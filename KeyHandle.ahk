@@ -6,34 +6,34 @@ Class KeyHandle
 {
 	; Creates a static variable for ReadConfig and Graphics
 	; Will be set later in the constructor
-	static ReadConfig :=
-	static Graphics :=
+	static s_ReadConfig :=
+	static s_Graphics 	:=
 	
-	IgnoreTarget := Array()	; Creates an array to hold the ignore target keys
-	Pressed := 0			; Number of buttons that are currently pressed down
-	IgnorePressed := 0		; Number of buttons that are currently pressed down which are considered IgnoreTarget buttons
+	IgnoreTarget 	:= Array()	; Creates an array to hold the ignore target keys
+	Pressed 		:= 0		; Number of buttons that are currently pressed down
+	IgnorePressed 	:= 0		; Number of buttons that are currently pressed down which are considered IgnoreTarget buttons
 	
 	;======== CONSTANTS ========
 	
 	; These are a way to reference an array index with a readable index rather than a number 
-	A_Button := 1
-	B_Button := 2
-	X_Button := 3
-	Y_Button := 4
+	A_BUTTON := 1
+	B_BUTTON := 2
+	X_BUTTON := 3
+	Y_BUTTON := 4
 
-	DPad_Up := 5
-	DPad_Down := 6
-	DPad_Left := 7
-	DPad_Right := 8
+	DPAD_UP 	:= 5
+	DPAD_DOWN 	:= 6
+	DPAD_LEFT 	:= 7
+	DPAD_RIGHT 	:= 8
 
-	Start_Button := 9
-	Back_Button := 10
+	START_BUTTON 	:= 9
+	BACK_BUTTON 	:= 10
 
-	Left_Shoulder := 11
-	Right_Shoulder := 12
+	LEFT_SHOULDER 	:= 11
+	RIGHT_SHOULDER 	:= 12
 
-	Left_Analog_Button := 13
-	Right_Analog_Button := 14
+	LEFT_ANALOG_BUTTON := 13
+	RIGHT_ANALOG_BUTTON := 14
 	
 	;=============== END CONSTANTS =================
 	
@@ -41,15 +41,25 @@ Class KeyHandle
 	{	
 		;======== VARIABLE DECLARATIONS ========
 		
-		m_MaxRadius = new System.Vector2()
-		m_Center = new System.Vector2()
-		m_Zero = new System.Vector2()
-		m_Threshold = new System.Vector2()
+		m_IsInUse := false	; Whether or not the stick is in use/moving according to the 'm_Deadzone' and 'm_Zero'
 		
-		m_StickPosition = new System.Vector2()
-		m_StickValue = new System.Vector2()
+		m_MaxRadius := new System.Vector2()	; The radius of the oval to calculate the position of the target
+		m_Center 	:= new System.Vector2()	; The center position of the oval used to calculate the position of the target
+		m_Zero 		:= new System.Vector2()	; The position to consider the stick at rest		
+		m_Threshold := new System.Vector2()	; The largest value the analog sticks should be allowed to read. Anything above this value is clamped down
+		m_Deadzone 	:= 0					; The value used to define the threshold to determine if the stick is currently being pushed in a direction
 		
-		m_Position = new System.Vector2()
+		m_StickPosition := new System.Vector2()	; The stick's actual position
+		m_StickValue 	:= new System.Vector2()	; The stick's current position after calculating the 'm_Zero' offset
+		
+		m_Angle 	:= 0	; The angle in radians that the stick has been calculated to be at
+		m_AngleDeg  := 0	; The angle in degrees that the stick has been calculated to be at
+		
+		m_Radius := new System.Vector2()	; The radius of the oval that will be used to determine the 'm_Position' vector2
+		
+		m_Position := new System.Vector2()	; The calculated position where the cursor/target should be drawn depending on the mode
+		
+		m_Mode := ""	; The mode used for this stick represented as a string
 		
 		;======== END VARIABLE DECLARATIONS ========
 		
@@ -65,128 +75,151 @@ Class KeyHandle
 		 -------------------
 		 	a_MaxRadius : System.Vector2 = the radius of the oval to calculate the position of the target
 			a_Center 	: System.Vector2 = the center position of the oval used to calculate the position of the target
-			a_Zero 		: System.Vector2 = the position to consider the stick at rest
+			a_Zero 		: System.Vector2 = the position to consider the stick at rest			
+			a_Threshold : System.Vector2 = the largest value the analog sticks should be allowed to read. Anything above this value is clamped down			
 			a_Deadzone 	: integer 		 = the value used to define the threshold to determine if the stick is currently being pushed in a direction
-			a_Threshold : System.Vector2 = the largest value the analog sticks should be allowed to read. Anything above this value is clamped down
 		*/
-		__New(a_MaxRadius, a_Center, a_Zero, a_Deadzone, a_Threshold) 
+		__New(a_MaxRadius, a_Center, a_Zero, a_Threshold, a_Deadzone) 
 		{
-			this.m_MaxRadius := a_MaxRadius
-			this.m_Center := a_Center
-			this.m_Zero := a_Zero
-			this.m_Deadzone := a_Deadzone
-			this.m_Threshold := a_Threshold
+			this.m_MaxRadius	:= a_MaxRadius
+			this.m_Center 		:= a_Center
+			this.m_Zero 		:= a_Zero			
+			this.m_Threshold 	:= a_Threshold			
+			this.m_Deadzone 	:= a_Deadzone
 		}
 		/*
 		 -------------------
-			Updates the v
+			Updates the 'm_StickValue' variable and calculates whether the stick is in use or not
 		 -------------------
 		 *	 Parameters    *
 		 -------------------
+			a_Position : System.Vector2 = the vector2 position to use for calculating whether the stick is in use or not
+			
+			Returns: true is the stick is in use; false otherwise
 		*/
-		Check_State(a_PositionX, a_PositionY) 
+		CheckState(a_Position) 
 		{
-			this.StickPosition.X := a_PositionX
-			this.StickPosition.Y := a_PositionY
+			this.m_StickPosition := a_Position
 			
 			; This takes the current value of the stick's axii and subtracts the value when the stick is at rest to 'zero out' the value before calculations
-			this.StickValue.X := this.StickPosition.X - this.OffsetX 
-			this.StickValue.Y := this.StickPosition.Y - this.OffsetY 
+			this.m_StickValue.X := this.m_StickPosition.X - this.m_Zero.X 
+			this.m_StickValue.Y := this.m_StickPosition.Y - this.m_Zero.Y 
 			
-			if (Abs(this.StickCenterX) > this.Deadzone || Abs(this.StickCenterY) > this.Deadzone)
-				this.IsPressed := true
+			if (Abs(this.m_StickValue.X) > this.m_Deadzone || Abs(this.m_StickValue.Y) > this.m_Deadzone)
+				this.m_IsInUse := true
 			else
-				this.IsPressed := false
+				this.m_IsInUse := false
 				
-			return this.IsPressed
+			return this.m_IsInUse
 		}
-		
-		Calc_Angle() 
+		/*
+		 -------------------
+				Calculates the angle the stick is currently at based on 'm_StickValue' in degrees for readability/debugging 
+			and then converts it back to radians for further calculations.
+		 -------------------
+			Returns: the calculated angle in radians
+		*/
+		CalcAngle() 
 		{
-			if (this.StickCenterX < 0 && this.StickCenterY < 0) ; 3rd Quadrant
+			if (this.m_StickValue.X < 0 && this.m_StickValue.Y < 0) ; 3rd Quadrant
 			{
-				this.AngleDeg := Abs(ATan(this.StickCenterY/this.StickCenterX)*(180/PI)) + 180
+				this.m_AngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 /PI )) + 180
 			}
-			else if (this.StickCenterX < 0 && this.StickCenterY > 0) ; 2nd Quadrant
+			else if (this.m_StickValue.X < 0 && this.m_StickValue.Y > 0) ; 2nd Quadrant
 			{    
-				this.AngleDeg := 180 - Abs(ATan(this.StickCenterY/this.StickCenterX)*(180/PI))
+				this.m_AngleDeg := 180 - Abs(ATan(this.m_m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
 			}
-			else if(this.StickCenterX > 0 && this.StickCenterY < 0) ; 4th Quadrant
+			else if(this.m_StickValue.X > 0 && this.m_StickValue.Y < 0) ; 4th Quadrant
 			{
-				this.AngleDeg := 360 - Abs(ATan(this.StickCenterY/this.StickCenterX)*(180/PI))
+				this.m_AngleDeg := 360 - Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
 			}
-			else if (this.StickCenterX = 0 && this.StickCenterY > 0) ; ATan Error would occur since angle is 90
+			else if (this.m_StickValue.X = 0 && this.m_StickValue.Y > 0) ; ATan Error would occur since angle is 90
 			{
-				this.AngleDeg := 90
+				this.m_AngleDeg := 90
 			}
-			else if (this.StickCenterX = 0 && this.StickCenterY < 0) ; ATan Error would occur since angle is 270
+			else if (this.m_StickValue.X = 0 && this.m_StickValue.Y < 0) ; ATan Error would occur since angle is 270
 			{
-				this.AngleDeg := 270
+				this.m_AngleDeg := 270
 			}
-			else if (this.StickCenterX < 0 && this.StickCenterY = 0) ; Differentiate between 0 and 180 degrees
+			else if (this.m_StickValue.X < 0 && this.m_StickValue.Y = 0) ; Differentiate between 0 and 180 degrees
 			{
-				this.AngleDeg := 180
+				this.m_AngleDeg := 180
 			}                 
 			else ; 1st Quadrant
 			{
-				this.AngleDeg := Abs(ATan(this.StickCenterY/this.StickCenterX)*(180/PI))
+				this.m_AngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
 			}
 				
-			this.Angle := -this.AngleDeg * (PI/180) ; Convert the angle back into radians for calculation
+			this.m_Angle := -this.m_AngleDeg * (PI / 180) ; Convert the angle back into radians for calculation
 			
-			return this.Angle
+			return this.m_Angle
 		}
-		
-		Calc_Radius(PassRadiusX := 0, PassRadiusY := 0) 
+		/*
+		 -------------------
+			Calculates the oval's radii used to eventually determine the 'm_Position'
+		 -------------------
+		 *	 Parameters    *
+		 -------------------
+			a_Radius : System.Vector2 = the radius that the new oval should be based off of depending on how much the user is pushing the stick
+		*/
+		CalcRadius(a_Radius) 
 		{
 			; The analog stick returns a lumpy square as movement. With this, I cut a proper square out of it by limiting the furthest the stick is pressed before I stop registering it		
-			if(Abs(this.StickCenterX) > this.Threshold)
+			if(Abs(this.m_StickValue.X) > this.m_Threshold.X)
 			{
-				if(this.StickCenterX > 0)
-					this.StickCenterX := this.Threshold
+				if(this.m_StickValue.X > 0)
+					this.m_StickValue.X := this.m_Threshold.X
 				else
-					this.StickCenterX := -this.Threshold
+					this.m_StickValue.X := -this.m_Threshold.X
 			}
-			if(Abs(this.StickCenterY) > this.Threshold)
+			if(Abs(this.m_StickValue.Y) > this.m_Threshold.Y)
 			{
-				if(this.StickCenterY > 0)
-					this.StickCenterY := this.Threshold
+				if(this.m_StickValue.Y > 0)
+					this.m_StickValue.Y := this.m_Threshold.Y
 				else	
-					this.StickCenterY := -this.Threshold
+					this.m_StickValue.Y := -this.m_Threshold.Y
 			}
 			
-			; Which ever value is higher (either StickCenterX or StickCenterY), that value is used to calculate the radii
-			if(Abs(this.StickCenterX) >= Abs(this.StickCenterY))
+			; Which ever value is higher (either m_StickValue.X or m_StickValue.Y), that value is used to calculate the radii
+			if(Abs(this.m_StickValue.X) >= Abs(this.m_StickValue.Y))
 			{
-				this.RadiusX := PassRadiusX * ((Abs(this.StickCenterX)-this.Deadzone)/(this.Threshold-this.Deadzone))
-				this.RadiusY := PassRadiusY * ((Abs(this.StickCenterX)-this.Deadzone)/(this.Threshold-this.Deadzone))
+				this.m_Radius.X := a_Radius.X * ((Abs(this.m_StickValue.X) - this.m_Deadzone) / (this.m_Threshold.X - this.m_Deadzone))
+				this.m_Radius.Y := a_Radius.Y * ((Abs(this.m_StickValue.X) - this.m_Deadzone) / (this.m_Threshold.X - this.m_Deadzone))
 			}
 			else
 			{
-				this.RadiusX := PassRadiusX * ((Abs(this.StickCenterY)-this.Deadzone)/(this.Threshold-this.Deadzone))
-				this.RadiusY := PassRadiusY * ((Abs(this.StickCenterY)-this.Deadzone)/(this.Threshold-this.Deadzone))
+				this.m_Radius.X := a_Radius.X * ((Abs(this.m_StickValue.Y) - this.m_Deadzone) / (this.m_Threshold.Y - this.m_Deadzone))
+				this.m_Radius.Y := a_Radius.Y * ((Abs(this.m_StickValue.Y) - this.m_Deadzone) / (this.m_Threshold.Y - this.m_Deadzone))
 			}
 		}
-		
-		Calc_Oval(PassRadiusX := 0, PassRadiusY := 0) 
+		/*
+		 -------------------
+			Calculates cursor/target's position based on the radii passed
+		 -------------------
+		 *	 Parameters    *
+		 -------------------
+			a_Radius : System.Vector2 = the radius that the position should be based on
+				DEFAULT: string = set to "NULL" as a place holder to determine when no value was passed and act accordingly
+		*/
+		CalcPosition(a_Radius := "NULL") 
 		{
-			if(PassRadiusX || PassRadiusY)
+			if(a_Radius != "NULL")
 			{
 				; http://math.stackexchange.com/questions/22064/calculating-a-point-that-lies-on-an-ellipse-given-an-angle
-				this.X := (this.Cx) + (PassRadiusX*PassRadiusY)/Sqrt((PassRadiusY**2)+(PassRadiusX**2)*(tan(this.Angle)**2))
-				this.Y := (this.Cy) + (PassRadiusX*PassRadiusY*tan(this.Angle))/Sqrt((PassRadiusY**2)+(PassRadiusX**2)*(tan(this.Angle)**2))
+				this.m_Position.X := (this.m_Center.X) + (a_Radius.X * a_Radius.Y) / Sqrt((a_Radius.Y ** 2) + (a_Radius.X ** 2) * (tan(this.m_Angle) ** 2))
+				this.m_Position.Y := (this.m_Center.Y) + (a_Radius.X * a_Radius.Y * tan(this.m_Angle)) / Sqrt((a_Radius.Y **2 ) + (a_Radius.X ** 2) * (tan(this.m_Angle) ** 2))
 				
 				; Because of the way the calculation goes, whenever the angle is in the 2nd and 3rd quadrant it needs to be translated
 				if(this.AngleDeg > 90 && this.AngleDeg <= 270)
 				{
-					this.X := (this.Cx) - (this.X - this.Cx)
-					this.Y := (this.Cy) - (this.Y - this.Cy)
+					this.m_Position.X := (this.m_Center.X) - (this.X - this.m_Center.X)
+					this.m_Position.Y := (this.m_Center.Y) - (this.Y - this.m_Center.Y)
 				}
 			}
 			else
 			{
-				this.X := this.Cx
-				this.Y := this.Cy
+				this.m_Position.X := this.m_Center.X
+				this.m_Position.Y := this.m_Center.Y
 			}
 		}
 	}
@@ -215,7 +248,7 @@ Class KeyHandle
 			} Until !IgnoreTarget[A_Index+1]
 		}
 		
-		Check_State(State, PrevState) 
+		CheckState(State, PrevState) 
 		{
 			if(State.Buttons & this.XInput)
 				this.IsPressed := true
@@ -360,8 +393,8 @@ Class KeyHandle
 	}
 	__New() 
 	{
-		ReadConfig := new ReadConfig()
-		Graphics := new Graphics()
+		s_ReadConfig := new ReadConfig()
+		s_Graphics := new Graphics()
 		
 		this.LStick := this.Load_AnalogStick("Left", "Absolute Mouse")
 		this.RStick := this.Load_AnalogStick("Right", "Target")
@@ -375,7 +408,7 @@ Class KeyHandle
 	
 	Handle() 
 	{
-		this.Check_State()
+		this.CheckState()
 		
 		this.Handle_Stick(this.LStick, "L")
 		this.Handle_Stick(this.RStick, "R")
@@ -391,62 +424,62 @@ Class KeyHandle
 		Var2 := this.State[Var2]
 		ForceMove := this.ForceMove
 		
-		Stick.Check_State(Var1, Var2)	
-		Stick.Calc_Angle()
-		Stick.Calc_Radius(Stick.MaxRadiusX, Stick.MaxRadiusY)		
+		Stick.CheckState(Var1, Var2)	
+		Stick.CalcAngle()
+		Stick.CalcRadius(Stick.m_MaxRadius)		
 		
-		if(Stick.Mode = "Absolute Mouse")
+		if(Stick.m_Mode = "Absolute Mouse")
 		{
-			if(Stick.IsPressed)
-				Stick.Calc_Oval(Stick.MaxRadiusX, Stick.MaxRadiusY)
+			if(Stick.m_IsInUse)
+				Stick.CalcPosition(Stick.m_MaxRadius)
 			else
-				Stick.Calc_Oval()
-			MouseMove, Stick.X, Stick.Y
+				Stick.CalcPosition()
+			MouseMove, Stick.m_Position.X, Stick.m_Position.Y
 			
-			if(Stick.IsPressed)
+			if(Stick.m_IsInUse)
 				Send {%ForceMove% Down}
 			else
 				Send {%ForceMove% Up}
 		}
-		else if(Stick.Mode = "Absolute Target")
+		else if(Stick.m_Mode = "Absolute Target")
 		{
-			if(Stick.IsPressed)
-				Stick.Calc_Oval(Stick.MaxRadiusX, Stick.MaxRadiusY)
+			if(Stick.m_IsInUse)
+				Stick.CalcPosition(Stick.m_MaxRadius)
 			else 
-				Stick.Calc_Oval()
-			Graphics.Draw_Target(Stick.X, Stick.Y)
+				Stick.CalcPosition()
+			s_Graphics.Draw_Target(Stick.m_Position.X, Stick.m_Position.Y)
 		}
-		else if(Stick.Mode = "Mouse")
+		else if(Stick.m_Mode = "Mouse")
 		{
-			if(Stick.IsPressed)
-				Stick.Calc_Oval(Stick.RadiusX, Stick.RadiusY)
+			if(Stick.m_IsInUse)
+				Stick.CalcPosition(Stick.m_Radius)
 			else
-				Stick.Calc_Oval()
-			MouseMove, Stick.X, Stick.Y
+				Stick.CalcPosition()
+			MouseMove, Stick.m_Position.X, Stick.m_Position.Y
 		}
-		else if(Stick.Mode = "Target")
+		else if(Stick.m_Mode = "Target")
 		{
-			if(Stick.IsPressed)
+			if(Stick.m_IsInUse)
 			{
-				Stick.Calc_Oval(Stick.RadiusX, Stick.RadiusY)
-				Graphics.Draw_Target(Stick.X, Stick.Y)
+				Stick.CalcPosition(Stick.m_Radius)
+				s_Graphics.Draw_Target(Stick.m_Position.X, Stick.m_Position.Y)
 			}
 			else 
 			{
-				Stick.Calc_Oval()
-				Graphics.Hide_Target()
+				Stick.CalcPosition()
+				s_Graphics.Hide_Target()
 			}
 		}		
 		
 		;if(StickAbv = "L")
-			;Tooltip , % StickAbv ":" Stick.Mode "`n" Stick.X ":" Stick.Y "`n" Stick.AngleDeg "`n" Stick.RadiusX ":" Stick.RadiusY "`n" Stick.MaxRadiusX ":" Stick.MaxRadiusY
+			;Tooltip , % StickAbv ":" Stick.m_Mode "`n" Stick.X ":" Stick.Y "`n" Stick.AngleDeg "`n" Stick.RadiusX ":" Stick.RadiusY "`n" Stick.MaxRadiusX ":" Stick.MaxRadiusY
 	}
 	
 	Handle_Buttons()
 	{
 		Loop, 14
 		{
-			if(this.Button[A_Index].Check_State(this.State, this.PrevState))
+			if(this.Button[A_Index].CheckState(this.State, this.PrevState))
 			{
 				if(this.Button[A_Index].IsPressed)
 				{
@@ -491,8 +524,8 @@ Class KeyHandle
 			this.Button[A_Index].TargetActionDown(this.RStick.X, this.RStick.Y, this.Delay, Pressed)			
 			this.Pressed := Pressed
 			
-			this.RStick.Mode := "Mouse"
-			this.LStick.Mode := "Absolute Target"
+			this.RStick.m_Mode := "Mouse"
+			this.LStick.m_Mode := "Absolute Target"
 		}
 		else
 		{
@@ -505,8 +538,8 @@ Class KeyHandle
 			this.IgnorePressed := IgnorePressed
 			this.ForceMove := ForceMove
 			
-			this.RStick.Mode := "Target"
-			this.LStick.Mode := "Absolute Mouse"
+			this.RStick.m_Mode := "Target"
+			this.LStick.m_Mode := "Absolute Mouse"
 		}
 	}
 	
@@ -520,8 +553,8 @@ Class KeyHandle
 			this.Pressed := Pressed
 			if(!Pressed)
 			{
-				this.RStick.Mode := "Target"
-				this.LStick.Mode := "Absolute Mouse"
+				this.RStick.m_Mode := "Target"
+				this.LStick.m_Mode := "Absolute Mouse"
 			}
 		}
 		else
@@ -535,12 +568,12 @@ Class KeyHandle
 			if(!this.IgnorePressed)
 			{
 				this.ForceMove := this.OGForceMove
-				this.RStick.Mode := "Target"
-				this.LStick.Mode := "Absolute Mouse"
+				this.RStick.m_Mode := "Target"
+				this.LStick.m_Mode := "Absolute Mouse"
 			}
 		}
 	}
-	Check_State() 
+	CheckState() 
 	{
 		this.PrevState := this.State
 		Loop, 4 
@@ -550,34 +583,33 @@ Class KeyHandle
 		}
 	}
 	
-	Load_AnalogStick(a_StickName, a_Mode) 
+	Load_AnalogStick(a_StickName, a_m_Mode) 
 	{
 		local maxRadius := new System.Vector2()
-		local center := new System.Vector2()
-		local zero := new System.Vector2()
+		local center 	:= new System.Vector2()
+		local zero 		:= new System.Vector2()		
+		local threshold := new System.Vector2()
 		
 		local deadzone := 0
 		
-		local threshold := new System.Vector2()
+		s_ReadConfig.Load(MaxRadius.X, "config.ini", "Preferences", a_StickName "_Max_RadiusX")
+		s_ReadConfig.Load(MaxRadius.Y, "config.ini", "Preferences", StickName "_Max_RadiusY")
 		
-		ReadConfig.Load(MaxRadius.X, "config.ini", "Preferences", a_StickName "_Max_RadiusX")
-		ReadConfig.Load(MaxRadius.Y, "config.ini", "Preferences", StickName "_Max_RadiusY")
+		s_ReadConfig.Load(center.X, "config.ini", "Preferences", a_StickName "_CenterX")
+		s_ReadConfig.Load(center.Y, "config.ini", "Preferences", a_StickName "_CenterY")
 		
-		ReadConfig.Load(center.X, "config.ini", "Preferences", a_StickName "_CenterX")
-		ReadConfig.Load(center.Y, "config.ini", "Preferences", a_StickName "_CenterY")
+		s_ReadConfig.Load(zero.X, "config.ini", "Calibration", a_StickName "_Analog_ZeroX")
+		s_ReadConfig.Load(zero.Y, "config.ini", "Calibration", a_StickName "_Analog_ZeroY")
 		
-		ReadConfig.Load(zero.X, "config.ini", "Calibration", a_StickName "_Analog_ZeroX")
-		ReadConfig.Load(zero.Y, "config.ini", "Calibration", a_StickName "_Analog_ZeroY")
+		s_ReadConfig.Load(threshold.X, "config.ini", "Calibration", a_StickName "_Analog_MaxX")
+		s_ReadConfig.Load(threshold.Y, "config.ini", "Calibration", a_StickName "_Analog_MaxY")
 		
-		ReadConfig.Load(deadzone, "config.ini", "Preferences", a_StickName "_Deadzone")
+		s_ReadConfig.Load(deadzone, "config.ini", "Preferences", a_StickName "_Deadzone")
 		
-		ReadConfig.Load(threshold.X, "config.ini", "Calibration", a_StickName "_Analog_MaxX")
-		ReadConfig.Load(threshold.Y, "config.ini", "Calibration", a_StickName "_Analog_MaxY")
+		Stick := new this.AnalogStick(maxRadius, center, zero, threshold, deadzone)
+		Stick.m_Mode := a_m_Mode
 		
-		Stick := new this.AnalogStick(maxRadius, center, zero, deadzone, threshold)
-		Stick.Mode := a_Mode
-		
-		this.Check_State()
+		this.CheckState()
 		
 		return Stick
 	}
@@ -585,34 +617,34 @@ Class KeyHandle
 	Load_Buttons() 
 	{
 		global
-		ReadConfig.Load(Delay, "config.ini", "Preferences", "Hold_Delay")
-		this.Delay := Delay
-		IgnoreTarget := ReadConfig.Load_Ignore()
+		s_ReadConfig.Load(Delay, "config.ini", "Preferences", "Hold_Delay")
+		this.Delay 		:= Delay
+		IgnoreTarget 	:= s_ReadConfig.Load_Ignore()
 		
-		this.Button[this.A_Button] := new this.Button(XINPUT_GAMEPAD_A, "A_Button", ReadConfig, IgnoreTarget)
-		this.Button[this.B_Button] := new this.Button(XINPUT_GAMEPAD_B, "B_Button", ReadConfig, IgnoreTarget)
-		this.Button[this.X_Button] := new this.Button(XINPUT_GAMEPAD_X, "X_Button", ReadConfig, IgnoreTarget)
-		this.Button[this.Y_Button] := new this.Button(XINPUT_GAMEPAD_Y, "Y_Button", ReadConfig, IgnoreTarget)
+		this.Button[this.A_BUTTON] := new this.Button(XINPUT_GAMEPAD_A, "A_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.B_BUTTON] := new this.Button(XINPUT_GAMEPAD_B, "B_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.X_BUTTON] := new this.Button(XINPUT_GAMEPAD_X, "X_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.Y_BUTTON] := new this.Button(XINPUT_GAMEPAD_Y, "Y_Button", s_ReadConfig, IgnoreTarget)
 		
-		this.Button[this.DPad_Up] := new this.Button(XINPUT_GAMEPAD_DPAD_UP, "DPad_Up", ReadConfig, IgnoreTarget)
-		this.Button[this.DPad_Down] := new this.Button(XINPUT_GAMEPAD_DPAD_DOWN, "DPad_Down", ReadConfig, IgnoreTarget)
-		this.Button[this.DPad_Left] := new this.Button(XINPUT_GAMEPAD_DPAD_LEFT, "DPad_Left", ReadConfig, IgnoreTarget)
-		this.Button[this.DPad_Right] := new this.Button(XINPUT_GAMEPAD_DPAD_RIGHT, "DPad_Right", ReadConfig, IgnoreTarget)
+		this.Button[this.DPAD_UP] 		:= new this.Button(XINPUT_GAMEPAD_DPAD_UP, "DPad_Up", s_ReadConfig, IgnoreTarget)
+		this.Button[this.DPAD_DOWN] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_DOWN, "DPad_Down", s_ReadConfig, IgnoreTarget)
+		this.Button[this.DPAD_LEFT] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_LEFT, "DPad_Left", s_ReadConfig, IgnoreTarget)
+		this.Button[this.DPAD_RIGHT] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_RIGHT, "DPad_Right", s_ReadConfig, IgnoreTarget)
 		
-		this.Button[this.Start_Button] := new this.Button(XINPUT_GAMEPAD_START, "Start_Button", ReadConfig, IgnoreTarget)
-		this.Button[this.Back_Button] := new this.Button(XINPUT_GAMEPAD_BACK, "Back_Button", ReadConfig, IgnoreTarget)
+		this.Button[this.START_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_START, "Start_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.BACK_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_BACK, "Back_Button", s_ReadConfig, IgnoreTarget)
 		
-		this.Button[this.Left_Shoulder] := new this.Button(XINPUT_GAMEPAD_LEFT_SHOULDER, "Left_Shoulder", ReadConfig, IgnoreTarget)
-		this.Button[this.Right_Shoulder] := new this.Button(XINPUT_GAMEPAD_RIGHT_SHOULDER, "Right_Shoulder", ReadConfig, IgnoreTarget)
+		this.Button[this.LEFT_SHOULDER] 	:= new this.Button(XINPUT_GAMEPAD_LEFT_SHOULDER, "Left_Shoulder", s_ReadConfig, IgnoreTarget)
+		this.Button[this.RIGHT_SHOULDER]	:= new this.Button(XINPUT_GAMEPAD_RIGHT_SHOULDER, "Right_Shoulder", s_ReadConfig, IgnoreTarget)
 
-		this.Button[this.Left_Analog_Button] := new this.Button(XINPUT_GAMEPAD_LEFT_THUMB, "Left_Analog_Button", ReadConfig, IgnoreTarget)
-		this.Button[this.Right_Analog_Button] := new this.Button(XINPUT_GAMEPAD_RIGHT_THUMB, "Right_Analog_Button", ReadConfig, IgnoreTarget)
+		this.Button[this.LEFT_ANALOG_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_LEFT_THUMB, "Left_Analog_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.RIGHT_ANALOG_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_RIGHT_THUMB, "Right_Analog_Button", s_ReadConfig, IgnoreTarget)
 		;Loop, 14
 			;MsgBox,, Ok, % this.Button[A_Index].PressModifier " + " this.Button[A_Index].PressKey "`n" this.Button[A_Index].HoldModifier " + " this.Button[A_Index].HoldKey
 	}
 
 	Delete_Me() 
 	{
-		Graphics.Delete_Me()
+		s_Graphics.Delete_Me()
 	}
 }

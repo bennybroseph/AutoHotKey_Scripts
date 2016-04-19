@@ -3,9 +3,9 @@
         <File name="Main.ahk" />
         <File name="KeyHandle.ahk" />
         <File name="ReadConfig.ahk" />
+        <File name="Graphics.ahk" />
         <Folder name="Libraries">
             <File name="System.ahk" />
-            <File name="Graphics.ahk" />
             <File name="FPS.ahk" />
         </Folder>
     </Project>
