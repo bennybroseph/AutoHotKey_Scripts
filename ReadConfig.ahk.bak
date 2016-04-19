@@ -1,3 +1,6 @@
+
+global PI := 3.141592653589793 ; Define PI for easier use
+
 Class ReadConfig
 {
 	Load(byRef Variable, ConfigFile, LabelName, ValueName){

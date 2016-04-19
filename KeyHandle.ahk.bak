@@ -38,61 +38,37 @@ Class KeyHandle
 	;=============== END CONSTANTS =================
 	
 	Class AnalogStick
-	{	
-		;======== VARIABLE DECLARATIONS ========
-		
-		m_MaxRadius = new System.Vector2()
-		m_Center = new System.Vector2()
-		m_Zero = new System.Vector2()
-		m_Threshold = new System.Vector2()
-		
-		m_StickPosition = new System.Vector2()
-		m_StickValue = new System.Vector2()
-		
-		m_Position = new System.Vector2()
-		
-		;======== END VARIABLE DECLARATIONS ========
-		
-		/*
-		 -------------------
-		 *   Constructor   *
-		 -------------------
-				Creates a new instance of 'AnalogStick' which will hold values related to one of the analog sticks on
-			the controller. Which stick this instance represents is handled by the KeyHandle. This class just calculates
-			values based on input, the KeyHandle determines how they are displayed to the user how it affects the game
-		 -------------------
-		 *	 Parameters    *
-		 -------------------
-		 	a_MaxRadius : System.Vector2 = the radius of the oval to calculate the position of the target
-			a_Center 	: System.Vector2 = the center position of the oval used to calculate the position of the target
-			a_Zero 		: System.Vector2 = the position to consider the stick at rest
-			a_Deadzone 	: integer 		 = the value used to define the threshold to determine if the stick is currently being pushed in a direction
-			a_Threshold : System.Vector2 = the largest value the analog sticks should be allowed to read. Anything above this value is clamped down
+	{		
+		/*  
+		*	Constructor
+		----------------
+		*	Parameters
+		----------------
+		 	a_MaxRadiusX = the X radius of the oval to calculate the position of the target
+		 	a_MaxRadiusY = the Y radius of the oval to calculate the position of the target
+			a_Cx = the center X position of the oval used to calculate the position of the target
+			a_Cy = the center Y position of the oval used to calculate the position of the target
+			a_OffsetX = the position to consider the stick at rest on the X axis
+			a_OffsetX = the position to consider the stick at rest on the Y axis
+			a_Deadzone
 		*/
 		__New(a_MaxRadius, a_Center, a_Zero, a_Deadzone, a_Threshold) 
 		{
-			this.m_MaxRadius := a_MaxRadius
-			this.m_Center := a_Center
-			this.m_Zero := a_Zero
-			this.m_Deadzone := a_Deadzone
-			this.m_Threshold := a_Threshold
+			this.MaxRadiusX := a_MaxRadius.X, this.MaxRadiusY := a_MaxRadius.Y
+			this.Cx := a_Center.X, this.Cy := a_Center.Y
+			this.OffsetX := a_Zero.X, this.OffsetY := a_Zero.Y
+			this.Deadzone := a_Deadzone
+			this.Threshold := a_Threshold.X
 		}
-		/*
-		 -------------------
-			Updates the v
-		 -------------------
-		 *	 Parameters    *
-		 -------------------
-		*/
-		Check_State(a_PositionX, a_PositionY) 
+		
+		Check_State(PassStickX, PassStickY) 
 		{
-			this.StickPosition.X := a_PositionX
-			this.StickPosition.Y := a_PositionY
+			this.StickX := PassStickX
+			this.StickY := PassStickY
 			
-			; This takes the current value of the stick's axii and subtracts the value when the stick is at rest to 'zero out' the value before calculations
-			this.StickValue.X := this.StickPosition.X - this.OffsetX 
-			this.StickValue.Y := this.StickPosition.Y - this.OffsetY 
-			
+			this.StickCenterX := this.StickX - this.OffsetX ; This takes the current value of the stick's X and subtracts the value when the stick is at rest to 'zero out' the value before calculations
+			this.StickCenterY := this.StickY - this.OffsetY ; This takes the current value of the stick's Y and subtracts the value when the stick is at rest to 'zero out' the value before calculations
+	
 			if (Abs(this.StickCenterX) > this.Deadzone || Abs(this.StickCenterY) > this.Deadzone)
 				this.IsPressed := true
 			else
@@ -552,13 +528,13 @@ Class KeyHandle
 	
 	Load_AnalogStick(a_StickName, a_Mode) 
 	{
-		local maxRadius := new System.Vector2()
-		local center := new System.Vector2()
-		local zero := new System.Vector2()
+		maxRadius := new System.Vector2()
+		center := new System.Vector2()
+		zero := new System.Vector2()
 		
-		local deadzone := 0
+		deadzone := 0
 		
-		local threshold := new System.Vector2()
+		threshold := new System.Vector2()
 		
 		ReadConfig.Load(MaxRadius.X, "config.ini", "Preferences", a_StickName "_Max_RadiusX")
 		ReadConfig.Load(MaxRadius.Y, "config.ini", "Preferences", StickName "_Max_RadiusY")

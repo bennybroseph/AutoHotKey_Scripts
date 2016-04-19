@@ -1,0 +1,12 @@
+<NotepadPlus>
+    <Project name="Joystick to Keyboard Emulation">
+        <File name="Main.ahk" />
+        <File name="KeyHandle.ahk" />
+        <File name="ReadConfig.ahk" />
+        <Folder name="Libraries">
+            <File name="System.ahk" />
+            <File name="Graphics.ahk" />
+            <File name="FPS.ahk" />
+        </Folder>
+    </Project>
+</NotepadPlus>
