@@ -310,6 +310,8 @@ Class KeyHandle
 			a_Position	: System.Vector2	= the position to move the mouse before sending the button's keys
 			a_Delay 	: integer			= the amount of delay in miliseconds between pressing a button and it being considered held down
 			a_Pressed	: integer			= the amount of buttons currently being pressed passed by reference and modified here
+			
+			Returns: whichever
 		*/
 		TargetActionDown(a_Position, a_Delay, byRef a_Pressed) 
 		{
@@ -323,8 +325,8 @@ Class KeyHandle
 				if(this.m_Timer && A_TickCount >= this.m_Timer + a_Delay)
 				{
 					; Store the held version of keys to be sent later
-					key 		:= this.HoldKey
-					modifier	:= this.HoldModifier
+					key 		:= this.m_HoldKey
+					modifier	:= this.m_HoldModifier
 					
 					this.m_Timer := 0	; Reset the timer
 				}
@@ -335,8 +337,8 @@ Class KeyHandle
 			else
 			{
 				; Store the standard version of keys to be sent later
-				key := this.PressKey
-				modifier := this.PressModifier				
+				key 		:= this.m_PressKey
+				modifier	:= this.m_PressModifier				
 			}
 			
 			MouseMove, a_Position.X, a_Position.Y	; Move the mouse to the requested position
@@ -344,110 +346,72 @@ Class KeyHandle
 			Send {%key% Down}						; Send the proper key
 			
 			a_Pressed += 1	; if the function got this far, consider another button currrently pressed
+			
+			return modifier key
 		}
-		IgnoreActionDown(X, Y, Delay, byRef IgnorePressed, byRef ForceMove) 
+		; Calls the 'TargetActionDown' function using all the same parameters, but also sets the passed 'a_ForceMove' to the return value of 'TargetActionDown'
+		IgnoreActionDown(a_Position, a_Delay, byRef a_IgnorePressed, byRef a_ForceMove) 
 		{
-			if(this.HoldKey)
-			{
-				if(this.m_Timer && A_TickCount >= this.m_Timer + Delay)
-				{
-					Modifier := this.HoldModifier
-					Key := this.HoldKey
-					
-					this.m_Timer := 0
-				}
-				else
-					return
-			}
-			else
-			{				
-				Modifier := this.PressModifier				
-				Key := this.PressKey
-			}
-			
-			MouseMove, X, Y				
-			Send {%Modifier% Down}		
-			Send {%Key% Down}
-			
-			ForceMove := Modifier Key
-			IgnorePressed += 1
+			local forcemove := this.TargetActionDown(a_Position, a_Delay, a_IgnorePressed)
+		
+			; if the return value of 'TargetActionDown' wasn't nothing
+			if(forcemove)
+				a_ForceMove := forcemove
 		}
 		
-		TargetActionUp(X, Y, Delay, byRef Pressed) 
+		TargetActionUp(a_Position, a_Delay, byRef a_Pressed) 
 		{
-			if(this.HoldKey)
+			local key 		:= ""	; Will store the proper key to be sent as a release action
+			local modifier	:= ""	; Will store the proper modifier to be sent in tandem with 'key'
+			
+			; if 'm_HoldKey' has a value stored in it
+			if(this.m_HoldKey)
 			{
-				if(!this.m_Timer && A_TickCount >= this.m_Timer + Delay)
+				; if this button had been held down for the required amount to be considered held 
+				if(!this.m_Timer && A_TickCount >= this.m_Timer + a_Delay)
 				{
-					Modifier := this.HoldModifier
-					Key := this.HoldKey
+					; Store the held version of keys to be sent as released later
+					modifier	:= this.m_HoldModifier
+					key 		:= this.m_HoldKey
 					
-					this.m_Timer := 0
+					this.m_Timer := 0	; Reset the timer
 				}
+				; Otherwise, we need to send the standard key once
 				else
 				{
-					MouseMove, X, Y				
-			
-					Modifier := this.PressModifier
-					Key := this.PressKey
+					MouseMove, a_Position.X, a_Position.Y	; Move the mouse to the requested position		
 					
-					Send {%Modifier% Down}		
-					Send {%Key% Down}
-					Send {%Modifier% Up}		
-					Send {%Key% Up}
+					; Not particularly needed but does stay consistant with other functionality in this function
+					modifier	:= this.m_PressModifier
+					key 		:= this.m_PressKey
 					
-					this.m_Timer := 0
+					; Send a down and up action so that the key is registered as pressed in game
+					Send {%modifier% Down}		
+					Send {%key% Down}
+					Send {%modifier% Up}		
+					Send {%key% Up}
 					
-					return
+					this.m_Timer := 0	; Reset the timer
+					
+					return	; Do not continue with the function
 				}
 			}
 			else
-			{				
-				Modifier := this.PressModifier				
-				Key := this.PressKey
+			{
+				; Store the standard version of keys to be sent later
+				modifier	:= this.m_PressModifier				
+				key 		:= this.m_PressKey
 			}
 			
-			Send {%Modifier% Up}		
-			Send {%Key% Up}				
-			Pressed -= 1
+			Send {%modifier% Up}	; Send the modifier key first as released
+			Send {%key% Up}			; Send the proper key as released
+			
+			a_Pressed -= 1	; if the function got this far, consider that a button was released
 		}
-		IgnoreActionUp(X, Y, Delay, byRef IgnorePressed) 
+		; Just calls 'TargetActionUp'. Once completely refactored DELETE THIS FUNCTION
+		IgnoreActionUp(a_Position, a_Delay, byRef a_IgnorePressed) 
 		{
-			if(this.HoldKey)
-			{
-				if(!this.m_Timer && A_TickCount >= this.m_Timer + Delay)
-				{
-					Modifier := this.HoldModifier
-					Key := this.HoldKey
-					
-					this.m_Timer := 0
-				}
-				else
-				{
-					MouseMove, X, Y				
-			
-					Modifier := this.PressModifier
-					Key := this.PressKey
-					
-					Send {%Modifier% Down}		
-					Send {%Key% Down}
-					Send {%Modifier% Up}		
-					Send {%Key% Up}
-					
-					this.m_Timer := 0
-					
-					return
-				}
-			}
-			else
-			{				
-				Modifier := this.PressModifier				
-				Key := this.PressKey
-			}
-			
-			Send {%Modifier% Up}		
-			Send {%Key% Up}	
-			IgnorePressed -= 1
+			this.TargetActionUp(a_Position, a_Delay, a_IgnorePressed)
 		}
 	}
 	__New() 
@@ -540,35 +504,35 @@ Class KeyHandle
 		{
 			if(this.Button[A_Index].CheckState(this.State, this.PrevState))
 			{
-				if(this.Button[A_Index].IsPressed)
+				if(this.Button[A_Index].m_IsPressed)
 				{
-					if(!this.Button[A_Index].HoldKey)
+					if(!this.Button[A_Index].m_HoldKey)
 					{
-						if(this.Button[A_Index].PressKey != "Inventory" && this.Button[A_Index].PressKey != "Freedom" && this.Button[A_Index].PressKey != "Loot")
+						if(this.Button[A_Index].m_PressKey != "Inventory" && this.Button[A_Index].m_PressKey != "Freedom" && this.Button[A_Index].m_PressKey != "Loot")
 							this.ActionDown()
 					}
 					else
-						this.Button[A_Index].Timer := A_TickCount
+						this.Button[A_Index].m_Timer := A_TickCount
 				}
 				else
 				{
-					if(!this.Button[A_Index].HoldKey || A_TickCount < this.Button[A_Index].Timer + this.Delay)
+					if(!this.Button[A_Index].m_HoldKey || A_TickCount < this.Button[A_Index].m_Timer + this.Delay)
 					{
-						if(this.Button[A_Index].PressKey != "Inventory" && this.Button[A_Index].PressKey != "Freedom" && this.Button[A_Index].PressKey != "Loot")
+						if(this.Button[A_Index].m_PressKey != "Inventory" && this.Button[A_Index].m_PressKey != "Freedom" && this.Button[A_Index].m_PressKey != "Loot")
 							this.ActionUp()
 					}
-					else if(this.Button[A_Index].HoldKey && A_TickCount >= this.Button[A_Index].Timer + this.Delay)
+					else if(this.Button[A_Index].m_HoldKey && A_TickCount >= this.Button[A_Index].m_Timer + this.Delay)
 					{
-						if(this.Button[A_Index].HoldKey != "Inventory" && this.Button[A_Index].HoldKey != "Freedom" && this.Button[A_Index].HoldKey != "Loot")
+						if(this.Button[A_Index].m_HoldKey != "Inventory" && this.Button[A_Index].m_HoldKey != "Freedom" && this.Button[A_Index].m_HoldKey != "Loot")
 							this.ActionUp()
 					}
 				}				
 			}
-			else if(this.Button[A_Index].IsPressed)
+			else if(this.Button[A_Index].m_IsPressed)
 			{
-				if(this.Button[A_Index].HoldKey && A_TickCount >= this.Button[A_Index].Timer + this.Delay)
+				if(this.Button[A_Index].m_HoldKey && A_TickCount >= this.Button[A_Index].m_Timer + this.Delay)
 				{
-					if(this.Button[A_Index].PressKey != "Inventory" && this.Button[A_Index].PressKey != "Freedom" && this.Button[A_Index].PressKey != "Loot")
+					if(this.Button[A_Index].m_PressKey != "Inventory" && this.Button[A_Index].m_PressKey != "Freedom" && this.Button[A_Index].m_PressKey != "Loot")
 						this.ActionDown()
 				}
 			}
@@ -577,7 +541,7 @@ Class KeyHandle
 	
 	ActionDown() 
 	{
-		if(!this.Button[A_Index].m_HasIgnoreKey || this.Button[A_Index].PressKey != this.Button[A_Index].m_IgnoreKey)
+		if(!this.Button[A_Index].m_HasIgnoreKey || this.Button[A_Index].m_PressKey != this.Button[A_Index].m_IgnoreKey)
 		{
 			Pressed := this.Pressed
 			this.Button[A_Index].TargetActionDown(this.RStick.m_Position, this.Delay, Pressed)			
@@ -604,7 +568,7 @@ Class KeyHandle
 	
 	ActionUp() 
 	{
-		if(!this.Button[A_Index].m_HasIgnoreKey || this.Button[A_Index].PressKey != this.Button[A_Index].m_IgnoreKey)
+		if(!this.Button[A_Index].m_HasIgnoreKey || this.Button[A_Index].m_PressKey != this.Button[A_Index].m_IgnoreKey)
 		{
 			Pressed := this.Pressed
 			this.Button[A_Index].TargetActionUp(this.RStick.m_Position, this.Delay, Pressed)
@@ -651,8 +615,8 @@ Class KeyHandle
 		
 		local deadzone := 0
 		
-		s_ReadConfig.Load(MaxRadius.X, "config.ini", "Preferences", a_StickName "_Max_RadiusX")
-		s_ReadConfig.Load(MaxRadius.Y, "config.ini", "Preferences", a_StickName "_Max_RadiusY")
+		s_ReadConfig.Load(maxRadius.X, "config.ini", "Preferences", a_StickName "_Max_RadiusX")
+		s_ReadConfig.Load(maxRadius.Y, "config.ini", "Preferences", a_StickName "_Max_RadiusY")
 		
 		s_ReadConfig.Load(center.X, "config.ini", "Preferences", a_StickName "_CenterX")
 		s_ReadConfig.Load(center.Y, "config.ini", "Preferences", a_StickName "_CenterY")
