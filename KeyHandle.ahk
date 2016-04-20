@@ -9,7 +9,6 @@ Class KeyHandle
 	static s_ReadConfig :=
 	static s_Graphics 	:=
 	
-	IgnoreTarget 	:= Array()	; Creates an array to hold the ignore target keys
 	Pressed 		:= 0		; Number of buttons that are currently pressed down
 	IgnorePressed 	:= 0		; Number of buttons that are currently pressed down which are considered IgnoreTarget buttons
 	
@@ -225,77 +224,137 @@ Class KeyHandle
 	}
 	Class Button
 	{		
-		Timer := 0
+		;======== VARIABLE DECLARATIONS ========
 		
-		__New(XInput, ButtonName, ReadConfig, IgnoreTarget) 
+		m_Timer := 0	; The timer used to determine if this button is being held down or not
+		
+		m_ButtonHexCode := 0x0000	; The hexidecimal value that represents this button in XInput.ahk
+		
+		m_PressKey 		:= ""	; The name of the key to be sent when this button is pressed
+		m_PressModifier := ""	; The name of the modifier key to be sent in tandem with 'm_PressKey' when this button is pressed
+		m_HoldKey 		:= ""	; The name of the key to be sent when this button has been held down
+		m_HoldModifier 	:= ""	; The name of the modifier key to be sent in tandem with 'm_HoldKey' when this button has been held down
+		
+		m_HasIgnoreKey	:= false	; Whether or not this button contains a key which should ignore the targeting system
+		m_IgnoreKey 	:= ""		; The name of the key that ignores the targeting system
+		
+		m_IsPressed := false	; Whether or not the button is pressed down currently
+		
+		;======== END VARIABLE DECLARATIONS ========
+		
+		/*
+		 -------------------
+		 *   Constructor   *
+		 -------------------
+				Creates a new instance of 'Button' which will hold all the related values for a single button. The 'Button' class contains
+			functionality for checking it's pressed or non-pressed state as well as the ability to determine if it has been held down for the 
+			required amount of time for a secondary action to take place. The 'Button' class sends input from within the class, and can determine
+			which input should be sent internally. This is in contrast to the current version of 'AnalogStick' which requires an outside class
+			to send input.
+		 -------------------
+		 *	 Parameters    *
+		 -------------------
+		 	a_ButtonHexCode 	: hexidecimal 	= the hex value that represents the button in XInput.ahk
+			a_ButtonName 		: string		= the name of the button represented as a string
+			a_IgnoreTargetKey	: Array; string = an array which holds each key as a string that should be ignored for targeting reasons
+		*/
+		__New(a_ButtonHexCode, a_ButtonName, a_IgnoreTargetKey) 
 		{ 
-			this.XInput := XInput
+			this.m_ButtonHexCode := a_ButtonHexCode
 			
-			ReadConfig.Load_Button(ButtonName, PressKey, PressModifier, HoldKey, HoldModifier)
-			this.PressKey := PressKey
-			this.PressModifier := PressModifier
-			this.HoldKey := HoldKey
-			this.HoldModifier := HoldModifier
+			KeyHandle.s_ReadConfig.Load_Button(a_ButtonName, this.m_PressKey, this.m_PressModifier, this.m_HoldKey, this.m_HoldModifier)
 			
-			this.IgnoreTarget := false
+			this.m_HasIgnoreKey := false
 			Loop
 			{
-				if(((this.PressKey = IgnoreTarget[A_Index] && !this.PressModifier)|| IgnoreTarget[A_Index] = this.PressKey "+" this.PressModifier) || ((this.HoldKey = IgnoreTarget[A_Index] && !this.HoldModifier) || IgnoreTarget[A_Index] = this.HoldKey "+" this.HoldModifier))
+				if(((this.m_PressKey = a_IgnoreTargetKey[A_Index] && !this.m_PressModifier)|| a_IgnoreTargetKey[A_Index] = this.m_PressKey "+" this.m_PressModifier) 
+				|| ((this.m_HoldKey  = a_IgnoreTargetKey[A_Index] && !this.m_HoldModifier) || a_IgnoreTargetKey[A_Index] = this.m_HoldKey  "+" this.m_HoldModifier))
 				{
-					this.IgnoreTarget := true
-					this.IgnoreKey := IgnoreTarget[A_Index]
+					this.m_HasIgnoreKey := true
+					this.m_IgnoreKey := a_IgnoreTargetKey[A_Index]
 				}
-			} Until !IgnoreTarget[A_Index+1]
+			} Until !a_IgnoreTargetKey[A_Index + 1]
 		}
-		
-		CheckState(State, PrevState) 
-		{
-			if(State.Buttons & this.XInput)
-				this.IsPressed := true
-			else
-				this.IsPressed := false
+		/*
+		 -------------------
+				Determines if this button is being pressed currently using the bitwise operator '&'. Returns whether the buttons is newly pressed, and
+			not was not held down from the last check.
+		 -------------------
+		 *	 Parameters    *
+		 -------------------
+			a_State 	: Object = a complex object to represent the state of the controller. 'a_State.Buttons' is going to be the more relevant information
+				as it holds the bitmask for the currently held buttons
+			a_PrevState : Object = the previous state of the controller
 			
-			if(State.Buttons & this.XInput != PrevState.Buttons & this.XInput)
+			Returns: true if the button was pressed this check or false if it is not pressed or is being held down
+		*/
+		CheckState(a_State, a_PrevState) 
+		{
+			if(a_State.Buttons & this.m_ButtonHexCode)
+				this.m_IsPressed := true
+			else
+				this.m_IsPressed := false
+			
+			if(a_State.Buttons & this.m_ButtonHexCode != a_PrevState.Buttons & this.m_ButtonHexCode)
 				return true
 			else
 				return false
 		}
-		
-		TargetActionDown(X, Y, Delay, byRef Pressed) 
+		/*
+		 -------------------
+				Determines if the button has been held down for the required amount of time to be considered held down and then sends
+			the proper action to match as a targeted action.
+		 -------------------
+		 *	 Parameters    *
+		 -------------------
+			a_Position	: System.Vector2	= the position to move the mouse before sending the button's keys
+			a_Delay 	: integer			= the amount of delay in miliseconds between pressing a button and it being considered held down
+			a_Pressed	: integer			= the amount of buttons currently being pressed passed by reference and modified here
+		*/
+		TargetActionDown(a_Position, a_Delay, byRef a_Pressed) 
 		{
-			if(this.HoldKey)
+			local key 		:= ""	; Will store the proper key to be sent as an action
+			local modifier	:= ""	; Will store the proper modifier to be sent in tandem with 'key'
+			
+			; if 'm_HoldKey' has a value stored in it
+			if(this.m_HoldKey != "")
 			{
-				if(this.Timer && A_TickCount >= this.Timer + Delay)
+				; if this button has been held down for the required amount to be considered held 
+				if(this.m_Timer && A_TickCount >= this.m_Timer + a_Delay)
 				{
-					Modifier := this.HoldModifier
-					Key := this.HoldKey
+					; Store the held version of keys to be sent later
+					key 		:= this.HoldKey
+					modifier	:= this.HoldModifier
 					
-					this.Timer := 0
+					this.m_Timer := 0	; Reset the timer
 				}
 				else
-					return
+					return	; Continue waiting for the key to either be released or held down long enough before acting
 			}
+			; there is nothing in 'm_HoldKey'
 			else
-			{				
-				Modifier := this.PressModifier				
-				Key := this.PressKey
+			{
+				; Store the standard version of keys to be sent later
+				key := this.PressKey
+				modifier := this.PressModifier				
 			}
 			
-			MouseMove, X, Y				
-			Send {%Modifier% Down}		
-			Send {%Key% Down}				
-			Pressed += 1
+			MouseMove, a_Position.X, a_Position.Y	; Move the mouse to the requested position
+			Send {%modifier% Down}					; Send the modifier key first
+			Send {%key% Down}						; Send the proper key
+			
+			a_Pressed += 1	; if the function got this far, consider another button currrently pressed
 		}
 		IgnoreActionDown(X, Y, Delay, byRef IgnorePressed, byRef ForceMove) 
 		{
 			if(this.HoldKey)
 			{
-				if(this.Timer && A_TickCount >= this.Timer + Delay)
+				if(this.m_Timer && A_TickCount >= this.m_Timer + Delay)
 				{
 					Modifier := this.HoldModifier
 					Key := this.HoldKey
 					
-					this.Timer := 0
+					this.m_Timer := 0
 				}
 				else
 					return
@@ -318,12 +377,12 @@ Class KeyHandle
 		{
 			if(this.HoldKey)
 			{
-				if(!this.Timer && A_TickCount >= this.Timer + Delay)
+				if(!this.m_Timer && A_TickCount >= this.m_Timer + Delay)
 				{
 					Modifier := this.HoldModifier
 					Key := this.HoldKey
 					
-					this.timer := 0
+					this.m_Timer := 0
 				}
 				else
 				{
@@ -337,7 +396,7 @@ Class KeyHandle
 					Send {%Modifier% Up}		
 					Send {%Key% Up}
 					
-					this.Timer := 0
+					this.m_Timer := 0
 					
 					return
 				}
@@ -356,12 +415,12 @@ Class KeyHandle
 		{
 			if(this.HoldKey)
 			{
-				if(!this.Timer && A_TickCount >= this.Timer + Delay)
+				if(!this.m_Timer && A_TickCount >= this.m_Timer + Delay)
 				{
 					Modifier := this.HoldModifier
 					Key := this.HoldKey
 					
-					this.timer := 0
+					this.m_Timer := 0
 				}
 				else
 				{
@@ -375,7 +434,7 @@ Class KeyHandle
 					Send {%Modifier% Up}		
 					Send {%Key% Up}
 					
-					this.Timer := 0
+					this.m_Timer := 0
 					
 					return
 				}
@@ -518,10 +577,10 @@ Class KeyHandle
 	
 	ActionDown() 
 	{
-		if(!this.Button[A_Index].IgnoreTarget || this.Button[A_Index].PressKey != this.Button[A_Index].IgnoreKey)
+		if(!this.Button[A_Index].m_HasIgnoreKey || this.Button[A_Index].PressKey != this.Button[A_Index].m_IgnoreKey)
 		{
 			Pressed := this.Pressed
-			this.Button[A_Index].TargetActionDown(this.RStick.X, this.RStick.Y, this.Delay, Pressed)			
+			this.Button[A_Index].TargetActionDown(this.RStick.m_Position, this.Delay, Pressed)			
 			this.Pressed := Pressed
 			
 			this.RStick.m_Mode := "Mouse"
@@ -533,7 +592,7 @@ Class KeyHandle
 			ForceMove := this.ForceMove
 			this.PrevForceMove := this.ForceMove
 			
-			this.Button[A_Index].IgnoreActionDown(this.LStick.X, this.LStick.Y, this.Delay, IgnorePressed, ForceMove)
+			this.Button[A_Index].IgnoreActionDown(this.LStick.m_Position, this.Delay, IgnorePressed, ForceMove)
 			
 			this.IgnorePressed := IgnorePressed
 			this.ForceMove := ForceMove
@@ -545,10 +604,10 @@ Class KeyHandle
 	
 	ActionUp() 
 	{
-		if(!this.Button[A_Index].IgnoreTarget || this.Button[A_Index].PressKey != this.Button[A_Index].IgnoreKey)
+		if(!this.Button[A_Index].m_HasIgnoreKey || this.Button[A_Index].PressKey != this.Button[A_Index].m_IgnoreKey)
 		{
 			Pressed := this.Pressed
-			this.Button[A_Index].TargetActionUp(this.RStick.X, this.RStick.Y, this.Delay, Pressed)
+			this.Button[A_Index].TargetActionUp(this.RStick.m_Position, this.Delay, Pressed)
 			
 			this.Pressed := Pressed
 			if(!Pressed)
@@ -560,7 +619,7 @@ Class KeyHandle
 		else
 		{
 			IgnorePressed := this.IgnorePressed
-			this.Button[A_Index].IgnoreActionUp(this.LStick.X, this.LStick.Y, this.Delay, IgnorePressed)
+			this.Button[A_Index].IgnoreActionUp(this.LStick.m_Position, this.Delay, IgnorePressed)
 			
 			this.IgnorePressed := IgnorePressed
 			this.ForceMove := this.PrevForceMove
@@ -583,7 +642,7 @@ Class KeyHandle
 		}
 	}
 	
-	Load_AnalogStick(a_StickName, a_m_Mode) 
+	Load_AnalogStick(a_StickName, a_Mode) 
 	{
 		local maxRadius := new System.Vector2()
 		local center 	:= new System.Vector2()
@@ -593,7 +652,7 @@ Class KeyHandle
 		local deadzone := 0
 		
 		s_ReadConfig.Load(MaxRadius.X, "config.ini", "Preferences", a_StickName "_Max_RadiusX")
-		s_ReadConfig.Load(MaxRadius.Y, "config.ini", "Preferences", StickName "_Max_RadiusY")
+		s_ReadConfig.Load(MaxRadius.Y, "config.ini", "Preferences", a_StickName "_Max_RadiusY")
 		
 		s_ReadConfig.Load(center.X, "config.ini", "Preferences", a_StickName "_CenterX")
 		s_ReadConfig.Load(center.Y, "config.ini", "Preferences", a_StickName "_CenterY")
@@ -607,7 +666,7 @@ Class KeyHandle
 		s_ReadConfig.Load(deadzone, "config.ini", "Preferences", a_StickName "_Deadzone")
 		
 		Stick := new this.AnalogStick(maxRadius, center, zero, threshold, deadzone)
-		Stick.m_Mode := a_m_Mode
+		Stick.m_Mode := a_Mode
 		
 		this.CheckState()
 		
@@ -619,26 +678,26 @@ Class KeyHandle
 		global
 		s_ReadConfig.Load(Delay, "config.ini", "Preferences", "Hold_Delay")
 		this.Delay 		:= Delay
-		IgnoreTarget 	:= s_ReadConfig.Load_Ignore()
+		ignoreTargetKey	:= s_ReadConfig.Load_Ignore()
 		
-		this.Button[this.A_BUTTON] := new this.Button(XINPUT_GAMEPAD_A, "A_Button", s_ReadConfig, IgnoreTarget)
-		this.Button[this.B_BUTTON] := new this.Button(XINPUT_GAMEPAD_B, "B_Button", s_ReadConfig, IgnoreTarget)
-		this.Button[this.X_BUTTON] := new this.Button(XINPUT_GAMEPAD_X, "X_Button", s_ReadConfig, IgnoreTarget)
-		this.Button[this.Y_BUTTON] := new this.Button(XINPUT_GAMEPAD_Y, "Y_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.A_BUTTON] := new this.Button(XINPUT_GAMEPAD_A, "A_Button", ignoreTargetKey)
+		this.Button[this.B_BUTTON] := new this.Button(XINPUT_GAMEPAD_B, "B_Button", ignoreTargetKey)
+		this.Button[this.X_BUTTON] := new this.Button(XINPUT_GAMEPAD_X, "X_Button", ignoreTargetKey)
+		this.Button[this.Y_BUTTON] := new this.Button(XINPUT_GAMEPAD_Y, "Y_Button", ignoreTargetKey)
 		
-		this.Button[this.DPAD_UP] 		:= new this.Button(XINPUT_GAMEPAD_DPAD_UP, "DPad_Up", s_ReadConfig, IgnoreTarget)
-		this.Button[this.DPAD_DOWN] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_DOWN, "DPad_Down", s_ReadConfig, IgnoreTarget)
-		this.Button[this.DPAD_LEFT] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_LEFT, "DPad_Left", s_ReadConfig, IgnoreTarget)
-		this.Button[this.DPAD_RIGHT] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_RIGHT, "DPad_Right", s_ReadConfig, IgnoreTarget)
+		this.Button[this.DPAD_UP] 		:= new this.Button(XINPUT_GAMEPAD_DPAD_UP, "DPad_Up", ignoreTargetKey)
+		this.Button[this.DPAD_DOWN] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_DOWN, "DPad_Down", ignoreTargetKey)
+		this.Button[this.DPAD_LEFT] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_LEFT, "DPad_Left", ignoreTargetKey)
+		this.Button[this.DPAD_RIGHT] 	:= new this.Button(XINPUT_GAMEPAD_DPAD_RIGHT, "DPad_Right", ignoreTargetKey)
 		
-		this.Button[this.START_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_START, "Start_Button", s_ReadConfig, IgnoreTarget)
-		this.Button[this.BACK_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_BACK, "Back_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.START_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_START, "Start_Button", ignoreTargetKey)
+		this.Button[this.BACK_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_BACK, "Back_Button", ignoreTargetKey)
 		
-		this.Button[this.LEFT_SHOULDER] 	:= new this.Button(XINPUT_GAMEPAD_LEFT_SHOULDER, "Left_Shoulder", s_ReadConfig, IgnoreTarget)
-		this.Button[this.RIGHT_SHOULDER]	:= new this.Button(XINPUT_GAMEPAD_RIGHT_SHOULDER, "Right_Shoulder", s_ReadConfig, IgnoreTarget)
+		this.Button[this.LEFT_SHOULDER] 	:= new this.Button(XINPUT_GAMEPAD_LEFT_SHOULDER, "Left_Shoulder", ignoreTargetKey)
+		this.Button[this.RIGHT_SHOULDER]	:= new this.Button(XINPUT_GAMEPAD_RIGHT_SHOULDER, "Right_Shoulder", ignoreTargetKey)
 
-		this.Button[this.LEFT_ANALOG_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_LEFT_THUMB, "Left_Analog_Button", s_ReadConfig, IgnoreTarget)
-		this.Button[this.RIGHT_ANALOG_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_RIGHT_THUMB, "Right_Analog_Button", s_ReadConfig, IgnoreTarget)
+		this.Button[this.LEFT_ANALOG_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_LEFT_THUMB, "Left_Analog_Button", ignoreTargetKey)
+		this.Button[this.RIGHT_ANALOG_BUTTON] 	:= new this.Button(XINPUT_GAMEPAD_RIGHT_THUMB, "Right_Analog_Button", ignoreTargetKey)
 		;Loop, 14
 			;MsgBox,, Ok, % this.Button[A_Index].PressModifier " + " this.Button[A_Index].PressKey "`n" this.Button[A_Index].HoldModifier " + " this.Button[A_Index].HoldKey
 	}

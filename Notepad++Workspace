@@ -7,6 +7,10 @@
         <Folder name="Libraries">
             <File name="System.ahk" />
             <File name="FPS.ahk" />
+            <Folder name="Not Mine">
+                <File name="XInput.ahk" />
+                <File name="Gdip.ahk" />
+            </Folder>
         </Folder>
     </Project>
 </NotepadPlus>

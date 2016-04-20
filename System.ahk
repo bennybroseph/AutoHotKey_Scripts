@@ -3,7 +3,7 @@ global PI := 3.141592653589793 ; Define PI for easier use
 class System
 {
 	class Vector2
-	{		
+	{
 		; Define member variables. Must be accessed with 'this' keyword
 		X := 0.0, Y := 0.0
 		
