@@ -28,7 +28,7 @@ global Pressed := 0 ; This value stores the amount of buttons currently pressed.
 global IgnoreIt := false ; When this value is greater true, there is a button currently pressed that the user does not want to use the target cursor for
 global IgnorePressed := 0
 
-global StartScript := true ; This is true until the 'Startup' timer has completed. It is used to stop some functions from running until everything has been initialized.
+global IsInitializing := true ; This is true until the 'Startup' timer has completed. It is used to stop some functions from running until everything has been initialized.
 
 global LThumbX ; The left analog stick's X value
 global LThumbY ; The left analog stick's Y value
@@ -65,6 +65,8 @@ global RMaxRadiusX ; The radius the cursor maxes out at on the left stick in the
 global RMaxRadiusY ; The radius the cursor maxes out at on the left stick in the Y direction 
 
 global RThreshold ; The deadzone of the right stick
+
+global ApplicationName ; Name of the application the script is set to run on
 
 ; Offset from the center of the currently active window to consider to be the actual center
 global CenterOffsetX
@@ -142,7 +144,7 @@ WatchAxisL()
 			ForceMove = false ; Don't tell me what to do
 		}
 		; Currently useless function
-		if (!StartScript && FirstMovement)
+		if (!IsInitializing && FirstMovement)
 		{
 			FirstMovement := false
 		}		
@@ -418,14 +420,14 @@ Loop, 4
     }
 }
 
-if(!StartScript) 
+if(!IsInitializing) 
 {
 	WinGetActiveStats, Title, Width, Height, X, Y
 	
 	Width := Width/2
 	Height := Height/2
 	; if the Diablo window is active then the center of the screen is a lot higher than normal. This sets it to that value.
-	IfWinActive,  Diablo III
+	IfWinActive, %ApplicationName%
 	{
 		Width := Width + CenterOffsetX
 		Height := Height + CenterOffsetY
@@ -491,7 +493,7 @@ WatchButtons:
 
 Loop, 14
 {
-	if(!StartScript)
+	if(!IsInitializing)
 	{
 		if(Buttons[A_Index] != PrevButtons[A_Index])
 		{
@@ -969,6 +971,8 @@ ReadConfig()
 	
 	IniRead, RThreshold, config.ini, Preferences, Right_Analog_Deadzone
 	
+	IniRead, ApplicationName, config.ini, Preferences, Application_Name
+
 	IniRead, CenterOffsetX, config.ini, Preferences, Center_XOffset
 	IniRead, CenterOffsetY, config.ini, Preferences, Center_YOffset
 	
@@ -1195,7 +1199,7 @@ MouseGetPos, MouseX, MouseY
 TargetX := MouseX
 TargetY := MouseY
 
-StartScript := false
+IsInitializing := false
 
 Gui, +LastFound -Caption +E0x80000 +Owner +AlwaysOnTop +ToolWindow
 WinSet, ExStyle, +0x20
