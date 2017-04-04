@@ -12,6 +12,8 @@ global PI := 3.141592653589793 ; Define PI for easier use
 
 TThreshold := 64 ; for trigger deadzones
 
+global IsPaused := false ; Is the application paused?
+
 global ForceMoveKey
 global Move := false ; This is true when space is pressed down so that it is not spam pressed over and over. It is set to false when a button is pressed, or the left analog stick is released
 global ForceMove := false ; This is true whenever all buttons are released. I use this to force the analog stick to induce movement any time it otherwise may not press the space bar
@@ -76,6 +78,10 @@ global LRadiusOffsetY
 global RRadiusOffsetX 
 global RRadiusOffsetY
 
+global ShowCursorModeNotification ; Whether or not to show the cursor mode notification when in said mode
+global ShowInventoryModeNotification ; Whether or not to show the cursor mode notification when in said mode
+global ShowPausedNotification ; Whether or not to show the cursor mode notification when the application is paused
+
 global Inventory := false ; This value is true when then Inventory hotkey is triggered, and is toggled by that button. While true, the D-Pad is used to navigate the inventory screen
 global InventoryX := 1 ; The X value of the Inventory grid the user is currently on
 global InventoryY := 6 ; The Y value of the Inventory grid the user is currently on
@@ -89,9 +95,14 @@ return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed. The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F10::
-Tooltip, Paused `nPress F10 to resume, 0, 0, 4
-if(A_IsPaused)
+; Set the tooltip if it should be shown
+if(!IsPaused and ShowPausedNotification)
+	Tooltip, Paused `nPress F10 to resume, 0, 0, 4
+; Remove the tooltip if it is currently shown
+else if(ShowPausedNotification)
 	Tooltip, , , , 4
+
+IsPaused := !IsPaused	; Toggle the pause boolean
 Pause,,1
 return
 
@@ -503,12 +514,16 @@ Loop, 14
 					if(LStick)
 					{
 						buffer := ButtonKey[A_Index][1]
-						ToolTip, Cursor Mode: Enabled `nPress %buffer% on the controller to disable, 0, 0
+						if(ShowCursorModeNotification)
+							ToolTip, Cursor Mode: Enabled `nPress %buffer% on the controller to disable, 0, 0
+
 						LStick := false
 					}
 					else
 					{
-						ToolTip
+						if(ShowCursorModeNotification)
+							ToolTip
+
 						LStick := true
 					}
 				}
@@ -612,7 +627,9 @@ Loop, 14
 						ButtonKey[A_Index+4][3] := temp
 					}	
 					buffer := ButtonKey[A_Index][1]
-					ToolTip, Inventory Mode: Enabled `nPress and hold %buffer% on the controller to disable, 0, 0
+					if(ShowInventoryModeNotification)
+						ToolTip, Inventory Mode: Enabled `nPress and hold %buffer% on the controller to disable, 0, 0
+
 					MouseMove, InventoryGridX[InventoryX,InventoryY], InventoryGridY[InventoryX,InventoryY]
 					Gui, 1:Hide
 				}
@@ -624,8 +641,9 @@ Loop, 14
 						temp := ButtonKey[A_Index+4][1]
 						ButtonKey[A_Index+4][1] := ButtonKey[A_Index+4][3]
 						ButtonKey[A_Index+4][3] := temp
-					}	
-					ToolTip					
+					}
+					if(ShowInventoryModeNotification)	
+						ToolTip					
 				}
 				ButtonKey[A_Index][4] := 0
 			}
@@ -959,6 +977,15 @@ ReadConfig()
 	
 	IniRead, RRadiusOffsetX, config.ini, Preferences, Right_Analog_Center_XOffset
 	IniRead, RRadiusOffsetY, config.ini, Preferences, Right_Analog_Center_YOffset
+	
+	IniRead, ShowCursorModeNotification, config.ini, Preferences, Show_Cursor_Mode_Notification
+	ShowCursorModeNotification := ShowCursorModeNotification = "true" ? true : false
+
+	IniRead, ShowInventoryModeNotification, config.ini, Preferences, Show_Inventory_Mode_Notification
+	ShowInventoryModeNotification := ShowInventoryModeNotification = "true" ? true : false
+
+	IniRead, ShowPausedNotification, config.ini, Preferences, Show_Paused_Notification
+	ShowPausedNotification := ShowPausedNotification = "true" ? true : false
 }
 PassKeys(ButtonName)
 {
