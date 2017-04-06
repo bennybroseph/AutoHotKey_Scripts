@@ -2,8 +2,6 @@
 {
     using IniParser;
     using IniParser.Model;
-    using IniParser.Model.Configuration;
-    using IniParser.Parser;
 
     public static class IniParserHelper
     {

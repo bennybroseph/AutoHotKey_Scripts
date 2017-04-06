@@ -12,7 +12,8 @@
         private string m_ChosenConfigPath;
 
         private TabControl m_TabControl;
-        private Tuple<int, int> m_TabControlOffset = new Tuple<int, int>(18, 40);
+        private Size m_TabControlOffset = new Size(18, 75);
+        private int m_ControlVerticalOffset = 20;
 
         public ConfigForm()
         {
@@ -86,8 +87,8 @@
                 {
                     Size =
                         new Size(
-                            Size.Width - m_TabControlOffset.Item1,
-                            Size.Height - m_TabControlOffset.Item2),
+                            Size.Width - m_TabControlOffset.Width,
+                            Size.Height - m_TabControlOffset.Height),
                 };
             Controls.Add(m_TabControl);
 
@@ -104,26 +105,69 @@
                     new TabPage
                     {
                         Text = dataSection.SectionName,
-                        AutoSize = true,
-                        AutoScroll = true,
+                        Dock = DockStyle.Fill,
+                        Padding = new Padding(10, 10, 10, 10)
                     });
                 m_TabControl.SelectedIndex = m_TabControl.TabCount - 1;
+                var tableLayoutPanel =
+                    new TableLayoutPanel
+                    {
+                        ColumnCount = 2,
+                        Dock = DockStyle.Fill,
+                        AutoScroll = true,
+                        ColumnStyles =
+                        {
+                            new ColumnStyle(SizeType.Percent, 30),
+                            new ColumnStyle(SizeType.Percent, 70),
+                        },
+                    };
+                m_TabControl.SelectedTab.Controls.Add(tableLayoutPanel);
 
                 foreach (var sectionKey in dataSection.Keys)
                 {
+                    string totalComment = string.Empty;
                     foreach (var comment in sectionKey.Comments)
                     {
                         Debug.WriteLine(comment);
-                        m_TabControl.SelectedTab.Controls.Add(
+                        totalComment += comment + "\n";
+                    }
+                    if (totalComment != string.Empty)
+                    {
+                        var commentLabel =
                             new Label
                             {
-                                Text = comment,
-                                Location = new Point(0, m_TabControl.SelectedTab.Controls.Count * 20),
+                                Text = totalComment,
+                                Anchor = AnchorStyles.Left,
                                 AutoSize = true,
-                            });
+                                ForeColor = Color.DarkGreen,
+                            };
+                        tableLayoutPanel.Controls.Add(commentLabel, 0, tableLayoutPanel.RowCount);
+                        tableLayoutPanel.SetColumnSpan(commentLabel, 2);
+
+                        tableLayoutPanel.RowCount++;
+                        tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                     }
 
                     Debug.WriteLine(sectionKey.KeyName + " = " + sectionKey.Value);
+                    tableLayoutPanel.Controls.Add(
+                        new Label
+                        {
+                            Text = sectionKey.KeyName + " = ",
+                            Anchor = AnchorStyles.Left,
+                            AutoSize = true,
+                            Padding = new Padding(0, 0, 0, 10),
+                        }, 0, tableLayoutPanel.RowCount);
+                    tableLayoutPanel.Controls.Add(
+                        new TextBox
+                        {
+                            Text = sectionKey.Value,
+                            Anchor = AnchorStyles.Left,
+                            AutoSize = true,
+                            Padding = new Padding(0, 0, 0, 10),
+                        }, 1, tableLayoutPanel.RowCount);
+
+                    tableLayoutPanel.RowCount++;
+                    tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                 }
             }
         }
@@ -132,11 +176,13 @@
         {
             base.OnResize(e);
 
-            if (m_TabControl != null)
-                m_TabControl.Size =
-                    new Size(
-                        Size.Width - m_TabControlOffset.Item1,
-                        Size.Height - m_TabControlOffset.Item2);
+            if (m_TabControl == null)
+                return;
+
+            m_TabControl.Width = Size.Width - m_TabControlOffset.Width;
+            m_TabControl.Height = Size.Height - m_TabControlOffset.Height;
+
+            Refresh();
         }
         //private class ScrollableTabPage : TabPage
         //{
@@ -149,4 +195,6 @@
         //    }
         //}
     }
+
+
 }
