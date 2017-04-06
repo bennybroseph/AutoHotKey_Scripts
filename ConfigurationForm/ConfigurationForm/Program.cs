@@ -6,7 +6,10 @@ using System.Windows.Forms;
 
 namespace ConfigurationForm
 {
-    static class Program
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+
+    internal static class Program
     {
         /// <summary>
         /// The main entry point for the application.
@@ -16,7 +19,10 @@ namespace ConfigurationForm
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ConfigForm());
+            
+            var newForm = new ConfigForm();
+            if (!newForm.IsDisposed)
+                Application.Run(newForm);
         }
     }
 }
