@@ -7,13 +7,18 @@
     using System.Windows.Forms;
     using System.IO;
 
+    using BrightIdeasSoftware;
+
+    using IniParser.Model;
+
     public partial class ConfigForm : Form
     {
         private string m_ChosenConfigPath;
 
         private TabControl m_TabControl;
         private Size m_TabControlOffset = new Size(18, 75);
-        private int m_ControlVerticalOffset = 20;
+
+        private IniData m_IniData;
 
         public ConfigForm()
         {
@@ -80,7 +85,7 @@
 
         private void AddComponents()
         {
-            var data = IniParserHelper.ParseIni(m_ChosenConfigPath);
+            m_IniData = IniParserHelper.ParseIni(m_ChosenConfigPath);
 
             m_TabControl =
                 new TabControl
@@ -92,10 +97,10 @@
                 };
             Controls.Add(m_TabControl);
 
-            foreach (var keyData in data.Global)
+            foreach (var keyData in m_IniData.Global)
                 Debug.WriteLine(keyData.Value);
 
-            foreach (var dataSection in data.Sections)
+            foreach (var dataSection in m_IniData.Sections)
             {
                 foreach (var comment in dataSection.Comments)
                     Debug.WriteLine(comment);
@@ -105,24 +110,14 @@
                     new TabPage
                     {
                         Text = dataSection.SectionName,
+                        AutoScroll = true,
                         Dock = DockStyle.Fill,
                         Padding = new Padding(10, 10, 10, 10)
                     });
                 m_TabControl.SelectedIndex = m_TabControl.TabCount - 1;
-                var tableLayoutPanel =
-                    new TableLayoutPanel
-                    {
-                        ColumnCount = 2,
-                        Dock = DockStyle.Fill,
-                        AutoScroll = true,
-                        ColumnStyles =
-                        {
-                            new ColumnStyle(SizeType.Percent, 30),
-                            new ColumnStyle(SizeType.Percent, 70),
-                        },
-                    };
-                m_TabControl.SelectedTab.Controls.Add(tableLayoutPanel);
+                m_TabControl.SelectedTab.Scroll += (sender, args) => Refresh();
 
+                ObjectListView previousListView = null;
                 foreach (var sectionKey in dataSection.Keys)
                 {
                     string totalComment = string.Empty;
@@ -131,43 +126,48 @@
                         Debug.WriteLine(comment);
                         totalComment += comment + "\n";
                     }
+                    Label previousCommentLabel = null;
                     if (totalComment != string.Empty)
-                    {
-                        var commentLabel =
+                        previousCommentLabel =
                             new Label
                             {
                                 Text = totalComment,
-                                Anchor = AnchorStyles.Left,
-                                AutoSize = true,
                                 ForeColor = Color.DarkGreen,
                             };
-                        tableLayoutPanel.Controls.Add(commentLabel, 0, tableLayoutPanel.RowCount);
-                        tableLayoutPanel.SetColumnSpan(commentLabel, 2);
 
-                        tableLayoutPanel.RowCount++;
-                        tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                    if (previousListView == null || previousCommentLabel != null)
+                    {
+                        previousListView =
+                            new ObjectListView
+                            {
+                                Dock = DockStyle.Top,
+                                HeaderStyle = ColumnHeaderStyle.Clickable,
+                                Columns =
+                                {
+                                    new OLVColumn
+                                    {
+                                        Text = "Variable",
+                                        AspectName = "KeyName",
+                                        Width = 200,
+                                        IsEditable = false,
+                                    },
+                                    new OLVColumn
+                                    {
+                                        Text = "Value",
+                                        AspectName = "Value",
+                                        Width = 100,
+                                        IsEditable = true,
+                                    },
+                                },
+                                CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick,
+                                Margin = new Padding(0, 100, 0, 0),
+                                ShowGroups = false,
+                            };
+                        m_TabControl.SelectedTab.Controls.Add(previousListView);
                     }
 
                     Debug.WriteLine(sectionKey.KeyName + " = " + sectionKey.Value);
-                    tableLayoutPanel.Controls.Add(
-                        new Label
-                        {
-                            Text = sectionKey.KeyName + " = ",
-                            Anchor = AnchorStyles.Left,
-                            AutoSize = true,
-                            Padding = new Padding(0, 0, 0, 10),
-                        }, 0, tableLayoutPanel.RowCount);
-                    tableLayoutPanel.Controls.Add(
-                        new TextBox
-                        {
-                            Text = sectionKey.Value,
-                            Anchor = AnchorStyles.Left,
-                            AutoSize = true,
-                            Padding = new Padding(0, 0, 0, 10),
-                        }, 1, tableLayoutPanel.RowCount);
-
-                    tableLayoutPanel.RowCount++;
-                    tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                    previousListView.AddObject(sectionKey);
                 }
             }
         }
@@ -184,6 +184,30 @@
 
             Refresh();
         }
+
+        protected override void OnClosed(EventArgs eventArgs)
+        {
+            base.OnClosed(eventArgs);
+
+            foreach (var keyData in m_IniData.Global)
+                Debug.WriteLine(keyData.Value);
+
+            foreach (var dataSection in m_IniData.Sections)
+            {
+                foreach (var comment in dataSection.Comments)
+                    Debug.WriteLine(comment);
+
+                Debug.WriteLine(dataSection.SectionName);
+                foreach (var sectionKey in dataSection.Keys)
+                {
+                    foreach (var comment in sectionKey.Comments)
+                        Debug.WriteLine(comment);
+
+                    Debug.WriteLine(sectionKey.KeyName + " = " + sectionKey.Value);
+                }
+            }
+        }
+
         //private class ScrollableTabPage : TabPage
         //{
         //    public ScrollableControl scrollableControl { get; private set; }
