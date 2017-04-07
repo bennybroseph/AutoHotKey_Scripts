@@ -1,11 +1,13 @@
 ﻿namespace ConfigurationForm
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Drawing;
     using System.Linq;
     using System.Windows.Forms;
     using System.IO;
+    using System.Windows.Forms.VisualStyles;
 
     using BrightIdeasSoftware;
 
@@ -16,7 +18,7 @@
         private string m_ChosenConfigPath;
 
         private TabControl m_TabControl;
-        private Size m_TabControlOffset = new Size(18, 75);
+        private Size m_TabControlOffset = new Size(23, 80);
 
         private IniData m_IniData;
 
@@ -25,7 +27,7 @@
             InitializeComponent();
 
             CenterToScreen();
-
+            
             ChooseIniPath();
             AddComponents();
         }
@@ -90,6 +92,7 @@
             m_TabControl =
                 new TabControl
                 {
+                    Location = new Point(5, 5),
                     Size =
                         new Size(
                             Size.Width - m_TabControlOffset.Width,
@@ -97,79 +100,8 @@
                 };
             Controls.Add(m_TabControl);
 
-            foreach (var keyData in m_IniData.Global)
-                Debug.WriteLine(keyData.Value);
-
-            foreach (var dataSection in m_IniData.Sections)
-            {
-                foreach (var comment in dataSection.Comments)
-                    Debug.WriteLine(comment);
-
-                Debug.WriteLine(dataSection.SectionName);
-                m_TabControl.TabPages.Add(
-                    new TabPage
-                    {
-                        Text = dataSection.SectionName,
-                        AutoScroll = true,
-                        Dock = DockStyle.Fill,
-                        Padding = new Padding(10, 10, 10, 10)
-                    });
-                m_TabControl.SelectedIndex = m_TabControl.TabCount - 1;
-                m_TabControl.SelectedTab.Scroll += (sender, args) => Refresh();
-
-                ObjectListView previousListView = null;
-                foreach (var sectionKey in dataSection.Keys)
-                {
-                    string totalComment = string.Empty;
-                    foreach (var comment in sectionKey.Comments)
-                    {
-                        Debug.WriteLine(comment);
-                        totalComment += comment + "\n";
-                    }
-                    Label previousCommentLabel = null;
-                    if (totalComment != string.Empty)
-                        previousCommentLabel =
-                            new Label
-                            {
-                                Text = totalComment,
-                                ForeColor = Color.DarkGreen,
-                            };
-
-                    if (previousListView == null || previousCommentLabel != null)
-                    {
-                        previousListView =
-                            new ObjectListView
-                            {
-                                Dock = DockStyle.Top,
-                                HeaderStyle = ColumnHeaderStyle.Clickable,
-                                Columns =
-                                {
-                                    new OLVColumn
-                                    {
-                                        Text = "Variable",
-                                        AspectName = "KeyName",
-                                        Width = 200,
-                                        IsEditable = false,
-                                    },
-                                    new OLVColumn
-                                    {
-                                        Text = "Value",
-                                        AspectName = "Value",
-                                        Width = 100,
-                                        IsEditable = true,
-                                    },
-                                },
-                                CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick,
-                                Margin = new Padding(0, 100, 0, 0),
-                                ShowGroups = false,
-                            };
-                        m_TabControl.SelectedTab.Controls.Add(previousListView);
-                    }
-
-                    Debug.WriteLine(sectionKey.KeyName + " = " + sectionKey.Value);
-                    previousListView.AddObject(sectionKey);
-                }
-            }
+            foreach (var sectionData in m_IniData.Sections)
+                m_TabControl.TabPages.Add(new MyTabPage(sectionData));
         }
 
         protected override void OnResize(EventArgs e)
@@ -182,6 +114,7 @@
             m_TabControl.Width = Size.Width - m_TabControlOffset.Width;
             m_TabControl.Height = Size.Height - m_TabControlOffset.Height;
 
+            PerformLayout();
             Refresh();
         }
 
@@ -189,23 +122,7 @@
         {
             base.OnClosed(eventArgs);
 
-            foreach (var keyData in m_IniData.Global)
-                Debug.WriteLine(keyData.Value);
-
-            foreach (var dataSection in m_IniData.Sections)
-            {
-                foreach (var comment in dataSection.Comments)
-                    Debug.WriteLine(comment);
-
-                Debug.WriteLine(dataSection.SectionName);
-                foreach (var sectionKey in dataSection.Keys)
-                {
-                    foreach (var comment in sectionKey.Comments)
-                        Debug.WriteLine(comment);
-
-                    Debug.WriteLine(sectionKey.KeyName + " = " + sectionKey.Value);
-                }
-            }
+            IniParserHelper.PrintIniData(m_IniData);
         }
 
         //private class ScrollableTabPage : TabPage
@@ -220,5 +137,139 @@
         //}
     }
 
+    public class MyTabPage : TabPage
+    {
+        private SectionData m_SectionData;
 
+        public MyTabPage(SectionData sectionData)
+        {
+            m_SectionData = sectionData;
+
+            Text = m_SectionData.SectionName;
+            Dock = DockStyle.Fill;
+            AutoScroll = true;
+            Padding = new Padding(10, 10, 10, 10);
+
+            Scroll += (sender, args) => Refresh();
+        }
+
+        protected override void InitLayout()
+        {
+            var tabControl = Parent as TabControl;
+            if (tabControl == null)
+            {
+                Debug.WriteLine("WARNING: The custom component " + Text + " is not a child of a 'TabPage'!");
+                return;
+            }
+
+            tabControl.SelectedIndex = tabControl.TabCount - 1;
+
+            Controls.Add(new MyTableLayoutPanel(m_SectionData));
+        }
+
+        public new void OnMouseWheel(MouseEventArgs mouseEventArgs)
+        {
+            base.OnMouseWheel(mouseEventArgs);
+        }
+    }
+
+    public class MyTableLayoutPanel : TableLayoutPanel
+    {
+        private SectionData m_SectionData;
+
+        public MyTableLayoutPanel(SectionData sectionData)
+        {
+            m_SectionData = sectionData;
+
+            Dock = DockStyle.Top;
+            AutoSize = true;
+            AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            TabIndex = 0;
+
+            ColumnCount = 1;
+            ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+            RowCount = 0;
+            RowStyles.Clear();
+        }
+
+        protected override void InitLayout()
+        {
+            SuspendLayout();
+            
+            var totalListViews = new List<FastObjectListView>();
+
+            FastObjectListView previousListView = null;
+            foreach (var sectionKey in m_SectionData.Keys)
+            {
+                var totalComment = string.Empty;
+                foreach (var comment in sectionKey.Comments)
+                    totalComment += comment.Trim(' ', '\n') + "\n";
+
+                Label previousCommentLabel = null;
+                if (totalComment != string.Empty)
+                {
+                    RowCount++;
+
+                    totalComment = totalComment.Trim(' ', '\n');
+                    previousCommentLabel =
+                        new Label
+                        {
+                            Text = totalComment,
+                            Dock = DockStyle.Fill,
+                            AutoSize = true,
+                            ForeColor = Color.DarkGreen,
+                        };
+                    Controls.Add(previousCommentLabel, 0, RowCount - 1);
+                }
+
+                if (previousListView == null || previousCommentLabel != null)
+                {
+                    RowCount++;
+                    
+                    previousListView =
+                        new FastObjectListView
+                        {
+                            HeaderStyle = ColumnHeaderStyle.Clickable,
+                            Dock = DockStyle.Fill,
+                            GridLines = true,
+                            RowHeight = 0,
+                            BackColor = Color.White,
+                            AlternateRowBackColor = Color.Gray,
+                            Columns =
+                            {
+                                new OLVColumn
+                                {
+                                    Text = "Variable",
+                                    AspectName = "KeyName",
+                                    Width = 200,
+                                    FillsFreeSpace = true,
+                                    IsEditable = false,
+                                },
+                                new OLVColumn
+                                {
+                                    Text = "Value",
+                                    AspectName = "Value",
+                                    Width = 250,
+                                    IsEditable = true,
+                                },
+                            },
+                            CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick,
+                            ShowGroups = false,
+                        };
+                    previousListView.MouseWheel += 
+                        (sender, args) => (Parent as MyTabPage)?.OnMouseWheel(args);
+                    totalListViews.Add(previousListView);
+                    Controls.Add(previousListView, 0, RowCount - 1);
+                }
+
+                previousListView.AddObject(sectionKey);
+            }
+
+            foreach (var listView in totalListViews)
+                listView.Height = 28 + listView.Items.Count * 17;
+            
+            ResumeLayout(true);
+        }
+    }
 }
