@@ -890,6 +890,7 @@ Calibrate()
 	RThumbX0 := RThumbX
 	RThumbY0 := RThumbY
 	
+	MsgBox, , Calibration Complete, That concludes the calibration. `n`nIf for any reason you think these values  are incorrect, you can either edit them yourself (not recommended) or set 'Calibrate = true' in %ConfigurationPath% to 'true' to run this again.
 	
 	IniWrite, false, %ConfigurationPath%, Calibration, Calibrate
 	
