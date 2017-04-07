@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.Drawing;
     using System.Linq;
@@ -27,7 +28,7 @@
             InitializeComponent();
 
             CenterToScreen();
-            
+
             ChooseIniPath();
             AddComponents();
         }
@@ -37,14 +38,16 @@
             var configDirectory = Directory.GetCurrentDirectory() + "\\Configurations";
             if (!Directory.Exists(configDirectory))
             {
+                var message = 
+                    "The folder \"Configurations\" was not found in " + Directory.GetCurrentDirectory();
                 MessageBox.Show(
-                    "The folder \"Configurations\" was not found in " + Directory.GetCurrentDirectory(),
+                    message,
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
-                Close();
-                return;
+                Application.Exit();
+                throw new Exception(message);
             }
 
             var filePaths = Directory.GetFiles(configDirectory);
@@ -61,27 +64,31 @@
                 m_ChosenConfigPath = filePaths.FirstOrDefault();
             else
             {
-                MessageBox.Show(
+                var message =
                     "The folder:\n\n\"" + configDirectory + "\"\n\nhas no valid configuration files " +
-                    "(files ending in \".ini\")",
+                    "(files ending in \".ini\")";
+                MessageBox.Show(
+                    message,
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
-                Close();
-                return;
+                Application.Exit();
+                throw new Exception(message);
             }
 
             if (m_ChosenConfigPath == null || !File.Exists(m_ChosenConfigPath))
             {
+                var message =
+                    "The selected file \n\n\"" + m_ChosenConfigPath + "\"\n\n does not exist or is invalid";
                 MessageBox.Show(
-                    "The selected file \n\n\"" + m_ChosenConfigPath + "\"\n\n does not exist or is invalid",
+                    message,
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
-                Close();
-                return;
+                Application.Exit();
+                throw new Exception(message);
             }
         }
 
@@ -118,11 +125,48 @@
             Refresh();
         }
 
-        protected override void OnClosed(EventArgs eventArgs)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            base.OnClosed(eventArgs);
+            base.OnClosing(e);
 
             IniParserHelper.PrintIniData(m_IniData);
+
+            var result =
+                MessageBox.Show(
+                    "Would you like to save first?",
+                    "Quit",
+                    MessageBoxButtons.YesNoCancel);
+
+            if (result == DialogResult.Cancel)
+                e.Cancel = true;
+
+            if (result == DialogResult.Yes)
+                IniParserHelper.SaveIni(m_ChosenConfigPath, m_IniData);
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            IniParserHelper.SaveIni(m_ChosenConfigPath, m_IniData);
+        }
+
+        private void cancelButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            var result =
+                MessageBox.Show(
+                    "Are you sure you want to exit? Unsaved changes will be lost!",
+                    "Cancel",
+                    MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+                Application.Exit();
         }
 
         //private class ScrollableTabPage : TabPage
@@ -196,7 +240,7 @@
         protected override void InitLayout()
         {
             SuspendLayout();
-            
+
             var totalListViews = new List<FastObjectListView>();
 
             FastObjectListView previousListView = null;
@@ -226,7 +270,7 @@
                 if (previousListView == null || previousCommentLabel != null)
                 {
                     RowCount++;
-                    
+
                     previousListView =
                         new FastObjectListView
                         {
@@ -257,7 +301,7 @@
                             CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick,
                             ShowGroups = false,
                         };
-                    previousListView.MouseWheel += 
+                    previousListView.MouseWheel +=
                         (sender, args) => (Parent as MyTabPage)?.OnMouseWheel(args);
                     totalListViews.Add(previousListView);
                     Controls.Add(previousListView, 0, RowCount - 1);
@@ -268,7 +312,7 @@
 
             foreach (var listView in totalListViews)
                 listView.Height = 28 + listView.Items.Count * 17;
-            
+
             ResumeLayout(true);
         }
     }

@@ -15,6 +15,12 @@
             return data;
         }
 
+        public static void SaveIni(string iniPath, IniData iniData)
+        {
+            var parser = new FileIniDataParser{ Parser = { Configuration = { CommentString = ";" } } };
+            parser.WriteFile(iniPath, iniData);
+        }
+
         public static void PrintIniData(IniData iniData)
         {
             foreach (var keyData in iniData.Global)

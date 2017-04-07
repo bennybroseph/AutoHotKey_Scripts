@@ -19,10 +19,18 @@ namespace ConfigurationForm
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            
+
             var newForm = new ConfigForm();
             if (!newForm.IsDisposed)
-                Application.Run(newForm);
+#if !DEBUG
+                try
+                {
+#endif
+                    Application.Run(newForm);
+#if !DEBUG
+                }
+                catch (Exception e) { }
+#endif
         }
     }
 }
