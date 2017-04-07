@@ -12,7 +12,7 @@ global PI := 3.141592653589793 ; Define PI for easier use
 
 TThreshold := 64 ; for trigger deadzones
 
-global ConfigurationPath = "configuration.ini"
+global ConfigurationPath = "config.ini"
 global PreferencesPath = "preferences.ini"
 
 global IsPaused := false ; Is the application paused?
@@ -94,8 +94,10 @@ global InventoryY := 6 ; The Y value of the Inventory grid the user is currently
 #Persistent  ; Keep this script running until the user explicitly exits it.
 SetTimer, Startup, 750 ; The 'Init' function of my code essentially. It's at the very bottom.
 
+; Reloades the config values when F5 is pressed
 $F5::
-ReadConfig() ; Reloades the config values when F5 is pressed
+Calibrate()
+ReadConfig() 
 return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed. The '$' ensures the hotkey can't be triggered with a 'Send' command
@@ -810,8 +812,7 @@ Calibrate()
 	
 	IniRead, buffer, %ConfigurationPath%, Calibration, Calibrate
 	if(!%buffer%)
-		return ; Calibrate is false
-	
+		return ; Calibrate is false	
 	
 	MsgBox, , Calibration, Since this appears to be your first time using my program, I will be calibrating your controller for use with it.
 	MsgBox, , Instructions, To begin, I need to determine the range that your controller is able to move at.`n`nMove both the Left *and* Right analog stick straight up at the same time. Then move them both in a circle (whatever direction you feel comfortable) multiple times. Then press any button while STILL HOLDING THEM UPWARDS.
@@ -906,6 +907,10 @@ Calibrate()
 
 ReadConfig()
 {
+	; Set Preferences Path
+	IniRead, PreferencesPath, %ConfigurationPath%, Other, Preferences_Location
+	PreferencesPath = %A_WorkingDir% %PreferencesPath%
+
 	global ButtonKey := Array()
 	
 	global LTriggerKey := PassKeys("Left_Trigger")
@@ -929,11 +934,9 @@ ReadConfig()
 	
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
-	
-	IniRead, PreferencesPath, %ConfigurationPath%, Other, Preferences_Location
 
 	IniRead, ForceMoveKey, %PreferencesPath%, Buttons, Force_Move
-	
+
 	global IgnoreTarget := Array()
 	IniRead, temp, %PreferencesPath%, Buttons, Ignore_Target
 	IgnoreTarget[1] := temp
@@ -953,14 +956,14 @@ ReadConfig()
 		
 	}Until EndLoop
 	
-	IniRead, LMaxThreshold, %PreferencesPath%, Calibration, Left_Analog_Max
-	IniRead, RMaxThreshold, %PreferencesPath%, Calibration, Right_Analog_Max
+	IniRead, LMaxThreshold, %ConfigurationPath%, Calibration, Left_Analog_Max
+	IniRead, RMaxThreshold, %ConfigurationPath%, Calibration, Right_Analog_Max
 	
-	IniRead, LThumbX0, %PreferencesPath%, Calibration, Left_Analog_XZero
-	IniRead, LThumbY0, %PreferencesPath%, Calibration, Left_Analog_YZero
+	IniRead, LThumbX0, %ConfigurationPath%, Calibration, Left_Analog_XZero
+	IniRead, LThumbY0, %ConfigurationPath%, Calibration, Left_Analog_YZero
 	
-	IniRead, RThumbX0, %PreferencesPath%, Calibration, Right_Analog_XZero
-	IniRead, RThumbY0, %PreferencesPath%, Calibration, Right_Analog_YZero
+	IniRead, RThumbX0, %ConfigurationPath%, Calibration, Right_Analog_XZero
+	IniRead, RThumbY0, %ConfigurationPath%, Calibration, Right_Analog_YZero
 	
 	IniRead, ApplicationName, %PreferencesPath%, Preferences, Application_Name
 

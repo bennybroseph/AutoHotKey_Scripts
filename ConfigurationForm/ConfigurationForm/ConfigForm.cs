@@ -16,10 +16,13 @@
 
     public partial class ConfigForm : Form
     {
-        private string m_ChosenConfigPath;
+        private const string m_ConfigPath = "AutoHotkey\\config.ini";
+
+        private string m_ChosenIniPath;
 
         private TabControl m_TabControl;
-        private Size m_TabControlOffset = new Size(23, 80);
+        private Point m_TabControlPoint = new Point(5, 30);
+        private Size m_TabControlOffset = new Size(23, 110);
 
         private IniData m_IniData;
 
@@ -58,10 +61,10 @@
                 AddOwnedForm(newForm);
                 newForm.ShowDialog();
 
-                m_ChosenConfigPath = newForm.chosenFile;
+                m_ChosenIniPath = newForm.chosenFile;
             }
             else if (filePaths.Length == 1)
-                m_ChosenConfigPath = filePaths.FirstOrDefault();
+                m_ChosenIniPath = filePaths.FirstOrDefault();
             else
             {
                 var message =
@@ -77,10 +80,10 @@
                 throw new Exception(message);
             }
 
-            if (m_ChosenConfigPath == null || !File.Exists(m_ChosenConfigPath))
+            if (m_ChosenIniPath != null && !File.Exists(m_ChosenIniPath))
             {
                 var message =
-                    "The selected file \n\n\"" + m_ChosenConfigPath + "\"\n\n does not exist or is invalid";
+                    "The selected file \n\n\"" + m_ChosenIniPath + "\"\n\n does not exist or is invalid";
                 MessageBox.Show(
                     message,
                     "Error",
@@ -94,14 +97,17 @@
 
         private void AddComponents()
         {
+            if (m_ChosenIniPath == null)
+                return;
+
             SuspendLayout();
 
-            m_IniData = IniParserHelper.ParseIni(m_ChosenConfigPath);
+            m_IniData = IniParserHelper.ParseIni(m_ChosenIniPath);
 
             m_TabControl =
                 new TabControl
                 {
-                    Location = new Point(5, 5),
+                    Location = m_TabControlPoint,
                     Size =
                         new Size(
                             Size.Width - m_TabControlOffset.Width,
@@ -114,6 +120,28 @@
 
             ResumeLayout(true);
             Refresh();
+        }
+
+        private void SetInConfig()
+        {
+            var data = IniParserHelper.ParseIni(m_ConfigPath);
+            foreach (var sectionData in data.Sections)
+            {
+                foreach (var sectionDataKey in sectionData.Keys)
+                {
+                    if (sectionDataKey.KeyName == "Preferences_Location")
+                    {
+                        var fileUri = new Uri(m_ChosenIniPath);
+                        var referenceUri = new Uri(Directory.GetCurrentDirectory() + "\\AutoHotkey\\");
+
+                        var relative =
+                            "\\" + referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
+                        sectionDataKey.Value = relative;
+                    }
+                }
+            }
+
+            IniParserHelper.SaveIni(m_ConfigPath, data);
         }
 
         protected override void OnResize(EventArgs e)
@@ -146,7 +174,7 @@
                 e.Cancel = true;
 
             if (result == DialogResult.Yes)
-                IniParserHelper.SaveIni(m_ChosenConfigPath, m_IniData);
+                IniParserHelper.SaveIni(m_ChosenIniPath, m_IniData);
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -155,7 +183,16 @@
             if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
                 return;
 
-            IniParserHelper.SaveIni(m_ChosenConfigPath, m_IniData);
+            var result =
+                MessageBox.Show(
+                    "Would you like to also set this .ini as the one used by the application?",
+                    "Set in Config",
+                    MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+                SetInConfig();
+
+            IniParserHelper.SaveIni(m_ChosenIniPath, m_IniData);
         }
 
         private void cancelButton_Click(object sender, EventArgs e)
@@ -317,6 +354,7 @@
                                 {
                                     Text = "Variable",
                                     AspectName = "KeyName",
+                                    HeaderForeColor = Color.DodgerBlue,
                                     Width = 200,
                                     FillsFreeSpace = true,
                                     IsEditable = false,
@@ -325,6 +363,7 @@
                                 {
                                     Text = "Value",
                                     AspectName = "Value",
+                                    HeaderForeColor = Color.DodgerBlue,
                                     Width = 250,
                                     IsEditable = true,
                                     AutoCompleteEditor = false,
@@ -334,7 +373,6 @@
                             ShowGroups = false,
                         };
 
-                    previousListView.FormatCell += HandleFormatCell;
                     previousListView.CellEditStarting += HandleCellEditStarting;
                     previousListView.CellEditFinishing += HandleCellEditFinishing;
 
@@ -351,25 +389,6 @@
                 listView.Height = 28 + listView.Items.Count * 17;
         }
 
-        private void HandleCellEditFinishing(object o, CellEditEventArgs cellEditEventArgs)
-        {
-            if (bool.TryParse(cellEditEventArgs.NewValue.ToString(), out var boolValue))
-                cellEditEventArgs.NewValue = cellEditEventArgs.NewValue.ToString().ToLower();
-            else
-                cellEditEventArgs.NewValue = cellEditEventArgs.NewValue.ToString();
-        }
-
-        private void HandleFormatCell(object sender, FormatCellEventArgs formatCellEventArgs)
-        {
-            //var stringValue = formatCellEventArgs.CellValue as string;
-            //if (stringValue == null)
-            //    return;
-            //if (bool.TryParse(stringValue, out var boolValue))
-            //{
-            //    formatCellEventArgs.SubItem.Text
-            //}
-        }
-        
         private void HandleCellEditStarting(object sender, CellEditEventArgs cellEditEventArgs)
         {
             var stringValue = cellEditEventArgs.Value as string;
@@ -410,6 +429,13 @@
 
                 cellEditEventArgs.Control = newTextBox;
             }
+        }
+        private void HandleCellEditFinishing(object o, CellEditEventArgs cellEditEventArgs)
+        {
+            if (bool.TryParse(cellEditEventArgs.NewValue.ToString(), out var boolValue))
+                cellEditEventArgs.NewValue = cellEditEventArgs.NewValue.ToString().ToLower();
+            else
+                cellEditEventArgs.NewValue = cellEditEventArgs.NewValue.ToString();
         }
     }
 }
