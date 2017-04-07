@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Windows.Forms;
     using System.IO;
+    using System.Text.RegularExpressions;
 
     using BrightIdeasSoftware;
 
@@ -224,6 +225,9 @@
 
     public class MyTableLayoutPanel : TableLayoutPanel
     {
+        const string REGEX_URL =
+        @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)";
+
         private SectionData m_SectionData;
 
         public MyTableLayoutPanel(SectionData sectionData)
@@ -259,15 +263,38 @@
                     RowCount++;
 
                     totalComment = totalComment.Trim(' ', '\n');
-                    previousCommentLabel =
-                        new Label
+
+                    var matches = Regex.Matches(totalComment, REGEX_URL);
+                    if (matches.Count > 0)
+                    {
+                        var linkLabel = new LinkLabel
                         {
                             Text = totalComment,
                             Dock = DockStyle.Fill,
                             AutoSize = true,
                             ForeColor = Color.DarkGreen,
                         };
+                        foreach (Match match in matches)
+                            linkLabel.Links.Add(match.Index, match.Length, match.Value);
+
+                        linkLabel.LinkClicked +=
+                            (sender, args) => Process.Start(args.Link.LinkData.ToString());
+
+                        previousCommentLabel = linkLabel;
+                    }
+                    else
+                    {
+                        previousCommentLabel =
+                            new Label
+                            {
+                                Text = totalComment,
+                                Dock = DockStyle.Fill,
+                                AutoSize = true,
+                                ForeColor = Color.DarkGreen,
+                            };
+                    }
                     Controls.Add(previousCommentLabel, 0, RowCount - 1);
+
                 }
 
                 if (previousListView == null || previousCommentLabel != null)
@@ -323,6 +350,7 @@
             foreach (var listView in totalListViews)
                 listView.Height = 28 + listView.Items.Count * 17;
         }
+
         private void HandleCellEditFinishing(object o, CellEditEventArgs cellEditEventArgs)
         {
             if (bool.TryParse(cellEditEventArgs.NewValue.ToString(), out var boolValue))
@@ -341,7 +369,7 @@
             //    formatCellEventArgs.SubItem.Text
             //}
         }
-
+        
         private void HandleCellEditStarting(object sender, CellEditEventArgs cellEditEventArgs)
         {
             var stringValue = cellEditEventArgs.Value as string;
@@ -366,6 +394,21 @@
                 };
 
                 cellEditEventArgs.Control = floatCellEditor;
+            }
+            else
+            {
+                var newTextBox = new TextBox
+                {
+                    Bounds =
+                        new Rectangle(
+                            cellEditEventArgs.CellBounds.Location,
+                            new Size(
+                                cellEditEventArgs.CellBounds.Width,
+                                cellEditEventArgs.CellBounds.Height)),
+                    Text = cellEditEventArgs.Control.Text,
+                };
+
+                cellEditEventArgs.Control = newTextBox;
             }
         }
     }

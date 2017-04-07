@@ -89,10 +89,7 @@
     <None Include="AutoHotkey\preferences.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Configurations\config 1.ini">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Configurations\config 2.ini">
+    <None Include="Configurations\preferences.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Configurations\test.ini">
