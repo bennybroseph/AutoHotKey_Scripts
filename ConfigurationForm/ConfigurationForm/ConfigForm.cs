@@ -8,7 +8,6 @@
     using System.Linq;
     using System.Windows.Forms;
     using System.IO;
-    using System.Windows.Forms.VisualStyles;
 
     using BrightIdeasSoftware;
 
@@ -168,17 +167,6 @@
             if (result == DialogResult.Yes)
                 Application.Exit();
         }
-
-        //private class ScrollableTabPage : TabPage
-        //{
-        //    public ScrollableControl scrollableControl { get; private set; }
-
-        //    public ScrollableTabPage()
-        //    {
-        //        scrollableControl = new ScrollableControl { Size = Size };
-        //        Controls.Add(scrollableControl);
-        //    }
-        //}
     }
 
     public class MyTabPage : TabPage
