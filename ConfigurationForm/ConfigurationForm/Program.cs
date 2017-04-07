@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace ConfigurationForm
+﻿namespace ConfigurationForm
 {
+    using System;
+#if !DEBUG
     using System.Diagnostics;
-    using System.Runtime.InteropServices;
+    using System.IO;
+#endif
+    using System.Windows.Forms;
 
     internal static class Program
     {
@@ -30,6 +28,10 @@ namespace ConfigurationForm
 #if !DEBUG
                 }
                 catch (Exception e) { }
+
+            var ahkPath = 
+                Directory.GetCurrentDirectory() + "\\AutoHotkey\\Joystick to Keyboard Emulation.exe";
+            Process.Start(ahkPath);
 #endif
         }
     }

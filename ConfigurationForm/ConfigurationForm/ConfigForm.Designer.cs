@@ -87,6 +87,7 @@
             this.openIniButton.TabIndex = 2;
             this.openIniButton.Text = "Open INI";
             this.openIniButton.UseVisualStyleBackColor = true;
+            this.openIniButton.Click += new System.EventHandler(this.openIniButton_Click);
             // 
             // ConfigForm
             // 

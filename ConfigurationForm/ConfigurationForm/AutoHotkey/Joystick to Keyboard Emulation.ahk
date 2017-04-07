@@ -12,6 +12,9 @@ global PI := 3.141592653589793 ; Define PI for easier use
 
 TThreshold := 64 ; for trigger deadzones
 
+global ConfigurationPath = "configuration.ini"
+global PreferencesPath = "preferences.ini"
+
 global IsPaused := false ; Is the application paused?
 
 global ForceMoveKey
@@ -805,7 +808,7 @@ Calibrate()
 	
 	local MaxL := 32767, MaxR := 32767, Button, buffer
 	
-	IniRead, buffer, config.ini, Calibration, Calibrate
+	IniRead, buffer, %ConfigurationPath%, Calibration, Calibrate
 	if(!%buffer%)
 		return ; Calibrate is false
 	
@@ -887,18 +890,17 @@ Calibrate()
 	RThumbX0 := RThumbX
 	RThumbY0 := RThumbY
 	
-	MsgBox, , Calibration Complete, That concludes the calibration. `n`nIf for any reason you think these values  are incorrect, you can either edit them yourself (not recommended) or change the 'Calibrate = true' in the config file to 'true' to run this again.
 	
-	IniWrite, false, config.ini, Calibration, Calibrate
+	IniWrite, false, %ConfigurationPath%, Calibration, Calibrate
 	
-	IniWrite, %MaxL%, config.ini, Calibration, Left_Analog_Max
-	IniWrite, %MaxR%, config.ini, Calibration, Right_Analog_Max
+	IniWrite, %MaxL%, %ConfigurationPath%, Calibration, Left_Analog_Max
+	IniWrite, %MaxR%, %ConfigurationPath%, Calibration, Right_Analog_Max
 	
-	IniWrite, %LThumbX0%, config.ini, Calibration, Left_Analog_XZero
-	IniWrite, %LThumbY0%, config.ini, Calibration, Left_Analog_YZero
+	IniWrite, %LThumbX0%, %ConfigurationPath%, Calibration, Left_Analog_XZero
+	IniWrite, %LThumbY0%, %ConfigurationPath%, Calibration, Left_Analog_YZero
 	
-	IniWrite, %RThumbX0%, config.ini, Calibration, Right_Analog_XZero
-	IniWrite, %RThumbY0%, config.ini, Calibration, Right_Analog_YZero
+	IniWrite, %RThumbX0%, %ConfigurationPath%, Calibration, Right_Analog_XZero
+	IniWrite, %RThumbY0%, %ConfigurationPath%, Calibration, Right_Analog_YZero
 }
 
 ReadConfig()
@@ -927,10 +929,12 @@ ReadConfig()
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
 	
-	IniRead, ForceMoveKey, config.ini, Buttons, Force_Move
+	IniRead, PreferencesPath, %ConfigurationPath%, Other, Preferences_Location
+
+	IniRead, ForceMoveKey, %PreferencesPath%, Buttons, Force_Move
 	
 	global IgnoreTarget := Array()
-	IniRead, temp, config.ini, Buttons, Ignore_Target
+	IniRead, temp, %PreferencesPath%, Buttons, Ignore_Target
 	IgnoreTarget[1] := temp
 	
 	EndLoop := false
@@ -948,52 +952,52 @@ ReadConfig()
 		
 	}Until EndLoop
 	
-	IniRead, LMaxThreshold, config.ini, Calibration, Left_Analog_Max
-	IniRead, RMaxThreshold, config.ini, Calibration, Right_Analog_Max
+	IniRead, LMaxThreshold, %PreferencesPath%, Calibration, Left_Analog_Max
+	IniRead, RMaxThreshold, %PreferencesPath%, Calibration, Right_Analog_Max
 	
-	IniRead, LThumbX0, config.ini, Calibration, Left_Analog_XZero
-	IniRead, LThumbY0, config.ini, Calibration, Left_Analog_YZero
+	IniRead, LThumbX0, %PreferencesPath%, Calibration, Left_Analog_XZero
+	IniRead, LThumbY0, %PreferencesPath%, Calibration, Left_Analog_YZero
 	
-	IniRead, RThumbX0, config.ini, Calibration, Right_Analog_XZero
-	IniRead, RThumbY0, config.ini, Calibration, Right_Analog_YZero
+	IniRead, RThumbX0, %PreferencesPath%, Calibration, Right_Analog_XZero
+	IniRead, RThumbY0, %PreferencesPath%, Calibration, Right_Analog_YZero
 	
-	IniRead, VibeStrength, config.ini, Preferences, Vibration_Strength
-	IniRead, VibeDuration, config.ini, Preferences, Vibration_Duration
-	IniRead, Delay, config.ini, Preferences, Hold_Delay
-	
-	IniRead, LMaxRadiusX, config.ini, Preferences, Left_Analog_XRadius
-	IniRead, LMaxRadiusY, config.ini, Preferences, Left_Analog_YRadius
-	
-	IniRead, LThreshold, config.ini, Preferences, Left_Analog_Deadzone
-	
-	IniRead, RMaxRadiusX, config.ini, Preferences, Right_Analog_XRadius
-	IniRead, RMaxRadiusY, config.ini, Preferences, Right_Analog_YRadius
-	
-	IniRead, RThreshold, config.ini, Preferences, Right_Analog_Deadzone
-	
-	IniRead, ApplicationName, config.ini, Preferences, Application_Name
+	IniRead, ApplicationName, %PreferencesPath%, Preferences, Application_Name
 
-	IniRead, CenterOffsetX, config.ini, Preferences, Center_XOffset
-	IniRead, CenterOffsetY, config.ini, Preferences, Center_YOffset
-	
-	IniRead, LRadiusOffsetX, config.ini, Preferences, Left_Analog_Center_XOffset
-	IniRead, LRadiusOffsetY, config.ini, Preferences, Left_Analog_Center_YOffset
-	
-	IniRead, RRadiusOffsetX, config.ini, Preferences, Right_Analog_Center_XOffset
-	IniRead, RRadiusOffsetY, config.ini, Preferences, Right_Analog_Center_YOffset
-	
-	IniRead, ShowCursorModeNotification, config.ini, Preferences, Show_Cursor_Mode_Notification
-	ShowCursorModeNotification := ShowCursorModeNotification = "true" ? true : false
+	IniRead, ShowCursorModeNotification, %PreferencesPath%, Preferences, Show_Cursor_Mode_Notification
+	ShowCursorModeNotification := %ShowCursorModeNotification%
 
-	IniRead, ShowInventoryModeNotification, config.ini, Preferences, Show_Inventory_Mode_Notification
-	ShowInventoryModeNotification := ShowInventoryModeNotification = "true" ? true : false
+	IniRead, ShowInventoryModeNotification, %PreferencesPath%, Preferences, Show_Inventory_Mode_Notification
+	ShowInventoryModeNotification := %ShowInventoryModeNotification%
 
-	IniRead, ShowPausedNotification, config.ini, Preferences, Show_Paused_Notification
-	ShowPausedNotification := ShowPausedNotification = "true" ? true : false
+	IniRead, ShowPausedNotification, %PreferencesPath%, Preferences, Show_Paused_Notification
+	ShowPausedNotification := %ShowPausedNotification%
+
+	IniRead, VibeStrength, %PreferencesPath%, Preferences, Vibration_Strength
+	IniRead, VibeDuration, %PreferencesPath%, Preferences, Vibration_Duration
+	IniRead, Delay, %PreferencesPath%, Preferences, Hold_Delay
+	
+	IniRead, LMaxRadiusX, %PreferencesPath%, Analog Stick, Left_Analog_XRadius
+	IniRead, LMaxRadiusY, %PreferencesPath%, Analog Stick, Left_Analog_YRadius
+	
+	IniRead, LThreshold, %PreferencesPath%, Analog Stick, Left_Analog_Deadzone
+	
+	IniRead, RMaxRadiusX, %PreferencesPath%, Analog Stick, Right_Analog_XRadius
+	IniRead, RMaxRadiusY, %PreferencesPath%, Analog Stick, Right_Analog_YRadius
+	
+	IniRead, RThreshold, %PreferencesPath%, Analog Stick, Right_Analog_Deadzone
+	
+	IniRead, CenterOffsetX, %PreferencesPath%, Analog Stick, Center_XOffset
+	IniRead, CenterOffsetY, %PreferencesPath%, Analog Stick, Center_YOffset
+	
+	IniRead, LRadiusOffsetX, %PreferencesPath%, Analog Stick, Left_Analog_Center_XOffset
+	IniRead, LRadiusOffsetY, %PreferencesPath%, Analog Stick, Left_Analog_Center_YOffset
+	
+	IniRead, RRadiusOffsetX, %PreferencesPath%, Analog Stick, Right_Analog_Center_XOffset
+	IniRead, RRadiusOffsetY, %PreferencesPath%, Analog Stick, Right_Analog_Center_YOffset	
 }
 PassKeys(ButtonName)
 {
-	IniRead, Key, config.ini, Buttons, %ButtonName%
+	IniRead, Key, %PreferencesPath%, Buttons, %ButtonName%
 	KeyBinding := Array()
 	
 	if Key = ERROR

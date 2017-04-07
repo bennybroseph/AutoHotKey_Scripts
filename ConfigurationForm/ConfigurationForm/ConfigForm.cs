@@ -37,7 +37,7 @@
             var configDirectory = Directory.GetCurrentDirectory() + "\\Configurations";
             if (!Directory.Exists(configDirectory))
             {
-                var message = 
+                var message =
                     "The folder \"Configurations\" was not found in " + Directory.GetCurrentDirectory();
                 MessageBox.Show(
                     message,
@@ -93,6 +93,8 @@
 
         private void AddComponents()
         {
+            SuspendLayout();
+
             m_IniData = IniParserHelper.ParseIni(m_ChosenConfigPath);
 
             m_TabControl =
@@ -108,6 +110,9 @@
 
             foreach (var sectionData in m_IniData.Sections)
                 m_TabControl.TabPages.Add(new MyTabPage(sectionData));
+
+            ResumeLayout(true);
+            Refresh();
         }
 
         protected override void OnResize(EventArgs e)
@@ -166,6 +171,18 @@
 
             if (result == DialogResult.Yes)
                 Application.Exit();
+        }
+
+        private void openIniButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            Controls.Remove(m_TabControl);
+
+            ChooseIniPath();
+            AddComponents();
         }
     }
 
@@ -227,8 +244,6 @@
 
         protected override void InitLayout()
         {
-            SuspendLayout();
-
             var totalListViews = new List<FastObjectListView>();
 
             FastObjectListView previousListView = null;
@@ -266,8 +281,9 @@
                             Dock = DockStyle.Fill,
                             GridLines = true,
                             RowHeight = 0,
-                            BackColor = Color.White,
-                            AlternateRowBackColor = Color.Gray,
+                            BackColor = Color.WhiteSmoke,
+                            UseAlternatingBackColors = true,
+                            AlternateRowBackColor = Color.LightGray,
                             Columns =
                             {
                                 new OLVColumn
@@ -284,11 +300,17 @@
                                     AspectName = "Value",
                                     Width = 250,
                                     IsEditable = true,
+                                    AutoCompleteEditor = false,
                                 },
                             },
                             CellEditActivation = ObjectListView.CellEditActivateMode.DoubleClick,
                             ShowGroups = false,
                         };
+
+                    previousListView.FormatCell += HandleFormatCell;
+                    previousListView.CellEditStarting += HandleCellEditStarting;
+                    previousListView.CellEditFinishing += HandleCellEditFinishing;
+
                     previousListView.MouseWheel +=
                         (sender, args) => (Parent as MyTabPage)?.OnMouseWheel(args);
                     totalListViews.Add(previousListView);
@@ -300,8 +322,51 @@
 
             foreach (var listView in totalListViews)
                 listView.Height = 28 + listView.Items.Count * 17;
+        }
+        private void HandleCellEditFinishing(object o, CellEditEventArgs cellEditEventArgs)
+        {
+            if (bool.TryParse(cellEditEventArgs.NewValue.ToString(), out var boolValue))
+                cellEditEventArgs.NewValue = cellEditEventArgs.NewValue.ToString().ToLower();
+            else
+                cellEditEventArgs.NewValue = cellEditEventArgs.NewValue.ToString();
+        }
 
-            ResumeLayout(true);
+        private void HandleFormatCell(object sender, FormatCellEventArgs formatCellEventArgs)
+        {
+            //var stringValue = formatCellEventArgs.CellValue as string;
+            //if (stringValue == null)
+            //    return;
+            //if (bool.TryParse(stringValue, out var boolValue))
+            //{
+            //    formatCellEventArgs.SubItem.Text
+            //}
+        }
+
+        private void HandleCellEditStarting(object sender, CellEditEventArgs cellEditEventArgs)
+        {
+            var stringValue = cellEditEventArgs.Value as string;
+            if (stringValue == null)
+                return;
+
+            if (bool.TryParse(stringValue, out var boolValue))
+            {
+                var boolCellEditor = new BooleanCellEditor
+                {
+                    Bounds = cellEditEventArgs.CellBounds,
+                    ValueMember = boolValue.ToString(),
+                };
+                cellEditEventArgs.Control = boolCellEditor;
+            }
+            else if (float.TryParse(stringValue, out var floatValue))
+            {
+                var floatCellEditor = new FloatCellEditor
+                {
+                    Bounds = cellEditEventArgs.CellBounds,
+                    Value = floatValue,
+                };
+
+                cellEditEventArgs.Control = floatCellEditor;
+            }
         }
     }
 }
