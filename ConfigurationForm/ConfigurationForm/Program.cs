@@ -28,10 +28,6 @@
 #if !DEBUG
                 }
                 catch (Exception e) { }
-
-            var ahkPath = 
-                Directory.GetCurrentDirectory() + "\\AutoHotkey\\Joystick to Keyboard Emulation.exe";
-            Process.Start(ahkPath);
 #endif
         }
     }

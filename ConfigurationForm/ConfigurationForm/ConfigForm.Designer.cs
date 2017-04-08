@@ -40,6 +40,7 @@
             this.profileComboBox = new System.Windows.Forms.ComboBox();
             this.setProfileButton = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.launchButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.iniDataBindingSource)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -70,13 +71,15 @@
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.BackColor = System.Drawing.Color.Transparent;
-            this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tableLayoutPanel1.Controls.Add(this.cancelButton, 2, 0);
+            this.tableLayoutPanel1.ColumnCount = 4;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66333F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66333F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33667F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33667F));
             this.tableLayoutPanel1.Controls.Add(this.saveButton, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.openIniButton, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.cancelButton, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.launchButton, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.openIniButton, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 452);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -88,7 +91,7 @@
             // openIniButton
             // 
             this.openIniButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.openIniButton.Location = new System.Drawing.Point(222, 5);
+            this.openIniButton.Location = new System.Drawing.Point(221, 5);
             this.openIniButton.Name = "openIniButton";
             this.openIniButton.Size = new System.Drawing.Size(75, 23);
             this.openIniButton.TabIndex = 2;
@@ -157,6 +160,17 @@
             this.setProfileButton.UseVisualStyleBackColor = true;
             this.setProfileButton.Click += new System.EventHandler(this.setProfileButton_Click);
             // 
+            // launchButton
+            // 
+            this.launchButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.launchButton.Location = new System.Drawing.Point(91, 5);
+            this.launchButton.Name = "launchButton";
+            this.launchButton.Size = new System.Drawing.Size(75, 23);
+            this.launchButton.TabIndex = 4;
+            this.launchButton.Text = "Launch";
+            this.launchButton.UseVisualStyleBackColor = true;
+            this.launchButton.Click += new System.EventHandler(this.launchButton_Click);
+            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -186,6 +200,7 @@
         private System.Windows.Forms.ComboBox profileComboBox;
         private System.Windows.Forms.Button setProfileButton;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
+        private System.Windows.Forms.Button launchButton;
     }
 }
 

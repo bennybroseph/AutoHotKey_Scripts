@@ -317,6 +317,16 @@
 
             SetInConfig();
         }
+        private void launchButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            var ahkPath =
+                Directory.GetCurrentDirectory() + "\\AutoHotkey\\Joystick to Keyboard Emulation.exe";
+            Process.Start(ahkPath);
+        }
 
         private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
