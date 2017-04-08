@@ -910,7 +910,7 @@ ReadConfig()
 	; Set Profile Path
 	IniRead, ProfilePath, %ConfigurationPath%, Other, Profile_Location
 	ProfilePath = %A_WorkingDir% %ProfilePath%
-
+	
 	global ButtonKey := Array()
 	
 	global LTriggerKey := PassKeys("Left_Trigger")
@@ -1049,9 +1049,6 @@ SetTimer, VibeOff, Off
 return
 
 Startup:
-IfWinExist, Diablo III
-	WinActivate ; Activate Diablo III Window
-	
 global AButton := 1
 global BButton := 2
 global XButton := 3
@@ -1201,6 +1198,10 @@ InventoryGridY[10,1] := 232.5
 ;1785 209 47 47 
 Calibrate()
 ReadConfig()
+
+IfWinExist, %Application_Name%
+	WinActivate ; Activate Application Window if it exists
+
 Gosub TriggerState
 	
 MouseGetPos, MouseX, MouseY

@@ -1,9 +1,6 @@
 ﻿namespace ConfigurationForm
 {
-    using System;
-    using System.Linq;
     using System.Windows.Forms;
-    using System.IO;
 
     public partial class InputDialogueForm : Form
     {

@@ -26,7 +26,7 @@
 
         private TabControl m_TabControl;
         private Point m_TabControlPoint = new Point(5, 30);
-        private Size m_TabControlOffset = new Size(23, 110);
+        private Size m_TabControlOffset = new Size(23, 115);
 
         private IniData m_IniData;
 
@@ -106,11 +106,11 @@
 
         private void AddComponents()
         {
-            if (m_ChosenIniPath == null)
-                return;
-
             if (m_TabControl != null)
                 Controls.Remove(m_TabControl);
+
+            if (m_ChosenIniPath == null)
+                return;
 
             SuspendLayout();
 
@@ -146,7 +146,7 @@
             {
                 foreach (var sectionDataKey in sectionData.Keys)
                 {
-                    if (sectionDataKey.KeyName == "Preferences_Location")
+                    if (sectionDataKey.KeyName == "Profile_Location")
                     {
                         var fileUri = new Uri(m_ChosenIniPath);
                         var referenceUri = new Uri(Directory.GetCurrentDirectory() + "\\AutoHotkey\\");
@@ -159,10 +159,14 @@
                     }
                 }
             }
+            
+            if (!foundKey)
+                return;
 
             IniParserHelper.SaveIni(CONFIG_PATH, data);
-            if (foundKey)
-                MessageBox.Show("Profile Set in " + CONFIG_PATH, "Profile Set", MessageBoxButtons.OK);
+
+            var newToolTip = new ToolTip();
+            newToolTip.Show("Profile Set", this, 10, Size.Height - 55, 3000);
         }
 
         protected override void OnResize(EventArgs e)
@@ -215,6 +219,9 @@
             }
 
             IniParserHelper.SaveIni(m_ChosenIniPath, m_IniData);
+
+            var newToolTip = new ToolTip();
+            newToolTip.Show("INI Saved", this, 10, Size.Height - 55, 3000);
         }
         private void cancelButton_Click(object sender, EventArgs e)
         {
@@ -259,7 +266,7 @@
             var inputDialogueForm = new InputDialogueForm("What will you name the new file?");
             inputDialogueForm.ShowDialog(this);
 
-            if (inputDialogueForm.dialogResult != DialogResult.OK)
+            if (inputDialogueForm.dialogResult != DialogResult.OK || inputDialogueForm.text == null)
                 return;
 
             var newFilePath = m_ProfilesDirectory + inputDialogueForm.text + ".ini";
@@ -290,7 +297,11 @@
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
 
+            if (result != DialogResult.Yes)
+                return;
 
+            File.Copy(m_DefaultProfilePath, m_ChosenIniPath, true);
+            AddComponents();
         }
         private void setProfileButton_Click(object sender, EventArgs e)
         {
