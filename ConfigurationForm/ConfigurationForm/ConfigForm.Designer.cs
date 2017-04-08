@@ -37,6 +37,9 @@
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.newIniButton = new System.Windows.Forms.Button();
             this.defaultButton = new System.Windows.Forms.Button();
+            this.profileComboBox = new System.Windows.Forms.ComboBox();
+            this.setProfileButton = new System.Windows.Forms.Button();
+            this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.iniDataBindingSource)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -95,11 +98,15 @@
             // 
             // tableLayoutPanel2
             // 
-            this.tableLayoutPanel2.ColumnCount = 2;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel2.ColumnCount = 4;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel2.Controls.Add(this.newIniButton, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this.defaultButton, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.defaultButton, 3, 0);
+            this.tableLayoutPanel2.Controls.Add(this.profileComboBox, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this.setProfileButton, 2, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
@@ -116,6 +123,7 @@
             this.newIniButton.TabIndex = 0;
             this.newIniButton.Text = "New INI";
             this.newIniButton.UseVisualStyleBackColor = true;
+            this.newIniButton.Click += new System.EventHandler(this.newIniButton_Click);
             // 
             // defaultButton
             // 
@@ -126,6 +134,28 @@
             this.defaultButton.TabIndex = 1;
             this.defaultButton.Text = "Default";
             this.defaultButton.UseVisualStyleBackColor = true;
+            this.defaultButton.Click += new System.EventHandler(this.defaultButton_Click);
+            // 
+            // profileComboBox
+            // 
+            this.profileComboBox.Dock = System.Windows.Forms.DockStyle.Top;
+            this.profileComboBox.FormattingEnabled = true;
+            this.profileComboBox.Location = new System.Drawing.Point(107, 3);
+            this.profileComboBox.Name = "profileComboBox";
+            this.profileComboBox.Size = new System.Drawing.Size(202, 21);
+            this.profileComboBox.TabIndex = 2;
+            this.profileComboBox.Text = "(Select INI)";
+            this.profileComboBox.SelectedIndexChanged += new System.EventHandler(this.profileComboBox_SelectedIndexChanged);
+            // 
+            // setProfileButton
+            // 
+            this.setProfileButton.Location = new System.Drawing.Point(315, 3);
+            this.setProfileButton.Name = "setProfileButton";
+            this.setProfileButton.Size = new System.Drawing.Size(75, 23);
+            this.setProfileButton.TabIndex = 3;
+            this.setProfileButton.Text = "Set Profile";
+            this.setProfileButton.UseVisualStyleBackColor = true;
+            this.setProfileButton.Click += new System.EventHandler(this.setProfileButton_Click);
             // 
             // ConfigForm
             // 
@@ -135,7 +165,7 @@
             this.Controls.Add(this.tableLayoutPanel2);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "ConfigForm";
-            this.Text = "Config";
+            this.Text = "Profile Configuration";
             ((System.ComponentModel.ISupportInitialize)(this.iniDataBindingSource)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
@@ -153,6 +183,9 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Button newIniButton;
         private System.Windows.Forms.Button defaultButton;
+        private System.Windows.Forms.ComboBox profileComboBox;
+        private System.Windows.Forms.Button setProfileButton;
+        private System.Windows.Forms.OpenFileDialog openFileDialog;
     }
 }
 

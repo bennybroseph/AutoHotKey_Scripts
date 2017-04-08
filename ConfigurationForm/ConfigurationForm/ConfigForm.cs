@@ -16,7 +16,11 @@
 
     public partial class ConfigForm : Form
     {
-        private const string m_ConfigPath = "AutoHotkey\\config.ini";
+        private const string CONFIG_PATH = "AutoHotkey\\config.ini";
+
+        private string m_DefaultsPath = Directory.GetCurrentDirectory() + "\\Profiles\\Defaults\\";
+        private string m_DefaultProfilePath;
+        private string m_ProfilesDirectory = Directory.GetCurrentDirectory() + "\\Profiles\\";
 
         private string m_ChosenIniPath;
 
@@ -32,17 +36,20 @@
 
             CenterToScreen();
 
-            ChooseIniPath();
-            AddComponents();
+            PopulateComboBox();
+
+            openFileDialog.InitialDirectory = m_ProfilesDirectory;
+            openFileDialog.Filter = "INI Files|*.ini";
+
+            m_DefaultProfilePath = m_DefaultsPath + "profile.ini";
         }
 
-        private void ChooseIniPath()
+        private void PopulateComboBox()
         {
-            var configDirectory = Directory.GetCurrentDirectory() + "\\Configurations";
-            if (!Directory.Exists(configDirectory))
+            if (!Directory.Exists(m_ProfilesDirectory))
             {
                 var message =
-                    "The folder \"Configurations\" was not found in " + Directory.GetCurrentDirectory();
+                    "The folder \"Profiles\" was not found in " + Directory.GetCurrentDirectory();
                 MessageBox.Show(
                     message,
                     "Error",
@@ -53,22 +60,13 @@
                 throw new Exception(message);
             }
 
-            var filePaths = Directory.GetFiles(configDirectory);
+            var filePaths = Directory.GetFiles(m_ProfilesDirectory);
 
-            if (filePaths.Length > 1)
-            {
-                var newForm = new ChooseConfigForm(configDirectory);
-                AddOwnedForm(newForm);
-                newForm.ShowDialog();
 
-                m_ChosenIniPath = newForm.chosenFile;
-            }
-            else if (filePaths.Length == 1)
-                m_ChosenIniPath = filePaths.FirstOrDefault();
-            else
+            if (!filePaths.Any())
             {
                 var message =
-                    "The folder:\n\n\"" + configDirectory + "\"\n\nhas no valid configuration files " +
+                    "The folder:\n\n\"" + m_ProfilesDirectory + "\"\n\nhas no valid configuration files " +
                     "(files ending in \".ini\")";
                 MessageBox.Show(
                     message,
@@ -80,25 +78,39 @@
                 throw new Exception(message);
             }
 
-            if (m_ChosenIniPath != null && !File.Exists(m_ChosenIniPath))
+            var iniFiles =
+                Directory.GetFiles(m_ProfilesDirectory).Where(file => file.EndsWith(".ini")).ToArray();
+            if (!iniFiles.Any())
             {
-                var message =
-                    "The selected file \n\n\"" + m_ChosenIniPath + "\"\n\n does not exist or is invalid";
                 MessageBox.Show(
-                    message,
+                    "There are no configuration files (files ending in \".ini\") in\n\n\"" +
+                    m_ProfilesDirectory + "\"",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
-                Application.Exit();
-                throw new Exception(message);
+                Close();
+                return;
             }
+
+            var fileDisplayNames =
+                iniFiles.Select(
+                        file => file.Substring(
+                            file.IndexOf(
+                                m_ProfilesDirectory, StringComparison.Ordinal) + m_ProfilesDirectory.Length)).
+                    Cast<object>().ToArray();
+
+            profileComboBox.Items.Clear();
+            profileComboBox.Items.AddRange(fileDisplayNames);
         }
 
         private void AddComponents()
         {
             if (m_ChosenIniPath == null)
                 return;
+
+            if (m_TabControl != null)
+                Controls.Remove(m_TabControl);
 
             SuspendLayout();
 
@@ -124,7 +136,12 @@
 
         private void SetInConfig()
         {
-            var data = IniParserHelper.ParseIni(m_ConfigPath);
+            if (m_ChosenIniPath == null)
+                return;
+
+            var foundKey = false;
+
+            var data = IniParserHelper.ParseIni(CONFIG_PATH);
             foreach (var sectionData in data.Sections)
             {
                 foreach (var sectionDataKey in sectionData.Keys)
@@ -137,11 +154,15 @@
                         var relative =
                             "\\" + referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
                         sectionDataKey.Value = relative;
+
+                        foundKey = true;
                     }
                 }
             }
 
-            IniParserHelper.SaveIni(m_ConfigPath, data);
+            IniParserHelper.SaveIni(CONFIG_PATH, data);
+            if (foundKey)
+                MessageBox.Show("Profile Set in " + CONFIG_PATH, "Profile Set", MessageBoxButtons.OK);
         }
 
         protected override void OnResize(EventArgs e)
@@ -162,13 +183,17 @@
         {
             base.OnClosing(e);
 
+            if (m_ChosenIniPath == null)
+                return;
+
             IniParserHelper.PrintIniData(m_IniData);
 
             var result =
                 MessageBox.Show(
                     "Would you like to save first?",
                     "Quit",
-                    MessageBoxButtons.YesNoCancel);
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question);
 
             if (result == DialogResult.Cancel)
                 e.Cancel = true;
@@ -183,43 +208,122 @@
             if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
                 return;
 
-            var result =
-                MessageBox.Show(
-                    "Would you like to also set this .ini as the one used by the application?",
-                    "Set in Config",
-                    MessageBoxButtons.YesNo);
-
-            if (result == DialogResult.Yes)
-                SetInConfig();
+            if (m_ChosenIniPath == null)
+            {
+                MessageBox.Show("No file selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             IniParserHelper.SaveIni(m_ChosenIniPath, m_IniData);
         }
-
         private void cancelButton_Click(object sender, EventArgs e)
         {
             var mouseEventArgs = e as MouseEventArgs;
             if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
                 return;
 
+            if (m_ChosenIniPath == null)
+                Application.Exit();
+
             var result =
                 MessageBox.Show(
                     "Are you sure you want to exit? Unsaved changes will be lost!",
                     "Cancel",
-                    MessageBoxButtons.YesNo);
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
                 Application.Exit();
         }
-
         private void openIniButton_Click(object sender, EventArgs e)
         {
             var mouseEventArgs = e as MouseEventArgs;
             if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
                 return;
 
-            Controls.Remove(m_TabControl);
+            var result = openFileDialog.ShowDialog();
+            PopulateComboBox(); // In case the user moves/deletes files 
 
-            ChooseIniPath();
+            if (result == DialogResult.OK)
+            {
+                m_ChosenIniPath = openFileDialog.FileName;
+
+                AddComponents();
+            }
+        }
+        private void newIniButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            var inputDialogueForm = new InputDialogueForm("What will you name the new file?");
+            inputDialogueForm.ShowDialog(this);
+
+            if (inputDialogueForm.dialogResult != DialogResult.OK)
+                return;
+
+            var newFilePath = m_ProfilesDirectory + inputDialogueForm.text + ".ini";
+            if (File.Exists(newFilePath))
+            {
+                MessageBox.Show(
+                    "A file with that name already exists!",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            File.Copy(m_DefaultProfilePath, m_ProfilesDirectory + inputDialogueForm.text + ".ini");
+            PopulateComboBox();
+        }
+        private void defaultButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            var result =
+                MessageBox.Show(
+                    "This will overwrite ALL values in this file with the default ones.\n" +
+                    "Are you SURE?",
+                    "Warning",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+
+        }
+        private void setProfileButton_Click(object sender, EventArgs e)
+        {
+            var mouseEventArgs = e as MouseEventArgs;
+            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            if (m_ChosenIniPath == null)
+            {
+                MessageBox.Show("No file selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            SetInConfig();
+        }
+
+        private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            m_ChosenIniPath = m_ProfilesDirectory + profileComboBox.SelectedItem;
+            if (m_ChosenIniPath != null && !File.Exists(m_ChosenIniPath))
+            {
+                var message =
+                    "The selected file \n\n\"" + m_ChosenIniPath + "\"\n\n does not exist or is invalid";
+                MessageBox.Show(
+                    message,
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                Application.Exit();
+                throw new Exception(message);
+            }
+
             AddComponents();
         }
     }

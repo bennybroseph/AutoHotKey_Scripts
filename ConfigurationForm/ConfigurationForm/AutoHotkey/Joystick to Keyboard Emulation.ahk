@@ -13,7 +13,7 @@ global PI := 3.141592653589793 ; Define PI for easier use
 TThreshold := 64 ; for trigger deadzones
 
 global ConfigurationPath = "config.ini"
-global PreferencesPath = "preferences.ini"
+global ProfilePath = "preferences.ini"
 
 global IsPaused := false ; Is the application paused?
 
@@ -907,9 +907,9 @@ Calibrate()
 
 ReadConfig()
 {
-	; Set Preferences Path
-	IniRead, PreferencesPath, %ConfigurationPath%, Other, Preferences_Location
-	PreferencesPath = %A_WorkingDir% %PreferencesPath%
+	; Set Profile Path
+	IniRead, ProfilePath, %ConfigurationPath%, Other, Profile_Location
+	ProfilePath = %A_WorkingDir% %ProfilePath%
 
 	global ButtonKey := Array()
 	
@@ -935,10 +935,10 @@ ReadConfig()
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
 
-	IniRead, ForceMoveKey, %PreferencesPath%, Buttons, Force_Move
+	IniRead, ForceMoveKey, %ProfilePath%, Buttons, Force_Move
 
 	global IgnoreTarget := Array()
-	IniRead, temp, %PreferencesPath%, Buttons, Ignore_Target
+	IniRead, temp, %ProfilePath%, Buttons, Ignore_Target
 	IgnoreTarget[1] := temp
 	
 	EndLoop := false
@@ -965,43 +965,43 @@ ReadConfig()
 	IniRead, RThumbX0, %ConfigurationPath%, Calibration, Right_Analog_XZero
 	IniRead, RThumbY0, %ConfigurationPath%, Calibration, Right_Analog_YZero
 	
-	IniRead, ApplicationName, %PreferencesPath%, Preferences, Application_Name
+	IniRead, ApplicationName, %ProfilePath%, Preferences, Application_Name
 
-	IniRead, ShowCursorModeNotification, %PreferencesPath%, Preferences, Show_Cursor_Mode_Notification
+	IniRead, ShowCursorModeNotification, %ProfilePath%, Preferences, Show_Cursor_Mode_Notification
 	ShowCursorModeNotification := %ShowCursorModeNotification%
 
-	IniRead, ShowInventoryModeNotification, %PreferencesPath%, Preferences, Show_Inventory_Mode_Notification
+	IniRead, ShowInventoryModeNotification, %ProfilePath%, Preferences, Show_Inventory_Mode_Notification
 	ShowInventoryModeNotification := %ShowInventoryModeNotification%
 
-	IniRead, ShowPausedNotification, %PreferencesPath%, Preferences, Show_Paused_Notification
+	IniRead, ShowPausedNotification, %ProfilePath%, Preferences, Show_Paused_Notification
 	ShowPausedNotification := %ShowPausedNotification%
 
-	IniRead, VibeStrength, %PreferencesPath%, Preferences, Vibration_Strength
-	IniRead, VibeDuration, %PreferencesPath%, Preferences, Vibration_Duration
-	IniRead, Delay, %PreferencesPath%, Preferences, Hold_Delay
+	IniRead, VibeStrength, %ProfilePath%, Preferences, Vibration_Strength
+	IniRead, VibeDuration, %ProfilePath%, Preferences, Vibration_Duration
+	IniRead, Delay, %ProfilePath%, Preferences, Hold_Delay
 	
-	IniRead, LMaxRadiusX, %PreferencesPath%, Analog Stick, Left_Analog_XRadius
-	IniRead, LMaxRadiusY, %PreferencesPath%, Analog Stick, Left_Analog_YRadius
+	IniRead, LMaxRadiusX, %ProfilePath%, Analog Stick, Left_Analog_XRadius
+	IniRead, LMaxRadiusY, %ProfilePath%, Analog Stick, Left_Analog_YRadius
 	
-	IniRead, LThreshold, %PreferencesPath%, Analog Stick, Left_Analog_Deadzone
+	IniRead, LThreshold, %ProfilePath%, Analog Stick, Left_Analog_Deadzone
 	
-	IniRead, RMaxRadiusX, %PreferencesPath%, Analog Stick, Right_Analog_XRadius
-	IniRead, RMaxRadiusY, %PreferencesPath%, Analog Stick, Right_Analog_YRadius
+	IniRead, RMaxRadiusX, %ProfilePath%, Analog Stick, Right_Analog_XRadius
+	IniRead, RMaxRadiusY, %ProfilePath%, Analog Stick, Right_Analog_YRadius
 	
-	IniRead, RThreshold, %PreferencesPath%, Analog Stick, Right_Analog_Deadzone
+	IniRead, RThreshold, %ProfilePath%, Analog Stick, Right_Analog_Deadzone
 	
-	IniRead, CenterOffsetX, %PreferencesPath%, Analog Stick, Center_XOffset
-	IniRead, CenterOffsetY, %PreferencesPath%, Analog Stick, Center_YOffset
+	IniRead, CenterOffsetX, %ProfilePath%, Analog Stick, Center_XOffset
+	IniRead, CenterOffsetY, %ProfilePath%, Analog Stick, Center_YOffset
 	
-	IniRead, LRadiusOffsetX, %PreferencesPath%, Analog Stick, Left_Analog_Center_XOffset
-	IniRead, LRadiusOffsetY, %PreferencesPath%, Analog Stick, Left_Analog_Center_YOffset
+	IniRead, LRadiusOffsetX, %ProfilePath%, Analog Stick, Left_Analog_Center_XOffset
+	IniRead, LRadiusOffsetY, %ProfilePath%, Analog Stick, Left_Analog_Center_YOffset
 	
-	IniRead, RRadiusOffsetX, %PreferencesPath%, Analog Stick, Right_Analog_Center_XOffset
-	IniRead, RRadiusOffsetY, %PreferencesPath%, Analog Stick, Right_Analog_Center_YOffset	
+	IniRead, RRadiusOffsetX, %ProfilePath%, Analog Stick, Right_Analog_Center_XOffset
+	IniRead, RRadiusOffsetY, %ProfilePath%, Analog Stick, Right_Analog_Center_YOffset	
 }
 PassKeys(ButtonName)
 {
-	IniRead, Key, %PreferencesPath%, Buttons, %ButtonName%
+	IniRead, Key, %ProfilePath%, Buttons, %ButtonName%
 	KeyBinding := Array()
 	
 	if Key = ERROR

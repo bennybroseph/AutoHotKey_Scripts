@@ -61,17 +61,17 @@
     <Compile Include="ConfigForm.Designer.cs">
       <DependentUpon>ConfigForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="ChooseConfigForm.cs">
+    <Compile Include="InputDialogueForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ChooseConfigForm.Designer.cs">
-      <DependentUpon>ChooseConfigForm.cs</DependentUpon>
+    <Compile Include="InputDialogueForm.Designer.cs">
+      <DependentUpon>InputDialogueForm.cs</DependentUpon>
     </Compile>
     <Compile Include="IniParserHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="ChooseConfigForm.resx">
-      <DependentUpon>ChooseConfigForm.cs</DependentUpon>
+    <EmbeddedResource Include="InputDialogueForm.resx">
+      <DependentUpon>InputDialogueForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ConfigForm.resx">
       <DependentUpon>ConfigForm.cs</DependentUpon>
@@ -91,19 +91,19 @@
     <None Include="AutoHotkey\Video Transcript.docx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Configurations\Defaults\config.ini">
+    <None Include="Profiles\Defaults\config.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Configurations\Defaults\preferences.ini">
+    <None Include="Profiles\Defaults\profile.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Configurations\myPreferences.ini">
+    <None Include="Profiles\myProfile.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Configurations\preferences.ini">
+    <None Include="Profiles\profile.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Configurations\test.ini">
+    <None Include="Profiles\test.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
