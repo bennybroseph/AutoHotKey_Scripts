@@ -20,6 +20,7 @@ global IsPaused := false ; Is the application paused?
 global ForceMoveKey
 global Move := false ; This is true when space is pressed down so that it is not spam pressed over and over. It is set to false when a button is pressed, or the left analog stick is released
 global ForceMove := false ; This is true whenever all buttons are released. I use this to force the analog stick to induce movement any time it otherwise may not press the space bar
+global ForceTarget := false
 
 global Target := false ; This is true when the Right analog stick is currently being used
 global TargetX ; This is the red target on the screen's X value
@@ -52,7 +53,7 @@ global PrevMouseY ; The mouse Y value before any buttons were pressed
 global Width ; The width of the current active window
 global Height ; The height of the current active window
 
-global RStick := true ; Currently unused
+global RStick := true ; When true the target is locked to an oval, when false it moves like a cursor
 global LStick := true ; When true movement is normal, when false cursor mode is enabled
 
 global VibeStrength ; The strength of the vibration
@@ -86,6 +87,7 @@ global RRadiusOffsetY
 global ShowCursorModeNotification ; Whether or not to show the cursor mode notification when in said mode
 global ShowInventoryModeNotification ; Whether or not to show the cursor mode notification when in said mode
 global ShowPausedNotification ; Whether or not to show the cursor mode notification when the application is paused
+global ShowFreeTargetModeNotification := true ; Whether or not to show the free target notification when in free target mode
 
 global Inventory := false ; This value is true when then Inventory hotkey is triggered, and is toggled by that button. While true, the D-Pad is used to navigate the inventory screen
 global InventoryX := 1 ; The X value of the Inventory grid the user is currently on
@@ -228,14 +230,14 @@ WatchAxisL()
 		}
 		
 		; Pretty much: if no buttons are pressed or the right stick isn't pressed, and the inventory isn't open or space isn't being pressed
-		if((!Pressed || !Target) && (!Inventory || Move))
+		if((!Pressed || (!Target && !ForceTarget)) && (!Inventory || Move))
 		{
 			if(Move)
 				MouseMove, MouseX, MouseY
 			else
 				MouseMove, Width, Height
 		}
-		else if(Target && Pressed)
+		else if((Target || ForceTarget) && Pressed)
 		{
 			if(Move)
 			{
@@ -252,7 +254,7 @@ WatchAxisL()
 		}
 		; Pretty much: if space isn't being pressed, and the inventory is open
 		else if(!Move && Inventory)
-			MouseMove, InventoryGridX[InventoryX,InventoryY], InventoryGridY[InventoryX,InventoryY]
+			MouseMove, InventoryGridX[InventoryX, InventoryY], InventoryGridY[InventoryX, InventoryY]
 		;if(!FirstMovement)
 			;ToolTip, %LThumbX% : %LThumbY% `n%LThumbX0% : %LThumbY0% `n%LThumbXCenter% : %LThumbYCenter% - %Radius% `n%AngleDeg% `n%CenterX% : %CenterY% `n%Title% - %Width% : %Height%, 1900, 425
 	}
@@ -269,6 +271,7 @@ WatchAxisL()
 		if(Move)
 			MouseMove, MouseX, MouseY, , R
 	}
+
 	return  ; Do nothing.
 }
 
@@ -277,11 +280,12 @@ WatchAxisR()
 	global ; All values are global unless stated otherwise
 	local CenterX := Width + RRadiusOffsetX, CenterY := Height + RRadiusOffsetY ; Where the circle will originate when it is drawn
 	local Angle, AngleDeg ; 'Angle' is the angle in radians that the stick is currently at. 'AngleDeg' is that angle but in degrees.
+	local Radius
 	
 	local RThumbXCenter := RThumbX - RThumbX0 ; This takes the current value of the stick's X and subtracts the value when the stick is at rest to 'zero out' the value before calculations
 	local RThumbYCenter := RThumbY - RThumbY0 ; This takes the current value of the stick's Y and subtracts the value when the stick is at rest to 'zero out' the value before calculations
 	
-	static FirstMovement ; Currently unused. Was for deleting the ToolTip that read "You man begin" once the user moved the stick.
+	static FirstMovement ; Currently unused. Was for deleting the ToolTip that read "You may begin" once the user moved the stick.
 	
 	; Checks the deadzone of the stick 
 	if (Abs(RThumbXCenter) > RThreshold || Abs(RThumbYCenter) > RThreshold)
@@ -291,46 +295,46 @@ WatchAxisR()
 	}
 	; If the stick is currently released
 	else
-	{
-		; Now all shall know that it is hidden, and it was good
+	{		
 		Target := false
-		Gui, 1:Hide
+		; Now all shall know that it is hidden, and it was good
+		if(RStick)
+			Gui, 1:Hide
 	}
+		
+	if(RThumbXCenter < 0 && RThumbYCenter < 0) ; 3rd Quadrant
+	{
+		AngleDeg := Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI)) + 180
+	}
+	else if(RThumbXCenter < 0 && RThumbYCenter > 0) ; 2nd Quadrant
+	{
+		AngleDeg := 180 - Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
+	}
+	else if(RThumbXCenter > 0 && RThumbYCenter < 0) ; 4th Quadrant
+	{
+		AngleDeg := 360 - Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
+	}
+	else if (RThumbXCenter = 0 && RThumbYCenter > 0) ; ATan Error would occur since angle is 90
+	{
+		AngleDeg := 90
+	}
+	else if (RThumbXCenter = 0 && RThumbYCenter < 0) ; ATan Error would occur since angle is 270
+	{
+		AngleDeg := 270
+	}
+	else if (RThumbXCenter < 0 && RThumbYCenter = 0) ; Differentiate between 0 and 180 degrees
+	{
+		AngleDeg := 180
+	}
+	else ; 1st Quadrant
+	{
+		AngleDeg := Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
+	}
+		
+	Angle := AngleDeg * (PI/180) ; Convert the angle back into radians for calculation
 	
-	; Currently always true. Ignore for now
 	if(RStick)
 	{
-		if(RThumbXCenter < 0 && RThumbYCenter < 0) ; 3rd Quadrant
-		{
-			AngleDeg := Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI)) + 180
-		}
-		else if(RThumbXCenter < 0 && RThumbYCenter > 0) ; 2nd Quadrant
-		{
-			AngleDeg := 180 - Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
-		}
-		else if(RThumbXCenter > 0 && RThumbYCenter < 0) ; 4th Quadrant
-		{
-			AngleDeg := 360 - Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
-		}
-		else if (RThumbXCenter = 0 && RThumbYCenter > 0) ; ATan Error would occur since angle is 90
-		{
-			AngleDeg := 90
-		}
-		else if (RThumbXCenter = 0 && RThumbYCenter < 0) ; ATan Error would occur since angle is 270
-		{
-			AngleDeg := 270
-		}
-		else if (RThumbXCenter < 0 && RThumbYCenter = 0) ; Differentiate between 0 and 180 degrees
-		{
-			AngleDeg := 180
-		}
-		else ; 1st Quadrant
-		{
-			AngleDeg := Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
-		}
-			
-		Angle := AngleDeg * (PI/180) ; Convert the angle back into radians for calculation
-		
 		; The analog stick returns a lumpy square as movement. With this, I cut a proper square out of it by limiting the furthest the stick is pressed before I stop registering it		
 		if(Abs(RThumbXCenter) > RMaxThreshold)
 		{
@@ -381,12 +385,38 @@ WatchAxisR()
 			; Pretty Much: if the right stick is currently held, and no buttons are being pressed
 			if(Target && !Pressed)
 			{
-				bufferx := TargetX - ImageW/2
-				buffery := TargetY - ImageH/2
-				Gui, 1:Show, x%bufferx% y%buffery% NoActivate
+				CurrentTargetX := TargetX - ImageW/2
+				CurrentTargetY := TargetY - ImageH/2
+
+				Gui, 1:Show, x%CurrentTargetX% y%CurrentTargetY% NoActivate
 			}
 		}
 	}
+	else
+	{
+		if(Abs(RThumbXCenter) >= Abs(RThumbYCenter))
+			Radius := 20 * ((Abs(RThumbXCenter)-RThreshold)/(RMaxThreshold-RThreshold))
+		else
+			Radius := 20 * ((Abs(RThumbYCenter)-RThreshold)/(RMaxThreshold-RThreshold))
+		
+		TargetDeltaX := Radius * cos(Angle)
+		TargetDeltaY := Radius * sin(Angle)
+		
+		if(Target)
+		{
+			TargetX := TargetX + TargetDeltaX
+			TargetY := TargetY - TargetDeltaY
+		}
+
+		bufferx := TargetX - ImageW/2
+		buffery := TargetY - ImageH/2 
+
+		if(Pressed)
+			MouseMove, TargetX, TargetY
+		else
+			Gui, 1:Show, x%bufferx% y%buffery% NoActivate		
+	}
+
 	return  ; Do nothing.
 }
 
@@ -440,7 +470,7 @@ if(!IsInitializing)
 	
 	if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
 		WatchAxisL()
-	if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY)
+	if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY || ForceTarget)
 		WatchAxisR()
 	Gosub WatchAxisT
 	GoSub WatchButtons
@@ -534,6 +564,26 @@ Loop, 14
 						LStick := true
 					}
 				}
+				else if(ButtonKey[A_Index][1] = "FreeTarget")
+				{
+					if(RStick)
+					{
+						buffer := ButtonKey[A_Index][1]
+						if(ShowFreeTargetModeNotification)
+							Tooltip, Free Target Mode: Enabled `nPress  %buffer% on the controller to disable, 0, 40, 2
+
+						ForceTarget := true
+						RStick := false
+					}
+					else
+					{
+						if(ShowFreeTargetModeNotification)
+							ToolTip, , , , 2
+
+						ForceTarget := false
+						RStick := true
+					} 
+				}
 				else
 					ButtonKey[A_Index][4] := ActionDown(ButtonKey[A_Index][1],ButtonKey[A_Index][2],ButtonKey[A_Index][3])
 			}
@@ -607,7 +657,7 @@ Loop, 14
 						InventoryY := PrevInventoryY
 					}
 				}
-				else if(ButtonKey[A_Index][1] != "Loot" && ButtonKey[A_Index][1] != "Freedom")
+				else if(ButtonKey[A_Index][1] != "Loot" && ButtonKey[A_Index][1] != "Freedom" && ButtonKey[A_Index][1] != "FreeTarget")
 					ActionUp(ButtonKey[A_Index][1],ButtonKey[A_Index][2],ButtonKey[A_Index][3],ButtonKey[A_Index][4])
 				else if(ButtonKey[A_Index][1] = "Loot")
 					SetTimer, SpamLoot, Off
@@ -749,16 +799,15 @@ TargetActionDown(Action, Modifier)
 	if(Pressed = 0)
 	{
 		MouseGetPos, PrevMouseX, PrevMouseY
-		if(Target)
-		{
+		if(Target || ForceTarget)
 			Gui, 1:Hide
-		}
+
 		;Move := false
 		Send {%ForceMoveKey% Up}
 	}
 	
 	Pressed += 1
-	if(Target)
+	if(Target || ForceTarget)
 	{
 		IgnoreIt := false
 		MouseMove, TargetX, TargetY
@@ -783,7 +832,7 @@ TargetActionUp(Action, Modifier)
 		Send {%ForceMoveKey% Up}
 		MouseMove, PrevMouseX, PrevMouseY
 		
-		if(Target)
+		if(Target || ForceTarget)
 		{
 			bufferx := TargetX - ImageW/2
 			buffery := TargetY - ImageH/2
@@ -1200,7 +1249,7 @@ Calibrate()
 ReadConfig()
 
 IfWinExist, %Application_Name%
-	WinActivate ; Activate Application Window if it exists
+	WinActivate, %Application_Name%; Activate Application Window if it exists
 
 Gosub TriggerState
 	
