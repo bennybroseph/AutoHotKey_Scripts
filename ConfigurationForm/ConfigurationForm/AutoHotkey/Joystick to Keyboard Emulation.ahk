@@ -50,8 +50,11 @@ global RThumbY0 ; The Y value when the left stick is at rest
 global PrevMouseX ; The mouse X value before any buttons were pressed
 global PrevMouseY ; The mouse Y value before any buttons were pressed
 
-global Width ; The width of the current active window
-global Height ; The height of the current active window
+global ScreenCenterX ; Center X position of the current active window
+global ScreenCenterY ; Center Y position of the current active window
+
+global Width
+global Height
 
 global RStick := true ; When true the target is locked to an oval, when false it moves like a cursor
 global LStick := true ; When true movement is normal, when false cursor mode is enabled
@@ -129,7 +132,7 @@ return
 WatchAxisL()
 {
 	global ; All values are global unless stated otherwise
-	local CenterX := Width + LRadiusOffsetX, CenterY := Height + LRadiusOffsetY ; Where the circle will originate when it is drawn
+	local CenterX := ScreenCenterX + LRadiusOffsetX, CenterY := ScreenCenterY + LRadiusOffsetY ; Where the circle will originate when it is drawn
 	local Angle, AngleDeg ; 'Angle' is the angle in radians that the stick is currently at. 'AngleDeg' is that angle but in degrees.
 	local Radius ; The radius of the circle drawn when LStick is false
 	
@@ -235,7 +238,7 @@ WatchAxisL()
 			if(Move)
 				MouseMove, MouseX, MouseY
 			else
-				MouseMove, Width, Height
+				MouseMove, ScreenCenterX, ScreenCenterY
 		}
 		else if((Target || ForceTarget) && Pressed)
 		{
@@ -247,16 +250,16 @@ WatchAxisL()
 			}
 			else
 			{
-				bufferx := Width - ImageW/2
-				buffery := Height - ImageH/2
+				bufferx := ScreenCenterX - ImageW/2
+				buffery := ScreenCenterY - ImageH/2
 				Gui, 1:Show, x%bufferx% y%buffery% NoActivate
 			}
 		}
 		; Pretty much: if space isn't being pressed, and the inventory is open
 		else if(!Move && Inventory)
-			MouseMove, InventoryGridX[InventoryX, InventoryY], InventoryGridY[InventoryX, InventoryY]
+			MouseMove, InventoryGridX[InventoryX,InventoryY] * (Width / 1920), InventoryGridY[InventoryX,InventoryY] * (Height / 1080)
 		;if(!FirstMovement)
-			;ToolTip, %LThumbX% : %LThumbY% `n%LThumbX0% : %LThumbY0% `n%LThumbXCenter% : %LThumbYCenter% - %Radius% `n%AngleDeg% `n%CenterX% : %CenterY% `n%Title% - %Width% : %Height%, 1900, 425
+			;ToolTip, %LThumbX% : %LThumbY% `n%LThumbX0% : %LThumbY0% `n%LThumbXCenter% : %LThumbYCenter% - %Radius% `n%AngleDeg% `n%CenterX% : %CenterY% `n%Title% - %ScreenCenterX% : %ScreenCenterY%, 1900, 425
 	}
 	else
 	{
@@ -278,7 +281,7 @@ WatchAxisL()
 WatchAxisR()
 {
 	global ; All values are global unless stated otherwise
-	local CenterX := Width + RRadiusOffsetX, CenterY := Height + RRadiusOffsetY ; Where the circle will originate when it is drawn
+	local CenterX := ScreenCenterX + RRadiusOffsetX, CenterY := ScreenCenterY + RRadiusOffsetY ; Where the circle will originate when it is drawn
 	local Angle, AngleDeg ; 'Angle' is the angle in radians that the stick is currently at. 'AngleDeg' is that angle but in degrees.
 	local Radius
 	
@@ -381,7 +384,7 @@ WatchAxisR()
 		
 		if(!FirstMovement)
 		{
-			;ToolTip, %RThumbX% : %RThumbY% `n%RThumbX0% : %RThumbY0% `n%RThumbXCenter% : %RThumbYCenter% `n%RadiusX% : %RadiusY% `n%AngleDeg% %Angle% `n%TargetX% %TargetY% `n%Title% - %Width% : %Height% `n%Pressed%, 1900, 510, 2
+			;ToolTip, %RThumbX% : %RThumbY% `n%RThumbX0% : %RThumbY0% `n%RThumbXCenter% : %RThumbYCenter% `n%RadiusX% : %RadiusY% `n%AngleDeg% %Angle% `n%TargetX% %TargetY% `n%Title% - %ScreenCenterX% : %ScreenCenterY% `n%Pressed%, 1900, 510, 2
 			; Pretty Much: if the right stick is currently held, and no buttons are being pressed
 			if(Target && !Pressed)
 			{
@@ -459,13 +462,13 @@ if(!IsInitializing)
 {
 	WinGetActiveStats, Title, Width, Height, X, Y
 	
-	Width := Width/2
-	Height := Height/2
+	ScreenCenterX := Width / 2
+	ScreenCenterY := Height / 2
 	; if the Diablo window is active then the center of the screen is a lot higher than normal. This sets it to that value.
 	IfWinActive, %ApplicationName%
 	{
-		Width := Width + CenterOffsetX
-		Height := Height + CenterOffsetY
+		ScreenCenterX := ScreenCenterX + CenterOffsetX
+		ScreenCenterY := ScreenCenterY + CenterOffsetY
 	}
 	
 	if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
@@ -649,8 +652,8 @@ Loop, 14
 						}
 					}Until ForceInventory
 					
-					if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])				
-						MouseMove, InventoryGridX[InventoryX,InventoryY], InventoryGridY[InventoryX,InventoryY]
+					if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])
+						MouseMove, InventoryGridX[InventoryX,InventoryY] * (Width / 1920), InventoryGridY[InventoryX,InventoryY] * (Height / 1080)
 					else
 					{
 						InventoryX := PrevInventoryX
@@ -1082,7 +1085,7 @@ PassKeys(ButtonName)
 
 SpamLoot:
 MouseGetPos, PrevX, PrevY
-MouseMove, Width, Height
+MouseMove, ScreenCenterX, ScreenCenterY
 Send {LButton Down}
 Send {LButton Up}
 MouseMove, PrevX, PrevY
