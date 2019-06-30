@@ -17,7 +17,8 @@ global ProfilePath = "preferences.ini"
 
 global IsPaused := false ; Is the application paused?
 
-global ForceMoveKey
+global ForceMoveKey ; This is the current force move key. When using keybindings which ignore the targeting reticule, this value is set to the new hotkey temporarily.
+global DefaultForceMoveKey ; This is the force move key set by the user in the .ini file
 global Move := false ; This is true when space is pressed down so that it is not spam pressed over and over. It is set to false when a button is pressed, or the left analog stick is released
 global ForceMove := false ; This is true whenever all buttons are released. I use this to force the analog stick to induce movement any time it otherwise may not press the space bar
 global ForceTarget := false
@@ -59,6 +60,8 @@ global Height
 global RStick := true ; When true the target is locked to an oval, when false it moves like a cursor
 global LStick := true ; When true movement is normal, when false cursor mode is enabled
 
+global TargetingDelay ; The delay in miliseconds defined by the user before sending input at the targeting reticule's location
+
 global VibeStrength ; The strength of the vibration
 global VibeDuration ; The length of time in miliseconds that the controller vibrates
 global Delay
@@ -86,6 +89,14 @@ global LRadiusOffsetY
 ; Extra offset for the right stick to adhere to from the center of the currently active window
 global RRadiusOffsetX 
 global RRadiusOffsetY
+
+; Sensitivity values for the left analog sticks
+global LSensitivityX
+global LSensitivityY
+
+; Sensitivity values for the right analog sticks
+global RSensitivityX
+global RSensitivityY
 
 global ShowCursorModeNotification ; Whether or not to show the cursor mode notification when in said mode
 global ShowInventoryModeNotification ; Whether or not to show the cursor mode notification when in said mode
@@ -165,7 +176,7 @@ WatchAxisL()
 		; If space is held down right now
 		if(Move)
 		{
-			if(!IgnoreIt)
+			if(!IgnoreIt && LStick)
 				Send {%ForceMoveKey% Up}
 			Move := false ; Space can be pressed again
 			ForceMove := false ;  Don't tell me what to do
@@ -268,8 +279,8 @@ WatchAxisL()
 		else
 			Radius := 20 * ((Abs(LThumbYCenter)-LThreshold)/(LMaxThreshold-LThreshold))
 		
-		MouseX := Radius * cos(Angle)
-		MouseY := Radius * sin(Angle)
+		MouseX := Radius * cos(Angle) * LSensitivityX
+		MouseY := Radius * sin(Angle) * LSensitivityY
 		
 		if(Move)
 			MouseMove, MouseX, MouseY, , R
@@ -402,8 +413,8 @@ WatchAxisR()
 		else
 			Radius := 20 * ((Abs(RThumbYCenter)-RThreshold)/(RMaxThreshold-RThreshold))
 		
-		TargetDeltaX := Radius * cos(Angle)
-		TargetDeltaY := Radius * sin(Angle)
+		TargetDeltaX := Radius * cos(Angle) * RSensitivityX
+		TargetDeltaY := Radius * sin(Angle) * RSensitivityY
 		
 		if(Target)
 		{
@@ -787,7 +798,7 @@ ActionUp(Action, Modifier, Held, byRef TimeHeld)
 				Send {%ForceMoveKey% Up}
 				IgnorePressed -= 1
 				IgnoreIt := false
-				ForceMoveKey := "Space"
+				ForceMoveKey := DefaultForceMoveKey ; Set force move back to the default key
 				local skip := true
 			}
 		} Until !IgnoreTarget[A_Index+1]
@@ -814,6 +825,9 @@ TargetActionDown(Action, Modifier)
 	{
 		IgnoreIt := false
 		MouseMove, TargetX, TargetY
+
+		if(TargetingDelay > 0)
+			Sleep, %TargetingDelay%
 	}
 	
 	if(Modifier)
@@ -987,7 +1001,8 @@ ReadConfig()
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
 
-	IniRead, ForceMoveKey, %ProfilePath%, Buttons, Force_Move
+	IniRead, DefaultForceMoveKey, %ProfilePath%, Buttons, Force_Move
+	ForceMoveKey := DefaultForceMoveKey
 
 	global IgnoreTarget := Array()
 	IniRead, temp, %ProfilePath%, Buttons, Ignore_Target
@@ -1028,6 +1043,8 @@ ReadConfig()
 	IniRead, ShowPausedNotification, %ProfilePath%, Preferences, Show_Paused_Notification
 	ShowPausedNotification := %ShowPausedNotification%
 
+	IniRead, TargetingDelay, %ProfilePath%, Preferences, Targeting_Delay
+
 	IniRead, VibeStrength, %ProfilePath%, Preferences, Vibration_Strength
 	IniRead, VibeDuration, %ProfilePath%, Preferences, Vibration_Duration
 	IniRead, Delay, %ProfilePath%, Preferences, Hold_Delay
@@ -1050,6 +1067,12 @@ ReadConfig()
 	
 	IniRead, RRadiusOffsetX, %ProfilePath%, Analog Stick, Right_Analog_Center_XOffset
 	IniRead, RRadiusOffsetY, %ProfilePath%, Analog Stick, Right_Analog_Center_YOffset	
+
+	IniRead, LSensitivityX, %ProfilePath%, Analog Stick, Left_Analog_Cursor_XSensitivity
+	IniRead, LSensitivityY, %ProfilePath%, Analog Stick, Left_Analog_Cursor_YSensitivity
+
+	IniRead, RSensitivityX, %ProfilePath%, Analog Stick, Right_Analog_Cursor_XSensitivity
+	IniRead, RSensitivityY, %ProfilePath%, Analog Stick, Right_Analog_Cursor_YSensitivity
 }
 PassKeys(ButtonName)
 {
