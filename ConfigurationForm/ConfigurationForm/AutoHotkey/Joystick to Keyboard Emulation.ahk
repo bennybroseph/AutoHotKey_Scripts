@@ -15,6 +15,10 @@ TThreshold := 64 ; for trigger deadzones
 global ConfigurationPath = "config.ini"
 global ProfilePath = "preferences.ini"
 
+global DebugMode := false ;Is debug mode on?
+global DebugLog := ""
+global DebugLogLength := 0
+
 global IsPaused := false ; Is the application paused?
 
 global ForceMoveKey ; This is the current force move key. When using keybindings which ignore the targeting reticule, this value is set to the new hotkey temporarily.
@@ -109,6 +113,15 @@ global InventoryY := 6 ; The Y value of the Inventory grid the user is currently
 
 #Persistent  ; Keep this script running until the user explicitly exits it.
 SetTimer, Startup, 750 ; The 'Init' function of my code essentially. It's at the very bottom.
+
+; Toggles Debug Mode
+$F3::
+DebugMode := !DebugMode
+if(DebugMode)
+	Tooltip, Debug mode enabled `nPress F3 to disable, 0, 45, 5
+else
+	Tooltip, , , , 5
+return
 
 ; Reloades the config values when F5 is pressed
 $F5::
@@ -435,6 +448,7 @@ WatchAxisR()
 }
 
 TriggerState:
+
 Loop, 4 
 {
     if State := XInput_GetState(A_Index-1) 
@@ -518,6 +532,10 @@ PrevLThumbY := LThumbY
 
 PrevRThumbX := RThumbX
 PrevRThumbY := RThumbY
+
+if(DebugMode)
+	ToolTip, Debug Log: `n%DebugLog%, 0, 90, 6
+
 return
 ; /TriggerState
 
@@ -737,75 +755,133 @@ return
 
 ActionDown(Action, Modifier, Held)
 {
-	global
+	local skip := false
+
 	if(!Held)
 	{
-		if(!Modifier && IgnoreTarget[1])
+		if (UsesMouse[1])
 		{
+			local found := false
+
 			Loop
 			{
-				if(Action = IgnoreTarget[A_Index])
-				{					
-					Send {%ForceMoveKey% Up}
-					ForceMoveKey := Action
-					Send {%ForceMoveKey% Down}
-					Move := false
-					ForceMove := true
-					IgnoreIt := true
-					IgnorePressed += 1
-					local skip := true
+				if(Action = UsesMouse[A_Index])
+				{
+					found := true
+					break					
 				}
-			} Until !IgnoreTarget[A_Index+1]
-			if(!skip)
-				TargetActionDown(Action, Modifier)
+			} Until !UsesMouse[A_Index+1]
+
+			if (found && IgnoreTarget[1])
+			{
+				Loop
+				{
+					if(Action = IgnoreTarget[A_Index])
+					{					
+						Send {%ForceMoveKey% Up}
+						ForceMoveKey := Action
+						Send {%ForceMoveKey% Down}
+
+						Move := false
+						ForceMove := true
+						IgnoreIt := true
+						IgnorePressed += 1
+
+						skip := true
+						break
+					}
+				} Until !IgnoreTarget[A_Index+1]			
+			}
+
+			if(!found)
+			{
+				if(Modifier)
+					Send {%Modifier% Down}
+				Send {%Action% Down}
+
+				skip := true
+			}
 		}
-		else
-			TargetActionDown(Action, Modifier)
+
+		if(!skip)
+				TargetActionDown(Action, Modifier)
 	}
 	else
 		return A_TickCount
 }
 ActionUp(Action, Modifier, Held, byRef TimeHeld)
 {
-	global
-	if(Held)
-	{	
+	local skip := false
+	
+	if (UsesMouse[1])
+	{
+		local found := false
+
 		Loop
 		{
-			if(Action = IgnoreTarget[A_Index])
+			if(Action = UsesMouse[A_Index])	
 			{
-				local tempX, local tempY
-				MouseGetPos, tempX, tempY
-				MouseMove, MouseX, MouseY
-				Send {%Action% Down}
-				Send {%Action% Up}
-				MouseMove, tempX, tempY
-				local skip := true
+				found := true
+				break
 			}
-		} Until !IgnoreTarget[A_Index+1]
-		if(!skip)
+		} Until !UsesMouse[A_Index+1]
+
+		if (found && IgnoreTarget[1])
 		{
-			TargetActionDown(Action, Modifier)		
-			TargetActionUp(Action, Modifier)
+			Loop
+			{
+				if(Action = IgnoreTarget[A_Index])
+				{
+					if (Held)
+					{
+						local tempX, local tempY
+						MouseGetPos, tempX, tempY
+						MouseMove, MouseX, MouseY
+
+						Send {%Action% Down}
+						Send {%Action% Up}
+
+						MouseMove, tempX, tempY
+					}
+					else
+					{
+						Send {%ForceMoveKey% Up}
+
+						IgnorePressed -= 1
+						IgnoreIt := false
+						ForceMoveKey := DefaultForceMoveKey ; Set force move back to the default key
+					}
+
+					skip := true
+					break
+				}
+			} Until !IgnoreTarget[A_Index+1]
+		}
+
+		if(!found)
+		{
+			if(Held)
+			{
+				if(Modifier)
+					Send {%Modifier% Down}
+				Send {%Action% Down}
+			}
+
+			if(Modifier)
+				Send {%Modifier% Up}
+			Send {%Action% Up} 	
+
+			skip := true
 		}
 	}
-	else if(IgnoreTarget[1])
+
+	if (!skip)
 	{
-		Loop
-		{
-			if(Action = IgnoreTarget[A_Index])
-			{
-				Send {%ForceMoveKey% Up}
-				IgnorePressed -= 1
-				IgnoreIt := false
-				ForceMoveKey := DefaultForceMoveKey ; Set force move back to the default key
-				local skip := true
-			}
-		} Until !IgnoreTarget[A_Index+1]
-		if(!skip)
-			TargetActionUp(Action, Modifier)
+		if(Held)
+			TargetActionDown(Action, Modifier)		
+
+		TargetActionUp(Action, Modifier)
 	}
-	else TargetActionUp(Action, Modifier)
 }
 
 TargetActionDown(Action, Modifier)
@@ -857,6 +933,11 @@ TargetActionUp(Action, Modifier)
 		}
 	}
 	return ; Do nothing
+}
+
+AddDebugToLog(NewText)
+{
+	DebugLog := DebugLog . "`n" . NewText
 }
 
 InventoryInit()
@@ -1004,7 +1085,28 @@ ReadConfig()
 	IniRead, DefaultForceMoveKey, %ProfilePath%, Buttons, Force_Move
 	ForceMoveKey := DefaultForceMoveKey
 
-	global IgnoreTarget := Array()
+	global UsesMouse := Array()
+	IniRead, temp, %ProfilePath%, Buttons, Uses_Mouse
+	UsesMouse[1] := temp
+	
+	EndLoop := false
+	Loop
+	{
+		i := InStr(UsesMouse[A_Index],", ")
+		
+		if(i)
+		{
+			UsesMouse[A_Index+1] := SubStr(UsesMouse[A_Index], i+2)
+			UsesMouse[A_Index] := SubStr(UsesMouse[A_Index], 1, i-1)			
+		}
+		else
+			EndLoop := true
+
+		AddDebugToLog(A_Index . "UsesMouse value is: " . UsesMouse[A_Index])
+		
+	}Until EndLoop
+
+	global IgnoreTarget := Array()	
 	IniRead, temp, %ProfilePath%, Buttons, Ignore_Target
 	IgnoreTarget[1] := temp
 	
