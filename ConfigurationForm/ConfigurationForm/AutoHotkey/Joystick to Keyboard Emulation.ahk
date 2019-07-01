@@ -1,7 +1,10 @@
 ﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#Persistent  ; Keep this script running until the user explicitly exits it.
 ;#Warn  ; Enable warnings to assist with detecting common errors.
+
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directoTargety.
+
 #Include XInput.ahk
 #Include Gdip.ahk
 
@@ -21,8 +24,8 @@ global DebugLogLength := 0
 
 global IsPaused := false ; Is the application paused?
 
-global ForceMoveKey ; This is the current force move key. When using keybindings which ignore the targeting reticule, this value is set to the new hotkey temporarily.
-global DefaultForceMoveKey ; This is the force move key set by the user in the .ini file
+global DefaultForceMoveKey := Array() ; This is the force move key set by the user in the .ini file
+global ForceMoveKey := Array() ; This is the current force move key. When using keybindings which ignore the targeting reticule, this value is set to the new hotkey temporarily.
 global Move := false ; This is true when space is pressed down so that it is not spam pressed over and over. It is set to false when a button is pressed, or the left analog stick is released
 global ForceMove := false ; This is true whenever all buttons are released. I use this to force the analog stick to induce movement any time it otherwise may not press the space bar
 global ForceTarget := false
@@ -64,10 +67,11 @@ global Height
 global RStick := true ; When true the target is locked to an oval, when false it moves like a cursor
 global LStick := true ; When true movement is normal, when false cursor mode is enabled
 
-global TargetingDelay ; The delay in miliseconds defined by the user before sending input at the targeting reticule's location
+global LootDelay ; The delay in milliseconds defined by the user between spamming the loot command
+global TargetingDelay ; The delay in milliseconds defined by the user before sending input at the targeting reticule's location
 
 global VibeStrength ; The strength of the vibration
-global VibeDuration ; The length of time in miliseconds that the controller vibrates
+global VibeDuration ; The length of time in milliseconds that the controller vibrates
 global Delay
 
 global LMaxRadiusX ; The radius the cursor maxes out at on the left stick in the X direction 
@@ -105,13 +109,22 @@ global RSensitivityY
 global ShowCursorModeNotification ; Whether or not to show the cursor mode notification when in said mode
 global ShowInventoryModeNotification ; Whether or not to show the cursor mode notification when in said mode
 global ShowPausedNotification ; Whether or not to show the cursor mode notification when the application is paused
-global ShowFreeTargetModeNotification := true ; Whether or not to show the free target notification when in free target mode
+global ShowFreeTargetModeNotification ; Whether or not to show the free target notification when in free target mode
 
 global Inventory := false ; This value is true when then Inventory hotkey is triggered, and is toggled by that button. While true, the D-Pad is used to navigate the inventory screen
 global InventoryX := 1 ; The X value of the Inventory grid the user is currently on
 global InventoryY := 6 ; The Y value of the Inventory grid the user is currently on
 
-#Persistent  ; Keep this script running until the user explicitly exits it.
+; Enum section
+global ACTION_INDEX := 		1
+global MODIFIER_INDEX := 	2
+
+global PRESS_ACTION := 		1
+global PRESS_MODIFIER := 	2
+global HOLD_ACTION :=		3
+global HOLD_MODIFIER := 	4
+global HELD_DURATION := 	5
+
 SetTimer, Startup, 750 ; The 'Init' function of my code essentially. It's at the very bottom.
 
 ; Toggles Debug Mode
@@ -120,7 +133,10 @@ DebugMode := !DebugMode
 if(DebugMode)
 	Tooltip, Debug mode enabled `nPress F3 to disable, 0, 45, 5
 else
+{
 	Tooltip, , , , 5
+	Tooltip, , , , 6
+}
 return
 
 ; Reloades the config values when F5 is pressed
@@ -173,7 +189,8 @@ WatchAxisL()
 		{
 			; "If no buttons are pressed right now"
 			if((!Pressed && LStick) || IgnoreIt)
-				Send {%ForceMoveKey% Down}
+				PressKey(ForceMoveKey)
+				
 			Move := true ; Don't press space again
 			ForceMove = false ; Don't tell me what to do
 		}
@@ -190,7 +207,8 @@ WatchAxisL()
 		if(Move)
 		{
 			if(!IgnoreIt && LStick)
-				Send {%ForceMoveKey% Up}
+				ReleaseKey(ForceMoveKey)
+
 			Move := false ; Space can be pressed again
 			ForceMove := false ;  Don't tell me what to do
 		}
@@ -279,7 +297,7 @@ WatchAxisL()
 				Gui, 1:Show, x%bufferx% y%buffery% NoActivate
 			}
 		}
-		; Pretty much: if space isn't being pressed, and the inventory is open
+		; Pretty much: if 'ForceMoveKey' isn't being pressed, and the inventory is open
 		else if(!Move && Inventory)
 			MouseMove, InventoryGridX[InventoryX,InventoryY] * (Width / 1920), InventoryGridY[InventoryX,InventoryY] * (Height / 1080)
 		;if(!FirstMovement)
@@ -540,20 +558,22 @@ return
 ; /TriggerState
 
 WatchAxisT:
+
 if(LTrigger != PrevLTrigger)
 { 
 	if (LTrigger > TThreshold && PrevLTrigger <= TThreshold) ;Left trigger is held
-		ActionDown(LTriggerKey[1],LTriggerKey[2],0)
+		ActionDown(LTriggerKey[ACTION_INDEX], LTriggerKey[MODIFIER_INDEX])
 	if (LTrigger <= TThreshold && PrevLTrigger > TThreshold) ;Left is released
-		ActionUp(LTriggerKey[1],LTriggerKey[2],0,0)
+		ActionUp(LTriggerKey[ACTION_INDEX], LTriggerKey[MODIFIER_INDEX], false)
 }
 if(RTrigger != PrevRTrigger)
 { 
 	if (RTrigger > TThreshold && PrevRTrigger <= TThreshold) ;Right trigger is held
-		ActionDown(RTriggerKey[1],RTriggerKey[2],0)
+		ActionDown(RTriggerKey[ACTION_INDEX],RTriggerKey[MODIFIER_INDEX])
 	if (RTrigger <= TThreshold && PrevRTrigger > TThreshold) ;Right is released
-		ActionUp(RTriggerKey[1],RTriggerKey[2],0,0)
+		ActionUp(RTriggerKey[ACTION_INDEX], RTriggerKey[MODIFIER_INDEX], false)
 }
+
 return ; Do nothing.
 
 WatchButtons:
@@ -562,71 +582,48 @@ Loop, 14
 {
 	if(!IsInitializing)
 	{
+		isPressSpecialKey := (ButtonKey[A_Index][PRESS_ACTION] = "Loot" or ButtonKey[A_Index][PRESS_ACTION] = "Freedom" or ButtonKey[A_Index][PRESS_ACTION] = "FreeTarget" or ButtonKey[A_Index][PRESS_ACTION] = "Inventory")
+		isHoldSpecialKey := (ButtonKey[A_Index][HOLD_ACTION] = "Loot" or ButtonKey[A_Index][HOLD_ACTION] = "Freedom" or ButtonKey[A_Index][HOLD_ACTION] = "FreeTarget" or ButtonKey[A_Index][HOLD_ACTION] = "Inventory")
+
 		if(Buttons[A_Index] != PrevButtons[A_Index])
 		{
+			; The first frame a button is pressed
 			if(Buttons[A_Index])
 			{
-				if(ButtonKey[A_Index][1] = "Loot")
-					SetTimer, SpamLoot, 5
-				else if(ButtonKey[A_Index][1] = "Freedom")
-				{
-					if(Inventory)
-					{
-						Inventory := false
-						Loop, 4
-						{
-							temp := ButtonKey[A_Index+4][1]
-							ButtonKey[A_Index+4][1] := ButtonKey[A_Index+4][3]
-							ButtonKey[A_Index+4][3] := temp
-						}	
-					}	
-					if(LStick)
-					{
-						buffer := ButtonKey[A_Index][1]
-						if(ShowCursorModeNotification)
-							ToolTip, Cursor Mode: Enabled `nPress %buffer% on the controller to disable, 0, 0
+				; If the button has a 'HOLD_ACTION'
+				if(ButtonKey[A_Index][HOLD_ACTION])				
+					ButtonKey[A_Index][HELD_DURATION] := A_TickCount
+				else if(isPressSpecialKey)
+				{				
+					if(ButtonKey[A_Index][PRESS_ACTION] = "Loot")
+						SetTimer, SpamLoot, %LootDelay%
+					else if(ButtonKey[A_Index][PRESS_ACTION] = "Freedom")
+						ToggleCursorMode()
+					else if(ButtonKey[A_Index][PRESS_ACTION] = "FreeTarget")
+						ToggleFreeTargetMode()
+					else if(ButtonKey[A_Index][PRESS_ACTION] = "Inventory")
+						ToggleInventoryMode()
 
-						LStick := false
-					}
-					else
-					{
-						if(ShowCursorModeNotification)
-							ToolTip
-
-						LStick := true
-					}
-				}
-				else if(ButtonKey[A_Index][1] = "FreeTarget")
-				{
-					if(RStick)
-					{
-						buffer := ButtonKey[A_Index][1]
-						if(ShowFreeTargetModeNotification)
-							Tooltip, Free Target Mode: Enabled `nPress  %buffer% on the controller to disable, 0, 40, 2
-
-						ForceTarget := true
-						RStick := false
-					}
-					else
-					{
-						if(ShowFreeTargetModeNotification)
-							ToolTip, , , , 2
-
-						ForceTarget := false
-						RStick := true
-					} 
+					if(ButtonKey[A_Index][PRESS_MODIFIER])
+						ActionDown(ButtonKey[A_Index][PRESS_MODIFIER], "")
 				}
 				else
-					ButtonKey[A_Index][4] := ActionDown(ButtonKey[A_Index][1],ButtonKey[A_Index][2],ButtonKey[A_Index][3])
+					ActionDown(ButtonKey[A_Index][PRESS_ACTION], ButtonKey[A_Index][PRESS_MODIFIER])
 			}
-			else if(ButtonKey[A_Index][3] && ButtonKey[A_Index][4] = 0)
+			; The first frame after a button was held long enough to trigger the 'HOLD_ACTION' and then released
+			else if(ButtonKey[A_Index][HOLD_ACTION] && ButtonKey[A_Index][HELD_DURATION] = 0)
 			{
-				if(ButtonKey[A_Index][3] != "Inventory")
-					ActionUp(ButtonKey[A_Index][3],0,0,0)
+				if(isHoldSpecialKey && ButtonKey[A_Index][HOLD_MODIFIER])
+					ActionUp(ButtonKey[A_Index][HOLD_MODIFIER], "", false)
+				else if(ButtonKey[A_Index][HOLD_ACTION] = "Loot")
+					SetTimer, SpamLoot, Off
+				else
+					ActionUp(ButtonKey[A_Index][HOLD_ACTION], ButtonKey[A_Index][HOLD_MODIFIER], false)
 			}
+			; The frame a button is released but did not trigger the 'HOLD_ACTION'
 			else
 			{
-				if(Inventory &&(A_Index > 4 && A_Index < 9))
+				if(Inventory &&(A_Index >= UpButton && A_Index <= RightButton))
 				{
 					ForceInventory := false
 					Button_Index := A_Index
@@ -689,13 +686,28 @@ Loop, 14
 						InventoryY := PrevInventoryY
 					}
 				}
-				else if(ButtonKey[A_Index][1] != "Loot" && ButtonKey[A_Index][1] != "Freedom" && ButtonKey[A_Index][1] != "FreeTarget")
-					ActionUp(ButtonKey[A_Index][1],ButtonKey[A_Index][2],ButtonKey[A_Index][3],ButtonKey[A_Index][4])
-				else if(ButtonKey[A_Index][1] = "Loot")
+				else if(ButtonKey[A_Index][PRESS_ACTION] = "Loot")
 					SetTimer, SpamLoot, Off
+				else if(isPressSpecialKey)
+				{
+					if(ButtonKey[A_Index][HOLD_ACTION])
+					{
+						if(ButtonKey[A_Index][PRESS_ACTION] = "Freedom")
+							ToggleCursorMode()
+						else if(ButtonKey[A_Index][PRESS_ACTION] = "FreeTarget")
+							ToggleFreeTargetMode()
+						else if(ButtonKey[A_Index][PRESS_ACTION] = "Inventory")
+							ToggleInventoryMode()
+					}
+					
+					if(ButtonKey[A_Index][PRESS_MODIFIER])
+						ActionUp(ButtonKey[A_Index][PRESS_MODIFIER], "", ButtonKey[A_Index][HOLD_ACTION])
+				}
+				else
+					ActionUp(ButtonKey[A_Index][PRESS_ACTION], ButtonKey[A_Index][PRESS_MODIFIER], ButtonKey[A_Index][HOLD_ACTION])
 			}	
 		}
-		else if(ButtonKey[A_Index][3] && Buttons[A_Index] && ButtonKey[A_Index][4] && A_TickCount >= ButtonKey[A_Index][4] + Delay)    
+		else if(ButtonKey[A_Index][HOLD_ACTION] && Buttons[A_Index] && ButtonKey[A_Index][HELD_DURATION] && A_TickCount >= ButtonKey[A_Index][HELD_DURATION] + Delay)    
 		{
 			Loop, 4 
 			{ 
@@ -703,113 +715,95 @@ Loop, 14
 					XInput_SetState(A_Index-1, VibeStrength, VibeStrength) ;MAX 65535
 			}
 			SetTimer, VibeOff, %VibeDuration%
-			if(ButtonKey[A_Index][3] = "Inventory")
-			{
-				if(!Inventory)
-				{
-					Inventory := true
-					LStick := true
-					Loop, 4
-					{
-						temp := ButtonKey[A_Index+4][1]
-						ButtonKey[A_Index+4][1] := ButtonKey[A_Index+4][3]
-						ButtonKey[A_Index+4][3] := temp
-					}	
-					buffer := ButtonKey[A_Index][1]
-					if(ShowInventoryModeNotification)
-						ToolTip, Inventory Mode: Enabled `nPress and hold %buffer% on the controller to disable, 0, 0
 
-					MouseMove, InventoryGridX[InventoryX,InventoryY], InventoryGridY[InventoryX,InventoryY]
-					Gui, 1:Hide
-				}
-				else
-				{
-					Inventory := false
-					Loop, 4
-					{
-						temp := ButtonKey[A_Index+4][1]
-						ButtonKey[A_Index+4][1] := ButtonKey[A_Index+4][3]
-						ButtonKey[A_Index+4][3] := temp
-					}
-					if(ShowInventoryModeNotification)	
-						ToolTip					
-				}
-				ButtonKey[A_Index][4] := 0
-			}
+			if(ButtonKey[A_Index][HOLD_ACTION] = "Loot")
+				SetTimer, SpamLoot, %LootDelay%
+			else if(ButtonKey[A_Index][HOLD_ACTION] = "Freedom")
+				ToggleCursorMode()
+			else if(ButtonKey[A_Index][HOLD_ACTION] = "FreeTarget")
+				ToggleFreeTargetMode()
+			else if(ButtonKey[A_Index][HOLD_ACTION] = "Inventory")
+				ToggleInventoryMode()
 			else
-			{
-				if(Buttons[A_Index])
-				{ 
-					ActionDown(ButtonKey[A_Index][3],0,0)
-					ButtonKey[A_Index][4] := 0
-				}	
-			}
+				ActionDown(ButtonKey[A_Index][HOLD_ACTION], ButtonKey[A_Index][HOLD_MODIFIER])
+
+			if(ButtonKey[A_Index][PRESS_MODIFIER])
+				ActionDown(ButtonKey[A_Index][HOLD_MODIFIER], "")
+
+			ButtonKey[A_Index][HELD_DURATION] := 0
 		}
 	}
 	else
-	{
-		ButtonKey[A_Index][4] := 0
-	}
+		ButtonKey[A_Index][HELD_DURATION] := 0
 }
-return
 
-ActionDown(Action, Modifier, Held)
+return
+; /WatchButtons
+
+ActionDown(Action, Modifier)
 {
 	local skip := false
 
-	if(!Held)
+	if (UsesMouse[1])
 	{
-		if (UsesMouse[1])
-		{
-			local found := false
+		local found := false
 
+		Loop
+		{
+			if(Action = UsesMouse[A_Index][ACTION_INDEX] && Modifier = UsesMouse[A_Index][MODIFIER_INDEX])
+			{
+				found := true
+				break					
+			}
+		} Until !UsesMouse[A_Index+1]
+
+		if (found && IgnoreTarget[1])
+		{
 			Loop
 			{
-				if(Action = UsesMouse[A_Index])
+				if(Action = IgnoreTarget[A_Index][ACTION_INDEX] && Modifier = IgnoreTarget[A_Index][MODIFIER_INDEX])
 				{
-					found := true
-					break					
-				}
-			} Until !UsesMouse[A_Index+1]
+					ReleaseKey(ForceMoveKey)
+					ForceMoveKey := Array(Action, Modifier)
+					
+					local tempX, local tempY
+					if(Pressed > 0)
+					{						
+						MouseGetPos, tempX, tempY
+						MouseMove, MouseX, MouseY
 
-			if (found && IgnoreTarget[1])
-			{
-				Loop
-				{
-					if(Action = IgnoreTarget[A_Index])
-					{					
-						Send {%ForceMoveKey% Up}
-						ForceMoveKey := Action
-						Send {%ForceMoveKey% Down}
-
-						Move := false
-						ForceMove := true
-						IgnoreIt := true
-						IgnorePressed += 1
-
-						skip := true
-						break
+						if(TargetingDelay > 0)
+							Sleep, %TargetingDelay%
 					}
-				} Until !IgnoreTarget[A_Index+1]			
-			}
 
-			if(!found)
-			{
-				if(Modifier)
-					Send {%Modifier% Down}
-				Send {%Action% Down}
+					PressKey(ForceMoveKey)
 
-				skip := true
-			}
+					if(Pressed > 0)
+						MouseMove, tempX, tempY
+
+					Move := false
+					ForceMove := true
+					IgnoreIt := true
+					IgnorePressed += 1
+
+					skip := true
+					break
+				}
+			} Until !IgnoreTarget[A_Index+1]			
 		}
 
-		if(!skip)
-				TargetActionDown(Action, Modifier)
+		if(!found)
+		{
+			PressKey(Array(Action, Modifier))
+
+			skip := true
+		}
 	}
-	else
-		return A_TickCount
+
+	if(!skip)
+			TargetActionDown(Action, Modifier)
 }
-ActionUp(Action, Modifier, Held, byRef TimeHeld)
+ActionUp(Action, Modifier, HasHoldAction)
 {
 	local skip := false
 	
@@ -819,7 +813,7 @@ ActionUp(Action, Modifier, Held, byRef TimeHeld)
 
 		Loop
 		{
-			if(Action = UsesMouse[A_Index])	
+			if(Action = UsesMouse[A_Index][ACTION_INDEX] && Modifier = UsesMouse[A_Index][MODIFIER_INDEX])
 			{
 				found := true
 				break
@@ -830,22 +824,25 @@ ActionUp(Action, Modifier, Held, byRef TimeHeld)
 		{
 			Loop
 			{
-				if(Action = IgnoreTarget[A_Index])
+				if(Action = IgnoreTarget[A_Index][ACTION_INDEX] && Modifier = IgnoreTarget[A_Index][MODIFIER_INDEX])
 				{
-					if (Held)
+					if (HasHoldAction)
 					{
 						local tempX, local tempY
 						MouseGetPos, tempX, tempY
 						MouseMove, MouseX, MouseY
 
-						Send {%Action% Down}
-						Send {%Action% Up}
+						if(TargetingDelay > 0)
+							Sleep, %TargetingDelay%
+
+						PressKey(Array(Action, Modifier))
+						ReleaseKey(Array(Action, Modifier))
 
 						MouseMove, tempX, tempY
 					}
 					else
 					{
-						Send {%ForceMoveKey% Up}
+						ReleaseKey(Array(Action, Modifier))
 
 						IgnorePressed -= 1
 						IgnoreIt := false
@@ -860,16 +857,10 @@ ActionUp(Action, Modifier, Held, byRef TimeHeld)
 
 		if(!found)
 		{
-			if(Held)
-			{
-				if(Modifier)
-					Send {%Modifier% Down}
-				Send {%Action% Down}
-			}
+			if(HasHoldAction)
+				PressKey(Array(Action, Modifier))
 
-			if(Modifier)
-				Send {%Modifier% Up}
-			Send {%Action% Up} 	
+			ReleaseKey(Array(Action, Modifier))	
 
 			skip := true
 		}
@@ -877,7 +868,7 @@ ActionUp(Action, Modifier, Held, byRef TimeHeld)
 
 	if (!skip)
 	{
-		if(Held)
+		if(HasHoldAction)
 			TargetActionDown(Action, Modifier)		
 
 		TargetActionUp(Action, Modifier)
@@ -893,7 +884,7 @@ TargetActionDown(Action, Modifier)
 			Gui, 1:Hide
 
 		;Move := false
-		Send {%ForceMoveKey% Up}
+		ReleaseKey(ForceMoveKey)
 	}
 	
 	Pressed += 1
@@ -906,23 +897,19 @@ TargetActionDown(Action, Modifier)
 			Sleep, %TargetingDelay%
 	}
 	
-	if(Modifier)
-		Send {%Modifier% Down}
-	Send {%Action% Down}	
+	PressKey(Array(Action, Modifier))	
 	return ; Do nothing
 }
 TargetActionUp(Action, Modifier)
 { 
 	Pressed -= 1	
-	if(Modifier)
-		Send {%Modifier% Up}
-	Send {%Action% Up} 	
+	ReleaseKey(Array(Action, Modifier))
 	
 	if(Pressed = 0)
 	{
 		Move := false
 		ForceMove := true
-		Send {%ForceMoveKey% Up}
+		ReleaseKey(ForceMove)
 		MouseMove, PrevMouseX, PrevMouseY
 		
 		if(Target || ForceTarget)
@@ -935,9 +922,187 @@ TargetActionUp(Action, Modifier)
 	return ; Do nothing
 }
 
-AddDebugToLog(NewText)
+PressKey(Key)
+{
+	local Action := Key[ACTION_INDEX]
+	local Modifier := Key[MODIFIER_INDEX]
+
+	;AddToDebugLog("Pressing " . Action " + " . Modifier)
+
+	if(Modifier)
+		Send {%Modifier% Down}
+	Send {%Action% Down}
+}
+ReleaseKey(Key)
+{
+	local Action := Key[ACTION_INDEX]
+	local Modifier := Key[MODIFIER_INDEX]
+
+	;AddToDebugLog("Pressing " . Action " + " . Modifier)
+	
+	Send {%Action% Up}
+	if(Modifier)
+		Send {%Modifier% Up}
+}
+
+ToggleCursorMode()
+{
+	if(LStick)
+		EnableCursorMode()
+	else
+		DisableCursorMode()
+}
+EnableCursorMode()
+{		
+	global
+	DisableInventoryMode()
+
+	if(ShowCursorModeNotification)
+	{
+		local newButtonInfo := FindButtonString(Array("Freedom"))
+		local buffer := newButtonInfo[1] . " " . newButtonInfo[2]
+
+		ToolTip, Cursor Mode: Enabled `n%buffer% on the controller to disable, 0, 0
+	}
+
+	LStick := false
+}
+DisableCursorMode()
+{
+	if(ShowCursorModeNotification)
+		ToolTip
+
+	LStick := true
+}
+
+ToggleFreeTargetMode()
+{
+	if(RStick)
+		EnableFreeTargetMode()
+	else
+		DisableFreeTargetMode()
+}
+EnableFreeTargetMode()
+{
+	global
+	if(ShowFreeTargetModeNotification)
+	{
+		local newButtonInfo := FindButtonString(Array("FreeTarget"))
+		local buffer := newButtonInfo[1] . " " . newButtonInfo[2]
+
+		Tooltip, Free Target Mode: Enabled `n%buffer% on the controller to disable, 0, 40, 2
+	}
+
+	ForceTarget := true
+	RStick := false
+}
+DisableFreeTargetMode()
+{
+	if(ShowFreeTargetModeNotification)
+		ToolTip, , , , 2
+
+	ForceTarget := false
+	RStick := true
+}
+
+ToggleInventoryMode()
+{
+	if(!Inventory)
+		EnableInventoryMode()
+	else
+		DisableInventoryMode()
+}
+EnableInventoryMode()
+{
+	global 
+	DisableCursorMode()
+
+	Inventory := true
+
+	Loop, 4
+	{
+		local temp := ButtonKey[A_Index+4][PRESS_ACTION]
+		ButtonKey[A_Index+4][PRESS_ACTION] := ButtonKey[A_Index+4][HOLD_ACTION]
+		ButtonKey[A_Index+4][HOLD_ACTION] := temp
+	}
+
+	if(ShowInventoryModeNotification)
+	{
+		local newButtonInfo := FindButtonString(Array("Inventory"))
+		local buffer := newButtonInfo[1] . " " . newButtonInfo[2]
+
+		ToolTip, Inventory Mode: Enabled `n%buffer% on the controller to disable, 0, 0
+	}
+
+	MouseMove, InventoryGridX[InventoryX,InventoryY], InventoryGridY[InventoryX,InventoryY]
+	Gui, 1:Hide
+}
+DisableInventoryMode()
+{
+	global
+	Inventory := false
+
+	Loop, 4
+	{
+		local temp := ButtonKey[A_Index+4][PRESS_ACTION]
+		ButtonKey[A_Index+4][PRESS_ACTION] := ButtonKey[A_Index+4][HOLD_ACTION]
+		ButtonKey[A_Index+4][HOLD_ACTION] := temp
+	}
+
+	if(ShowInventoryModeNotification)	
+		ToolTip
+}
+
+AddToDebugLog(NewText)
 {
 	DebugLog := DebugLog . "`n" . NewText
+}
+
+FindButtonString(Key)
+{
+	local newButtonInfo := Array()
+	Loop, 14
+	{
+		
+		if(ButtonKey[A_Index][PRESS_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][PRESS_MODIFIER] = Key[MODIFIER_INDEX])
+		{
+			newButtonInfo[1] := "Press"
+			newButtonInfo[2] := ButtonString[A_Index]
+			break
+		}
+
+		if(ButtonKey[A_Index][HOLD_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][HOLD_MODIFIER] = Key[MODIFIER_INDEX])
+		{
+			newButtonInfo[1] := "Hold"
+			newButtonInfo[2] := ButtonString[A_Index]
+			break
+		}
+	}
+
+	if(!newButtonInfo[1])
+	{
+		AddToDebugLog("Couldn't find a matching button. Attempting again but with no modifier.")
+
+		Loop, 14
+		{
+			
+			if(ButtonKey[A_Index][PRESS_ACTION] = Key[ACTION_INDEX])
+			{
+				newButtonInfo[1] := "Press"
+				newButtonInfo[2] := ButtonString[A_Index]
+				break
+			}
+
+			if(ButtonKey[A_Index][HOLD_ACTION] = Key[ACTION_INDEX])
+			{
+				newButtonInfo[1] := "Hold"
+				newButtonInfo[2] := ButtonString[A_Index]
+				break
+			}
+		}
+	}
+
+	return newButtonInfo
 }
 
 InventoryInit()
@@ -945,9 +1110,9 @@ InventoryInit()
 	global
 	Loop, 4
 	{
-		local temp := ButtonKey[A_Index+4][1]
-		ButtonKey[A_Index+4][1] := ButtonKey[A_Index+4][3]
-		ButtonKey[A_Index+4][3] := temp
+		local temp := ButtonKey[A_Index+4][PRESS_ACTION]
+		ButtonKey[A_Index+4][PRESS_ACTION] := ButtonKey[A_Index+4][HOLD_ACTION]
+		ButtonKey[A_Index+4][HOLD_ACTION] := temp
 	}	
 }
 
@@ -1082,48 +1247,61 @@ ReadConfig()
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
 
-	IniRead, DefaultForceMoveKey, %ProfilePath%, Buttons, Force_Move
+	IniRead, temp, %ProfilePath%, Buttons, Force_Move
+	DefaultForceMoveKey := ParseKeyBinding(temp)
 	ForceMoveKey := DefaultForceMoveKey
 
 	global UsesMouse := Array()
 	IniRead, temp, %ProfilePath%, Buttons, Uses_Mouse
-	UsesMouse[1] := temp
 	
-	EndLoop := false
 	Loop
 	{
-		i := InStr(UsesMouse[A_Index],", ")
+		;AddToDebugLog("temp = " . temp)
+
+		; 'i' will be the position in the string that a comma was found
+		; if there is no comma, 'i' will be 0
+		i := InStr(temp,", ")
 		
+		; If a comma was found in the string
 		if(i)
 		{
-			UsesMouse[A_Index+1] := SubStr(UsesMouse[A_Index], i+2)
-			UsesMouse[A_Index] := SubStr(UsesMouse[A_Index], 1, i-1)			
+			UsesMouse[A_Index] := ParseKeyBinding(SubStr(temp, 1, i - 1))
+			temp := SubStr(temp, i + 1)			
 		}
 		else
-			EndLoop := true
+		{
+			UsesMouse[A_Index] := ParseKeyBinding(temp)
+			break
+		}
 
-		AddDebugToLog(A_Index . "UsesMouse value is: " . UsesMouse[A_Index])
+		;AddToDebugLog("UsesMouse[" . A_Index . "] is: " . UsesMouse[A_Index][ACTION_INDEX] . " " . UsesMouse[A_Index][MODIFIER_INDEX])
 		
-	}Until EndLoop
+	}Until false
 
 	global IgnoreTarget := Array()	
 	IniRead, temp, %ProfilePath%, Buttons, Ignore_Target
-	IgnoreTarget[1] := temp
 	
-	EndLoop := false
 	Loop
 	{
-		i := InStr(IgnoreTarget[A_Index],", ")
+		; 'i' will be the position in the string that a comma was found
+		; if there is no comma, 'i' will be 0
+		i := InStr(temp,", ")
 		
+		; If a comma was found in the string
 		if(i)
 		{
-			IgnoreTarget[A_Index+1] := SubStr(IgnoreTarget[A_Index], i+2)
-			IgnoreTarget[A_Index] := SubStr(IgnoreTarget[A_Index], 1, i-1)			
+			IgnoreTarget[A_Index] := ParseKeyBinding(SubStr(temp, 1, i - 1))
+			temp := SubStr(temp, i + 1)			
 		}
 		else
-			EndLoop := true
+		{
+			IgnoreTarget[A_Index] := ParseKeyBinding(temp)
+			break
+		}
 		
-	}Until EndLoop
+		;AddToDebugLog("IgnoreTarget[" . A_Index . "] is: " . IgnoreTarget[A_Index][ACTION_INDEX] . " " . IgnoreTarget[A_Index][MODIFIER_INDEX])
+		
+	}Until false
 	
 	IniRead, LMaxThreshold, %ConfigurationPath%, Calibration, Left_Analog_Max
 	IniRead, RMaxThreshold, %ConfigurationPath%, Calibration, Right_Analog_Max
@@ -1139,17 +1317,31 @@ ReadConfig()
 	IniRead, ShowCursorModeNotification, %ProfilePath%, Preferences, Show_Cursor_Mode_Notification
 	ShowCursorModeNotification := %ShowCursorModeNotification%
 
+	IniRead, ShowFreeTargetModeNotification, %ProfilePath%, Preferences, Show_FreeTarget_Mode_Notification
+	ShowFreeTargetModeNotification := %ShowFreeTargetModeNotification%
+
 	IniRead, ShowInventoryModeNotification, %ProfilePath%, Preferences, Show_Inventory_Mode_Notification
 	ShowInventoryModeNotification := %ShowInventoryModeNotification%
 
 	IniRead, ShowPausedNotification, %ProfilePath%, Preferences, Show_Paused_Notification
 	ShowPausedNotification := %ShowPausedNotification%
 
-	IniRead, TargetingDelay, %ProfilePath%, Preferences, Targeting_Delay
+	IniRead, LootDelay, %ProfilePath%, Preferences, Loot_Delay
+	IniRead, TargetingDelay, %ProfilePath%, Preferences, Targeting_Delay	
 
 	IniRead, VibeStrength, %ProfilePath%, Preferences, Vibration_Strength
 	IniRead, VibeDuration, %ProfilePath%, Preferences, Vibration_Duration
 	IniRead, Delay, %ProfilePath%, Preferences, Hold_Delay
+
+	IniRead, temp, %ProfilePath%, Preferences, Cursor_Mode_At_Start
+	temp := %temp%
+	if(temp)
+		EnableCursorMode()
+
+	IniRead, temp, %ProfilePath%, Preferences, FreeTarget_Mode_At_Start
+	temp := %temp%
+	if(temp)
+		EnableFreeTargetMode()
 	
 	IniRead, LMaxRadiusX, %ProfilePath%, Analog Stick, Left_Analog_XRadius
 	IniRead, LMaxRadiusY, %ProfilePath%, Analog Stick, Left_Analog_YRadius
@@ -1177,35 +1369,57 @@ ReadConfig()
 	IniRead, RSensitivityY, %ProfilePath%, Analog Stick, Right_Analog_Cursor_YSensitivity
 }
 PassKeys(ButtonName)
-{
-	IniRead, Key, %ProfilePath%, Buttons, %ButtonName%
-	KeyBinding := Array()
+{	
+	local key
+	IniRead, key, %ProfilePath%, Buttons, %ButtonName%
+
+	local newKeyBinding := Array()
 	
-	if Key = ERROR
+	; Returns an error when the requested button is not in the current profile
+	if key = ERROR
 		return ERROR
-	i := InStr(Key,"+") 
-	f := InStr(Key,",")
+
+	commaPos := InStr(key,",")
 	
-	if(f)
-	{
-		KeyBinding[3] := SubStr(Key, f+2)
-		if(i)
-		{
-			KeyBinding[1] := SubStr(Key, i+1, f-i-1)
-			KeyBinding[2] := SubStr(Key, 1, i-1)
-		}
-		else
-			KeyBinding[1] := SubStr(Key, 1, f-1)
+	local tempKeyBinding := Array()
+	if(commaPos)
+	{	
+		tempKeyBinding := ParseKeyBinding(SubStr(key, 1, commaPos - 1))
+		newKeyBinding[1] := tempKeyBinding[1]
+		newKeyBinding[2] := tempKeyBinding[2]
+
+		tempKeyBinding := ParseKeyBinding(SubStr(key, commaPos + 1))
+		newKeyBinding[3] := tempKeyBinding[1]
+		newKeyBinding[4] := tempKeyBinding[2]	
 	}
-	else if(i)
+	else 
 	{
-		KeyBinding[1] := SubStr(Key, i+1)
-		KeyBinding[2] := SubStr(Key, 1, i-1)
+		tempKeyBinding := ParseKeyBinding(key)
+		newKeyBinding[1] := tempKeyBinding[1]
+		newKeyBinding[2] := tempKeyBinding[2]
+	}
+	
+	;AddToDebugLog("Key " . key . " parsed as [1]-" . newKeyBinding[1] " [2]-" . newKeyBinding[2] " [3]-" . newKeyBinding[3] " [4]-" . newKeyBinding[4])
+
+	return newKeyBinding
+}
+
+ParseKeyBinding(Key)
+{
+	local newKeyBinding := Array()
+
+	Key := Trim(Key)
+	plusPos := InStr(Key,"+") 
+
+	if(plusPos)
+	{
+		newKeyBinding[ACTION_INDEX] := SubStr(Key, plusPos+1)
+		newKeyBinding[MODIFIER_INDEX] := SubStr(Key, 1, plusPos-1)
 	}
 	else
-		KeyBinding[1] := Key
-	
-	return KeyBinding
+		newKeyBinding[ACTION_INDEX] := SubStr(Key, 1)
+
+	return newKeyBinding
 }
 
 SpamLoot:
@@ -1244,6 +1458,33 @@ global RShoulderButton := 12
 
 global LThumbButton := 13
 global RThumbButton := 14
+
+global LTriggerIndex := 15
+global RTriggerIndex := 16
+
+global ButtonString := Array()
+
+ButtonString[AButton] := "A"
+ButtonString[BButton] := "B"
+ButtonString[XButton] := "X"
+ButtonString[YButton] := "Y"
+
+ButtonString[UpButton] := "D-pad Up"
+ButtonString[DownButton] := "D-pad Down"
+ButtonString[LeftButton] := "D-pad Left"
+ButtonString[RightButton] := "D-pad Right"
+
+ButtonString[StartButton] := "Start"
+ButtonString[BackButton] := "Back"
+
+ButtonString[LShoulderButton] := "Left Bumper"
+ButtonString[RShoulderButton] := "Right Bumper"
+
+ButtonString[LThumbButton] := "Left Stick"
+ButtonString[RThumbButton] := "Right Stick"
+
+ButtonString[LTriggerIndex] := "Left Trigger"
+ButtonString[RTriggerIndex] := "Right Trigger"
 
 global Buttons := Array()
 global PrevButtons := Array()
@@ -1376,8 +1617,8 @@ InventoryGridY[10,1] := 232.5
 Calibrate()
 ReadConfig()
 
-IfWinExist, %Application_Name%
-	WinActivate, %Application_Name%; Activate Application Window if it exists
+if WinExist(ApplicationName)
+	WinActivate ; Activate Application Window if it exists
 
 Gosub TriggerState
 	
