@@ -5,8 +5,8 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directoTargety.
 
-#Include XInput.ahk
-#Include Gdip.ahk
+#Include Library/XInput.ahk
+#Include Library/Gdip.ahk
 
 XInput_Init() ; Initialize XInput
 Gdip_Startup()
@@ -16,7 +16,7 @@ global PI := 3.141592653589793 ; Define PI for easier use
 TThreshold := 64 ; for trigger deadzones
 
 global ConfigurationPath = "config.ini"
-global ProfilePath = "preferences.ini"
+global ProfilePath = "profile.ini"
 
 global DebugMode := false ;Is debug mode on?
 global DebugLog := ""
@@ -127,7 +127,7 @@ global HOLD_ACTION :=		3
 global HOLD_MODIFIER := 	4
 global HELD_DURATION := 	5
 
-SetTimer, Startup, 750 ; The 'Init' function of my code essentially. It's at the very bottom.
+SetTimer, Startup, 750 ; The 'Init' function of the code essentially. It's at the very bottom.
 
 ; Toggles Debug Mode
 $F3::
@@ -1749,7 +1749,7 @@ pGraphics := Gdip_GraphicsFromHDC(hdc)
 Gui, Show, NoActivate
 
 UpdateLayeredWindow(hGui, hdc,0,0,300,300)
-sFile   := "Target.png"
+sFile   := "Images/Target.png"
 
 Gdip_SetCompositingMode(pGraphics,1)
 pBrush:=Gdip_BrushCreateSolid(0x0000000)
