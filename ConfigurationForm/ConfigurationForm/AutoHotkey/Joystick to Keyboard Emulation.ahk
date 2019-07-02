@@ -34,10 +34,10 @@ global Target := false ; This is true when the Right analog stick is currently b
 global TargetX ; This is the red target on the screen's X value
 global TargetY ; This is the red target on the screen's Y value
 global MouseX ; The left stick's X value on the screen
-global MouseY ; The right stick's Y value on the screen
+global MouseY ; The left stick's Y value on the screen
 
 global Pressed := 0 ; This value stores the amount of buttons currently pressed. It is used to stop the left ananlog stick from inducing movement
-global IgnoreIt := false ; When this value is greater true, there is a button currently pressed that the user does not want to use the target cursor for
+global IgnoreIt := false ; When this value is true, there is a button currently pressed that the user does not want to use the target cursor for
 global IgnorePressed := 0
 
 global IsInitializing := true ; This is true until the 'Startup' timer has completed. It is used to stop some functions from running until everything has been initialized.
@@ -114,6 +114,8 @@ global ShowFreeTargetModeNotification ; Whether or not to show the free target n
 global Inventory := false ; This value is true when then Inventory hotkey is triggered, and is toggled by that button. While true, the D-Pad is used to navigate the inventory screen
 global InventoryX := 1 ; The X value of the Inventory grid the user is currently on
 global InventoryY := 6 ; The Y value of the Inventory grid the user is currently on
+
+global TooltipOverlayShowing := false
 
 ; Enum section
 global ACTION_INDEX := 		1
@@ -504,6 +506,9 @@ Loop, 4
 if(!IsInitializing) 
 {
 	WinGetActiveStats, Title, Width, Height, X, Y
+
+	if(!TooltipOverlayShowing)
+		EnableTooltipOverlay()
 	
 	ScreenCenterX := Width / 2
 	ScreenCenterY := Height / 2
@@ -552,7 +557,7 @@ PrevRThumbX := RThumbX
 PrevRThumbY := RThumbY
 
 if(DebugMode)
-	ToolTip, Debug Log: `n%DebugLog%, 0, 90, 6
+	ToolTip, Inventory: (%InventoryX% %InventoryY%) `nMove: %Move% `nPressed: %Pressed% `nIgnorePressed: %IgnorePressed% `nDebug Log: `n%DebugLog%, 0, 90, 6
 
 return
 ; /TriggerState
@@ -625,14 +630,16 @@ Loop, 14
 			{
 				if(Inventory &&(A_Index >= UpButton && A_Index <= RightButton))
 				{
-					ForceInventory := false
 					Button_Index := A_Index
+
+					ForceInventory := false
+					; Loops over and repeats input until a new cursor position is determined	
 					Loop
 					{
 						PrevInventoryX := InventoryX
 						PrevInventoryY := InventoryY
 					
-						if(Button_Index = 5)
+						if(Button_Index = UpButton)
 						{
 							if((InventoryX > 4 || InventoryY > 2) && InventoryY != 1)
 							{
@@ -640,10 +647,16 @@ Loop, 14
 								if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])
 									ForceInventory := true
 							}
+							else if(InventoryY <= 1)
+							{
+								InventoryY := 5
+
+								ForceInventory := true
+							}
 							else 
 								ForceInventory := true
 						}
-						if(Button_Index = 6)
+						if(Button_Index = DownButton)
 						{
 							if(InventoryY != 11)
 							{
@@ -651,10 +664,16 @@ Loop, 14
 								if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])
 									ForceInventory := true
 							}
+							else if(InventoryY >= 11)
+							{
+								InventoryY := 6
+
+								ForceInventory := true
+							}
 							else
 								ForceInventory := true
 						}
-						if(Button_Index = 7)
+						if(Button_Index = LeftButton)
 						{
 							if((InventoryX > 4 || InventoryY > 5) && InventoryX != 1)
 							{
@@ -662,16 +681,34 @@ Loop, 14
 								if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])
 									ForceInventory := true
 							}
+							else if(InventoryX <= 4)
+							{
+								if(InventoryY <= 5)
+									InventoryX := 9
+								else if(InventoryX <= 1)
+									InventoryX := 10
+
+								ForceInventory := true
+							}
 							else 
 								ForceInventory := true
 						}	
-						if(Button_Index = 8)
+						if(Button_Index = RightButton)
 						{
 							if(InventoryX != 10)
 							{
 								InventoryX += 1
 								if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])
 									ForceInventory := true
+							}
+							else if(InventoryX >= 10)
+							{
+								if(InventoryY <= 5)
+									InventoryX := 5
+								else
+									InventoryX := 1
+
+								ForceInventory := true
 							}
 							else
 								ForceInventory := true
@@ -955,12 +992,13 @@ ToggleCursorMode()
 EnableCursorMode()
 {		
 	global
-	DisableInventoryMode()
+	if(Inventory)
+		DisableInventoryMode()
 
 	if(ShowCursorModeNotification)
 	{
 		local newButtonInfo := FindButtonString(Array("Freedom"))
-		local buffer := newButtonInfo[1] . " " . newButtonInfo[2]
+		local buffer := newButtonInfo[1] . " " . newButtonInfo[2][1]
 
 		ToolTip, Cursor Mode: Enabled `n%buffer% on the controller to disable, 0, 0
 	}
@@ -988,7 +1026,7 @@ EnableFreeTargetMode()
 	if(ShowFreeTargetModeNotification)
 	{
 		local newButtonInfo := FindButtonString(Array("FreeTarget"))
-		local buffer := newButtonInfo[1] . " " . newButtonInfo[2]
+		local buffer := newButtonInfo[1] . " " . newButtonInfo[2][1]
 
 		Tooltip, Free Target Mode: Enabled `n%buffer% on the controller to disable, 0, 40, 2
 	}
@@ -1029,7 +1067,7 @@ EnableInventoryMode()
 	if(ShowInventoryModeNotification)
 	{
 		local newButtonInfo := FindButtonString(Array("Inventory"))
-		local buffer := newButtonInfo[1] . " " . newButtonInfo[2]
+		local buffer := newButtonInfo[1] . " " . newButtonInfo[2][1]
 
 		ToolTip, Inventory Mode: Enabled `n%buffer% on the controller to disable, 0, 0
 	}
@@ -1053,6 +1091,29 @@ DisableInventoryMode()
 		ToolTip
 }
 
+EnableTooltipOverlay()
+{
+	local buffer
+	For i, key in OverlayTooltip
+	{
+		buffer := FindButtonString(key[1])
+
+		local buffer1 := buffer[2][2] . (buffer[1] = "Press" ? "(P)" : "(H)")
+		local buffer2 := A_Index + 10
+
+		ToolTip, % buffer1, % key[2], % key[3], % buffer2
+
+		WinGetPos, x, y, w, h, ahk_class tooltips_class32
+		WinMove, ahk_class tooltips_class32, , % (key[2] - (w / 2)) * (Width / 1920), % (key[3] - (h / 2)) * (Height / 1080)
+	}
+
+	TooltipOverlayShowing := true
+}
+DisableTooltipOverlay()
+{
+	
+}
+
 AddToDebugLog(NewText)
 {
 	DebugLog := DebugLog . "`n" . NewText
@@ -1061,21 +1122,36 @@ AddToDebugLog(NewText)
 FindButtonString(Key)
 {
 	local newButtonInfo := Array()
-	Loop, 14
-	{
-		
-		if(ButtonKey[A_Index][PRESS_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][PRESS_MODIFIER] = Key[MODIFIER_INDEX])
-		{
-			newButtonInfo[1] := "Press"
-			newButtonInfo[2] := ButtonString[A_Index]
-			break
-		}
 
-		if(ButtonKey[A_Index][HOLD_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][HOLD_MODIFIER] = Key[MODIFIER_INDEX])
+	if(LTriggerKey[ACTION_INDEX] = Key[ACTION_INDEX] && LTriggerKey[MODIFIER_INDEX] = Key[MODIFIER_INDEX])
+	{
+		newButtonInfo[1] := "Press"
+		newButtonInfo[2] := ButtonString[LTriggerIndex]
+	}
+	else if(RTriggerKey[ACTION_INDEX] = Key[ACTION_INDEX] && RTriggerKey[MODIFIER_INDEX] = Key[MODIFIER_INDEX])
+	{
+		newButtonInfo[1] := "Press"
+		newButtonInfo[2] := ButtonString[RTriggerIndex]
+	}
+
+	if(!newButtonInfo[1])
+	{
+		Loop, 14
 		{
-			newButtonInfo[1] := "Hold"
-			newButtonInfo[2] := ButtonString[A_Index]
-			break
+			
+			if(ButtonKey[A_Index][PRESS_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][PRESS_MODIFIER] = Key[MODIFIER_INDEX])
+			{
+				newButtonInfo[1] := "Press"
+				newButtonInfo[2] := ButtonString[A_Index]
+				break
+			}
+
+			if(ButtonKey[A_Index][HOLD_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][HOLD_MODIFIER] = Key[MODIFIER_INDEX])
+			{
+				newButtonInfo[1] := "Hold"
+				newButtonInfo[2] := ButtonString[A_Index]
+				break
+			}
 		}
 	}
 
@@ -1122,7 +1198,7 @@ Calibrate()
 	
 	local MaxL := 32767, MaxR := 32767, Button, buffer
 	
-	IniRead, buffer, %ConfigurationPath%, Calibration, Calibrate
+	IniRead, buffer, % ConfigurationPath, Calibration, Calibrate
 	if(!%buffer%)
 		return ; Calibrate is false	
 	
@@ -1205,23 +1281,23 @@ Calibrate()
 	
 	MsgBox, , Calibration Complete, That concludes the calibration. `n`nIf for any reason you think these values  are incorrect, you can either edit them yourself (not recommended) or set 'Calibrate = true' in %ConfigurationPath% to 'true' to run this again.
 	
-	IniWrite, false, %ConfigurationPath%, Calibration, Calibrate
+	IniWrite, false, % ConfigurationPath, Calibration, Calibrate
 	
-	IniWrite, %MaxL%, %ConfigurationPath%, Calibration, Left_Analog_Max
-	IniWrite, %MaxR%, %ConfigurationPath%, Calibration, Right_Analog_Max
+	IniWrite, %MaxL%, % ConfigurationPath, Calibration, Left_Analog_Max
+	IniWrite, %MaxR%, % ConfigurationPath, Calibration, Right_Analog_Max
 	
-	IniWrite, %LThumbX0%, %ConfigurationPath%, Calibration, Left_Analog_XZero
-	IniWrite, %LThumbY0%, %ConfigurationPath%, Calibration, Left_Analog_YZero
+	IniWrite, %LThumbX0%, % ConfigurationPath, Calibration, Left_Analog_XZero
+	IniWrite, %LThumbY0%, % ConfigurationPath, Calibration, Left_Analog_YZero
 	
-	IniWrite, %RThumbX0%, %ConfigurationPath%, Calibration, Right_Analog_XZero
-	IniWrite, %RThumbY0%, %ConfigurationPath%, Calibration, Right_Analog_YZero
+	IniWrite, %RThumbX0%, % ConfigurationPath, Calibration, Right_Analog_XZero
+	IniWrite, %RThumbY0%, % ConfigurationPath, Calibration, Right_Analog_YZero
 }
 
 ReadConfig()
 {
 	; Set Profile Path
-	IniRead, ProfilePath, %ConfigurationPath%, Other, Profile_Location
-	ProfilePath = %A_WorkingDir% %ProfilePath%
+	IniRead, ProfilePath, % ConfigurationPath, Other, Profile_Location
+	ProfilePath := A_WorkingDir . ProfilePath
 	
 	global ButtonKey := Array()
 	
@@ -1247,12 +1323,12 @@ ReadConfig()
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
 
-	IniRead, temp, %ProfilePath%, Buttons, Force_Move
+	IniRead, temp, % ProfilePath, Buttons, Force_Move
 	DefaultForceMoveKey := ParseKeyBinding(temp)
 	ForceMoveKey := DefaultForceMoveKey
 
 	global UsesMouse := Array()
-	IniRead, temp, %ProfilePath%, Buttons, Uses_Mouse
+	IniRead, temp, % ProfilePath, Buttons, Uses_Mouse
 	
 	Loop
 	{
@@ -1279,7 +1355,7 @@ ReadConfig()
 	}Until false
 
 	global IgnoreTarget := Array()	
-	IniRead, temp, %ProfilePath%, Buttons, Ignore_Target
+	IniRead, temp, % ProfilePath, Buttons, Ignore_Target
 	
 	Loop
 	{
@@ -1303,75 +1379,102 @@ ReadConfig()
 		
 	}Until false
 	
-	IniRead, LMaxThreshold, %ConfigurationPath%, Calibration, Left_Analog_Max
-	IniRead, RMaxThreshold, %ConfigurationPath%, Calibration, Right_Analog_Max
+	IniRead, LMaxThreshold, % ConfigurationPath, Calibration, Left_Analog_Max
+	IniRead, RMaxThreshold, % ConfigurationPath, Calibration, Right_Analog_Max
 	
-	IniRead, LThumbX0, %ConfigurationPath%, Calibration, Left_Analog_XZero
-	IniRead, LThumbY0, %ConfigurationPath%, Calibration, Left_Analog_YZero
+	IniRead, LThumbX0, % ConfigurationPath, Calibration, Left_Analog_XZero
+	IniRead, LThumbY0, % ConfigurationPath, Calibration, Left_Analog_YZero
 	
-	IniRead, RThumbX0, %ConfigurationPath%, Calibration, Right_Analog_XZero
-	IniRead, RThumbY0, %ConfigurationPath%, Calibration, Right_Analog_YZero
+	IniRead, RThumbX0, % ConfigurationPath, Calibration, Right_Analog_XZero
+	IniRead, RThumbY0, % ConfigurationPath, Calibration, Right_Analog_YZero
 	
-	IniRead, ApplicationName, %ProfilePath%, Preferences, Application_Name
+	IniRead, ApplicationName, % ProfilePath, Preferences, Application_Name
 
-	IniRead, ShowCursorModeNotification, %ProfilePath%, Preferences, Show_Cursor_Mode_Notification
+	IniRead, ShowCursorModeNotification, % ProfilePath, Preferences, Show_Cursor_Mode_Notification
 	ShowCursorModeNotification := %ShowCursorModeNotification%
 
-	IniRead, ShowFreeTargetModeNotification, %ProfilePath%, Preferences, Show_FreeTarget_Mode_Notification
+	IniRead, ShowFreeTargetModeNotification, % ProfilePath, Preferences, Show_FreeTarget_Mode_Notification
 	ShowFreeTargetModeNotification := %ShowFreeTargetModeNotification%
 
-	IniRead, ShowInventoryModeNotification, %ProfilePath%, Preferences, Show_Inventory_Mode_Notification
+	IniRead, ShowInventoryModeNotification, % ProfilePath, Preferences, Show_Inventory_Mode_Notification
 	ShowInventoryModeNotification := %ShowInventoryModeNotification%
 
-	IniRead, ShowPausedNotification, %ProfilePath%, Preferences, Show_Paused_Notification
+	IniRead, ShowPausedNotification, % ProfilePath, Preferences, Show_Paused_Notification
 	ShowPausedNotification := %ShowPausedNotification%
 
-	IniRead, LootDelay, %ProfilePath%, Preferences, Loot_Delay
-	IniRead, TargetingDelay, %ProfilePath%, Preferences, Targeting_Delay	
+	IniRead, LootDelay, % ProfilePath, Preferences, Loot_Delay
+	IniRead, TargetingDelay, % ProfilePath, Preferences, Targeting_Delay	
 
-	IniRead, VibeStrength, %ProfilePath%, Preferences, Vibration_Strength
-	IniRead, VibeDuration, %ProfilePath%, Preferences, Vibration_Duration
-	IniRead, Delay, %ProfilePath%, Preferences, Hold_Delay
+	IniRead, VibeStrength, % ProfilePath, Preferences, Vibration_Strength
+	IniRead, VibeDuration, % ProfilePath, Preferences, Vibration_Duration
+	IniRead, Delay, % ProfilePath, Preferences, Hold_Delay
 
-	IniRead, temp, %ProfilePath%, Preferences, Cursor_Mode_At_Start
+	IniRead, temp, % ProfilePath, Preferences, Cursor_Mode_At_Start
 	temp := %temp%
 	if(temp)
 		EnableCursorMode()
 
-	IniRead, temp, %ProfilePath%, Preferences, FreeTarget_Mode_At_Start
+	IniRead, temp, % ProfilePath, Preferences, FreeTarget_Mode_At_Start
 	temp := %temp%
 	if(temp)
 		EnableFreeTargetMode()
 	
-	IniRead, LMaxRadiusX, %ProfilePath%, Analog Stick, Left_Analog_XRadius
-	IniRead, LMaxRadiusY, %ProfilePath%, Analog Stick, Left_Analog_YRadius
+	IniRead, LMaxRadiusX, % ProfilePath, Analog Stick, Left_Analog_XRadius
+	IniRead, LMaxRadiusY, % ProfilePath, Analog Stick, Left_Analog_YRadius
 	
-	IniRead, LThreshold, %ProfilePath%, Analog Stick, Left_Analog_Deadzone
+	IniRead, LThreshold, % ProfilePath, Analog Stick, Left_Analog_Deadzone
 	
-	IniRead, RMaxRadiusX, %ProfilePath%, Analog Stick, Right_Analog_XRadius
-	IniRead, RMaxRadiusY, %ProfilePath%, Analog Stick, Right_Analog_YRadius
+	IniRead, RMaxRadiusX, % ProfilePath, Analog Stick, Right_Analog_XRadius
+	IniRead, RMaxRadiusY, % ProfilePath, Analog Stick, Right_Analog_YRadius
 	
-	IniRead, RThreshold, %ProfilePath%, Analog Stick, Right_Analog_Deadzone
+	IniRead, RThreshold, % ProfilePath, Analog Stick, Right_Analog_Deadzone
 	
-	IniRead, CenterOffsetX, %ProfilePath%, Analog Stick, Center_XOffset
-	IniRead, CenterOffsetY, %ProfilePath%, Analog Stick, Center_YOffset
+	IniRead, CenterOffsetX, % ProfilePath, Analog Stick, Center_XOffset
+	IniRead, CenterOffsetY, % ProfilePath, Analog Stick, Center_YOffset
 	
-	IniRead, LRadiusOffsetX, %ProfilePath%, Analog Stick, Left_Analog_Center_XOffset
-	IniRead, LRadiusOffsetY, %ProfilePath%, Analog Stick, Left_Analog_Center_YOffset
+	IniRead, LRadiusOffsetX, % ProfilePath, Analog Stick, Left_Analog_Center_XOffset
+	IniRead, LRadiusOffsetY, % ProfilePath, Analog Stick, Left_Analog_Center_YOffset
 	
-	IniRead, RRadiusOffsetX, %ProfilePath%, Analog Stick, Right_Analog_Center_XOffset
-	IniRead, RRadiusOffsetY, %ProfilePath%, Analog Stick, Right_Analog_Center_YOffset	
+	IniRead, RRadiusOffsetX, % ProfilePath, Analog Stick, Right_Analog_Center_XOffset
+	IniRead, RRadiusOffsetY, % ProfilePath, Analog Stick, Right_Analog_Center_YOffset	
 
-	IniRead, LSensitivityX, %ProfilePath%, Analog Stick, Left_Analog_Cursor_XSensitivity
-	IniRead, LSensitivityY, %ProfilePath%, Analog Stick, Left_Analog_Cursor_YSensitivity
+	IniRead, LSensitivityX, % ProfilePath, Analog Stick, Left_Analog_Cursor_XSensitivity
+	IniRead, LSensitivityY, % ProfilePath, Analog Stick, Left_Analog_Cursor_YSensitivity
 
-	IniRead, RSensitivityX, %ProfilePath%, Analog Stick, Right_Analog_Cursor_XSensitivity
-	IniRead, RSensitivityY, %ProfilePath%, Analog Stick, Right_Analog_Cursor_YSensitivity
+	IniRead, RSensitivityX, % ProfilePath, Analog Stick, Right_Analog_Cursor_XSensitivity
+	IniRead, RSensitivityY, % ProfilePath, Analog Stick, Right_Analog_Cursor_YSensitivity
+
+	global OverlayTooltip := Array()	
+	Loop
+	{
+		buffer := "Tooltip" . A_Index . "_KeyValue"
+		IniRead, temp, % ProfilePath, Tooltip Overlay, % buffer
+
+		if(temp = "ERROR")
+			break
+
+		OverlayTooltip[A_Index] := Array()
+		OverlayTooltip[A_Index][1] := ParseKeyBinding(temp)
+
+		;AddToDebugLog(OverlayTooltip[A_Index][1])
+
+		buffer := "Tooltip" . A_Index . "_XPos"
+		IniRead, temp, % ProfilePath, Tooltip Overlay, % buffer
+
+		OverlayTooltip[A_Index][2] := temp
+
+		buffer := "Tooltip" . A_Index . "_YPos"
+		IniRead, temp, % ProfilePath, Tooltip Overlay, % buffer
+
+		OverlayTooltip[A_Index][3] := temp		
+	} Until false	
+
+	;SetTimer, DelayedEnableTooltipOverlay, 5000
 }
 PassKeys(ButtonName)
 {	
 	local key
-	IniRead, key, %ProfilePath%, Buttons, %ButtonName%
+	IniRead, key, % ProfilePath, Buttons, %ButtonName%
 
 	local newKeyBinding := Array()
 	
@@ -1422,6 +1525,11 @@ ParseKeyBinding(Key)
 	return newKeyBinding
 }
 
+DelayedEnableTooltipOverlay:
+EnableTooltipOverlay()
+SetTimer, DelayedEnableTooltipOverlay, Off
+return
+
 SpamLoot:
 MouseGetPos, PrevX, PrevY
 MouseMove, ScreenCenterX, ScreenCenterY
@@ -1464,27 +1572,27 @@ global RTriggerIndex := 16
 
 global ButtonString := Array()
 
-ButtonString[AButton] := "A"
-ButtonString[BButton] := "B"
-ButtonString[XButton] := "X"
-ButtonString[YButton] := "Y"
+ButtonString[AButton] := Array("A", "A")
+ButtonString[BButton] := Array("B", "B")
+ButtonString[XButton] := Array("X", "X")
+ButtonString[YButton] := Array("Y", "Y")
 
-ButtonString[UpButton] := "D-pad Up"
-ButtonString[DownButton] := "D-pad Down"
-ButtonString[LeftButton] := "D-pad Left"
-ButtonString[RightButton] := "D-pad Right"
+ButtonString[UpButton] := Array("D-pad Up", "Up")
+ButtonString[DownButton] := Array("D-pad Down", "Down")
+ButtonString[LeftButton] := Array("D-pad Left", "Left")
+ButtonString[RightButton] := Array("D-pad Right", "Right")
 
-ButtonString[StartButton] := "Start"
-ButtonString[BackButton] := "Back"
+ButtonString[StartButton] := Array("Start", "Start")
+ButtonString[BackButton] := Array("Back", "Back")
 
-ButtonString[LShoulderButton] := "Left Bumper"
-ButtonString[RShoulderButton] := "Right Bumper"
+ButtonString[LShoulderButton] := Array("Left Bumper", "LB")
+ButtonString[RShoulderButton] := Array("Right Bumper", "RB")
 
-ButtonString[LThumbButton] := "Left Stick"
-ButtonString[RThumbButton] := "Right Stick"
+ButtonString[LThumbButton] := Array("Left Stick", "LS")
+ButtonString[RThumbButton] := Array("Right Stick", "RS")
 
-ButtonString[LTriggerIndex] := "Left Trigger"
-ButtonString[RTriggerIndex] := "Right Trigger"
+ButtonString[LTriggerIndex] := Array("Left Trigger", "LT")
+ButtonString[RTriggerIndex] := Array("Right Trigger", "RT")
 
 global Buttons := Array()
 global PrevButtons := Array()
