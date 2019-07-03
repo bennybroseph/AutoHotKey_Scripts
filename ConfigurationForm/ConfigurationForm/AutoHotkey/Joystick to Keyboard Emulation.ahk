@@ -3,7 +3,7 @@
 ;#Warn  ; Enable warnings to assist with detecting common errors.
 
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
-SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directoTargety.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 ; Compile the library files
 #Include Library\XInput.ahk
@@ -54,7 +54,7 @@ global RThumbY ; The right analog stick's Y value
 
 global LMaxThreshold ; Analog movement is not in a circle, rather it is a square. A lumpy square. This is how I round out the square so it is easier to create a circle from it.
 global RMaxThreshold ; See above, but for the right stick
-            
+
 global LThumbX0 ; The X value when the left stick is at rest
 global LThumbY0 ; The Y value when the left stick is at rest
 global RThumbX0 ; The X value when the left stick is at rest
@@ -79,13 +79,13 @@ global VibeStrength ; The strength of the vibration
 global VibeDuration ; The length of time in milliseconds that the controller vibrates
 global Delay
 
-global LMaxRadiusX ; The radius the cursor maxes out at on the left stick in the X direction 
-global LMaxRadiusY ; The radius the cursor maxes out at on the left stick in the Y direction 
+global LMaxRadiusX ; The radius the cursor maxes out at on the left stick in the X direction
+global LMaxRadiusY ; The radius the cursor maxes out at on the left stick in the Y direction
 
 global LThreshold ; The deadzone of the left stick
 
-global RMaxRadiusX ; The radius the cursor maxes out at on the left stick in the X direction 
-global RMaxRadiusY ; The radius the cursor maxes out at on the left stick in the Y direction 
+global RMaxRadiusX ; The radius the cursor maxes out at on the left stick in the X direction
+global RMaxRadiusY ; The radius the cursor maxes out at on the left stick in the Y direction
 
 global RThreshold ; The deadzone of the right stick
 
@@ -100,7 +100,7 @@ global LRadiusOffsetX
 global LRadiusOffsetY
 
 ; Extra offset for the right stick to adhere to from the center of the currently active window
-global RRadiusOffsetX 
+global RRadiusOffsetX
 global RRadiusOffsetY
 
 ; Sensitivity values for the left analog sticks
@@ -149,7 +149,7 @@ return
 ; Reloades the config values when F5 is pressed
 $F5::
 Calibrate()
-ReadConfig() 
+ReadConfig()
 return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed. The '$' ensures the hotkey can't be triggered with a 'Send' command
@@ -182,13 +182,13 @@ WatchAxisL()
 	local CenterX := ScreenCenterX + LRadiusOffsetX, CenterY := ScreenCenterY + LRadiusOffsetY ; Where the circle will originate when it is drawn
 	local Angle, AngleDeg ; 'Angle' is the angle in radians that the stick is currently at. 'AngleDeg' is that angle but in degrees.
 	local Radius ; The radius of the circle drawn when LStick is false
-	
+
 	local LThumbXCenter := LThumbX - LThumbX0 ; This takes the current value of the stick's X and subtracts the value when the stick is at rest to 'zero out' the value before calculations
 	local LThumbYCenter := LThumbY - LThumbY0 ; This takes the current value of the stick's Y and subtracts the value when the stick is at rest to 'zero out' the value before calculations
-	
+
 	static FirstMovement ; Currently unused. Was for deleting the ToolTip that read "You man begin" once the user moved the stick.
-	
-	; Checks the deadzone of the stick 
+
+	; Checks the deadzone of the stick
 	if (Abs(LThumbXCenter) > LThreshold || Abs(LThumbYCenter) > LThreshold)
 	{
 		; Pretty much: "If you aren't pressing space, the right stick isn't held or no buttons are pressed down, or I told you to press space specifically"
@@ -197,7 +197,7 @@ WatchAxisL()
 			; "If no buttons are pressed right now"
 			if((!Pressed && LStick) || IgnoreIt)
 				PressKey(ForceMoveKey)
-				
+
 			Move := true ; Don't press space again
 			ForceMove = false ; Don't tell me what to do
 		}
@@ -205,7 +205,7 @@ WatchAxisL()
 		if (!IsInitializing && FirstMovement)
 		{
 			FirstMovement := false
-		}		
+		}
 	}
 	; If the stick is currently released
 	else
@@ -226,7 +226,7 @@ WatchAxisL()
 		AngleDeg := Abs(ATan(LThumbYCenter/LThumbXCenter)*(180/PI)) + 180
 	}
 	else if(LThumbXCenter < 0 && LThumbYCenter > 0) ; 2nd Quadrant
-	{    
+	{
 		AngleDeg := 180 - Abs(ATan(LThumbYCenter/LThumbXCenter)*(180/PI))
 	}
 	else if(LThumbXCenter > 0 && LThumbYCenter < 0) ; 4th Quadrant
@@ -244,14 +244,14 @@ WatchAxisL()
 	else if (LThumbXCenter < 0 && LThumbYCenter = 0) ; Differentiate between 0 and 180 degrees
 	{
 		AngleDeg := 180
-	}                 
+	}
 	else ; 1st Quadrant
 	{
 		AngleDeg := Abs(ATan(LThumbYCenter/LThumbXCenter)*(180/PI))
 	}
-		
+
 	Angle := -AngleDeg * (PI/180) ; Convert the angle back into radians for calculation
-	
+
 	if(LStick)
 	{
 		; The analog stick returns a lumpy square as movement. With this, I cut a proper square out of it by limiting the furthest the stick is pressed before I stop registering it
@@ -266,21 +266,21 @@ WatchAxisL()
 		{
 			if(LThumbYCenter > 0)
 				LThumbYCenter := LMaxThreshold
-			else	
+			else
 				LThumbYCenter := -LMaxThreshold
 		}
-		
+
 		; http://math.stackexchange.com/questions/22064/calculating-a-point-that-lies-on-an-ellipse-given-an-angle
 		MouseX := (CenterX) + (LMaxRadiusX*LMaxRadiusY)/Sqrt((LMaxRadiusY**2)+(LMaxRadiusX**2)*(tan(Angle)**2))
 		MouseY := (CenterY) + (LMaxRadiusX*LMaxRadiusY*tan(Angle))/Sqrt((LMaxRadiusY**2)+(LMaxRadiusX**2)*(tan(Angle)**2))
-		
+
 		; Because of the way the calculation goes, whenever the angle is in the 2nd and 3rd quadrant it needs to be translated
 		if(AngleDeg > 90 && AngleDeg <= 270)
 		{
 			MouseX := (CenterX) - (MouseX - CenterX)
 			MouseY := (CenterY) - (MouseY - CenterY)
 		}
-		
+
 		; Pretty much: if no buttons are pressed or the right stick isn't pressed, and the inventory isn't open or space isn't being pressed
 		if((!Pressed || (!Target && !ForceTarget)) && (!Inventory || Move))
 		{
@@ -316,10 +316,10 @@ WatchAxisL()
 			Radius := 20 * ((Abs(LThumbXCenter)-LThreshold)/(LMaxThreshold-LThreshold))
 		else
 			Radius := 20 * ((Abs(LThumbYCenter)-LThreshold)/(LMaxThreshold-LThreshold))
-		
+
 		MouseX := Radius * cos(Angle) * LSensitivityX
 		MouseY := Radius * sin(Angle) * LSensitivityY
-		
+
 		if(Move)
 			MouseMove, MouseX, MouseY, , R
 	}
@@ -333,13 +333,13 @@ WatchAxisR()
 	local CenterX := ScreenCenterX + RRadiusOffsetX, CenterY := ScreenCenterY + RRadiusOffsetY ; Where the circle will originate when it is drawn
 	local Angle, AngleDeg ; 'Angle' is the angle in radians that the stick is currently at. 'AngleDeg' is that angle but in degrees.
 	local Radius
-	
+
 	local RThumbXCenter := RThumbX - RThumbX0 ; This takes the current value of the stick's X and subtracts the value when the stick is at rest to 'zero out' the value before calculations
 	local RThumbYCenter := RThumbY - RThumbY0 ; This takes the current value of the stick's Y and subtracts the value when the stick is at rest to 'zero out' the value before calculations
-	
+
 	static FirstMovement ; Currently unused. Was for deleting the ToolTip that read "You may begin" once the user moved the stick.
-	
-	; Checks the deadzone of the stick 
+
+	; Checks the deadzone of the stick
 	if (Abs(RThumbXCenter) > RThreshold || Abs(RThumbYCenter) > RThreshold)
 	{
 		;Makes sure that the target on the screen being present is known to all who may question it
@@ -347,13 +347,13 @@ WatchAxisR()
 	}
 	; If the stick is currently released
 	else
-	{		
+	{
 		Target := false
 		; Now all shall know that it is hidden, and it was good
 		if(RStick)
 			Gui, 1:Hide
 	}
-		
+
 	if(RThumbXCenter < 0 && RThumbYCenter < 0) ; 3rd Quadrant
 	{
 		AngleDeg := Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI)) + 180
@@ -382,12 +382,12 @@ WatchAxisR()
 	{
 		AngleDeg := Abs(ATan(RThumbYCenter/RThumbXCenter)*(180/PI))
 	}
-		
+
 	Angle := AngleDeg * (PI/180) ; Convert the angle back into radians for calculation
-	
+
 	if(RStick)
 	{
-		; The analog stick returns a lumpy square as movement. With this, I cut a proper square out of it by limiting the furthest the stick is pressed before I stop registering it		
+		; The analog stick returns a lumpy square as movement. With this, I cut a proper square out of it by limiting the furthest the stick is pressed before I stop registering it
 		if(Abs(RThumbXCenter) > RMaxThreshold)
 		{
 			if(RThumbXCenter > 0)
@@ -399,12 +399,12 @@ WatchAxisR()
 		{
 			if(RThumbYCenter > 0)
 				RThumbYCenter := RMaxThreshold
-			else	
+			else
 				RThumbYCenter := -RMaxThreshold
 		}
-			
+
 		; This is where I calculate the X and Y radius of the oval I'm about to draw
-		
+
 		;Which ever value is higher (either RThumbXCenter or RThumbYCenter), that value is used to calculate the radii
 		if(Abs(RThumbXCenter) >= Abs(RThumbYCenter))
 		{
@@ -416,21 +416,21 @@ WatchAxisR()
 			RadiusX := RMaxRadiusX * ((Abs(RThumbYCenter)-RThreshold)/(RMaxThreshold-RThreshold))
 			RadiusY := RMaxRadiusY * ((Abs(RThumbYCenter)-RThreshold)/(RMaxThreshold-RThreshold))
 		}
-		
+
 		TargetX := (CenterX) + (RadiusX*RadiusY)/Sqrt((RadiusY**2)+(RadiusX**2)*(tan(Angle)**2))
 		TargetY := (CenterY) +(RadiusX*RadiusY*tan(-Angle))/Sqrt((RadiusY**2)+(RadiusX**2)*(tan(-Angle)**2))
-		
+
 		; Because of the way the calculation goes, whenever the angle is in the 2nd and 3rd quadrant it needs to be translated
 		if(AngleDeg > 90 && AngleDeg <= 270)
 		{
 			TargetX := (CenterX) - (TargetX - CenterX)
 			TargetY := (CenterY) - (TargetY - CenterY)
 		}
-		
+
 		; Pretty much: if the right stick is currently held, and a button is currently pressed
 		if(Target && Pressed)
 			MouseMove, TargetX, TargetY ; The right stick is now used for moving the cursor instead of the left one
-		
+
 		if(!FirstMovement)
 		{
 			;ToolTip, %RThumbX% : %RThumbY% `n%RThumbX0% : %RThumbY0% `n%RThumbXCenter% : %RThumbYCenter% `n%RadiusX% : %RadiusY% `n%AngleDeg% %Angle% `n%TargetX% %TargetY% `n%Title% - %ScreenCenterX% : %ScreenCenterY% `n%Pressed%, 1900, 510, 2
@@ -450,10 +450,10 @@ WatchAxisR()
 			Radius := 20 * ((Abs(RThumbXCenter)-RThreshold)/(RMaxThreshold-RThreshold))
 		else
 			Radius := 20 * ((Abs(RThumbYCenter)-RThreshold)/(RMaxThreshold-RThreshold))
-		
+
 		TargetDeltaX := Radius * cos(Angle) * RSensitivityX
 		TargetDeltaY := Radius * sin(Angle) * RSensitivityY
-		
+
 		if(Target)
 		{
 			TargetX := TargetX + TargetDeltaX
@@ -461,12 +461,12 @@ WatchAxisR()
 		}
 
 		bufferx := TargetX - ImageW/2
-		buffery := TargetY - ImageH/2 
+		buffery := TargetY - ImageH/2
 
 		if(Pressed)
 			MouseMove, TargetX, TargetY
 		else
-			Gui, 1:Show, x%bufferx% y%buffery% NoActivate		
+			Gui, 1:Show, x%bufferx% y%buffery% NoActivate
 	}
 
 	return  ; Do nothing.
@@ -476,47 +476,47 @@ TriggerState:
 
 InputManager.RefreshState(State)
 
-Loop, 4 
+Loop, 4
 {
-    if State := XInput_GetState(A_Index-1) 
+    if State := XInput_GetState(A_Index-1)
 	{
 		LTrigger := State.LeftTrigger
-		RTrigger := State.RightTrigger 
-		
+		RTrigger := State.RightTrigger
+
 		Buttons[AButton] := State.Buttons & XINPUT_GAMEPAD_A
 		Buttons[BButton] := State.Buttons & XINPUT_GAMEPAD_B
 		Buttons[XButton] := State.Buttons & XINPUT_GAMEPAD_X
 		Buttons[YButton] := State.Buttons & XINPUT_GAMEPAD_Y
-		
+
 		Buttons[UpButton] := State.Buttons & XINPUT_GAMEPAD_DPAD_UP
 		Buttons[DownButton] := State.Buttons & XINPUT_GAMEPAD_DPAD_DOWN
 		Buttons[LeftButton] := State.Buttons & XINPUT_GAMEPAD_DPAD_LEFT
 		Buttons[RightButton] := State.Buttons & XINPUT_GAMEPAD_DPAD_RIGHT
-		
+
 		Buttons[StartButton] := State.Buttons & XINPUT_GAMEPAD_START
 		Buttons[BackButton] := State.Buttons & XINPUT_GAMEPAD_BACK
-		
+
 		Buttons[LShoulderButton] := State.Buttons & XINPUT_GAMEPAD_LEFT_SHOULDER
 		Buttons[RShoulderButton] := State.Buttons & XINPUT_GAMEPAD_RIGHT_SHOULDER
-		
+
 		Buttons[LThumbButton] := State.Buttons & XINPUT_GAMEPAD_LEFT_THUMB
 		Buttons[RThumbButton] := State.Buttons & XINPUT_GAMEPAD_RIGHT_THUMB
-		
+
 		LThumbX := State.ThumbLX
 		LThumbY := State.ThumbLY
-		
+
 		RThumbX := State.ThumbRX
 		RThumbY := State.ThumbRY
     }
 }
 
-if(!IsInitializing) 
+if(!IsInitializing)
 {
 	WinGetActiveStats, Title, Width, Height, X, Y
 
 	if(!TooltipOverlayShowing)
 		EnableTooltipOverlay()
-	
+
 	ScreenCenterX := Width / 2
 	ScreenCenterY := Height / 2
 	; if the Diablo window is active then the center of the screen is a lot higher than normal. This sets it to that value.
@@ -525,7 +525,7 @@ if(!IsInitializing)
 		ScreenCenterX := ScreenCenterX + CenterOffsetX
 		ScreenCenterY := ScreenCenterY + CenterOffsetY
 	}
-	
+
 	if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
 		WatchAxisL()
 	if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY || ForceTarget)
@@ -534,9 +534,9 @@ if(!IsInitializing)
 	GoSub WatchButtons
 	;ToolTip, ForceMove = %ForceMove% Move = %Move% `nPressed = %Pressed% `nIgnoreIt = %IgnoreIt% IgnorePress = %IgnorePress% `nForceMoveKey = %ForceMoveKey%, 0, 0
 }
-  
+
 PrevLTrigger := LTrigger
-PrevRTrigger := RTrigger 
+PrevRTrigger := RTrigger
 
 PrevButtons[AButton] := Buttons[AButton]
 PrevButtons[BButton] := Buttons[BButton]
@@ -574,14 +574,14 @@ WatchAxisT:
 InputManager.ProcessInput()
 
 if(LTrigger != PrevLTrigger)
-{ 
+{
 	if (LTrigger > TThreshold && PrevLTrigger <= TThreshold) ;Left trigger is held
 		ActionDown(LTriggerKey[ACTION_INDEX], LTriggerKey[MODIFIER_INDEX])
 	if (LTrigger <= TThreshold && PrevLTrigger > TThreshold) ;Left is released
 		ActionUp(LTriggerKey[ACTION_INDEX], LTriggerKey[MODIFIER_INDEX], false)
 }
 if(RTrigger != PrevRTrigger)
-{ 
+{
 	if (RTrigger > TThreshold && PrevRTrigger <= TThreshold) ;Right trigger is held
 		ActionDown(RTriggerKey[ACTION_INDEX],RTriggerKey[MODIFIER_INDEX])
 	if (RTrigger <= TThreshold && PrevRTrigger > TThreshold) ;Right is released
@@ -605,10 +605,10 @@ Loop, 14
 			if(Buttons[A_Index])
 			{
 				; If the button has a 'HOLD_ACTION'
-				if(ButtonKey[A_Index][HOLD_ACTION])				
+				if(ButtonKey[A_Index][HOLD_ACTION])
 					ButtonKey[A_Index][HELD_DURATION] := A_TickCount
 				else if(isPressSpecialKey)
-				{				
+				{
 					if(ButtonKey[A_Index][PRESS_ACTION] = "Loot")
 						SetTimer, SpamLoot, %LootDelay%
 					else if(ButtonKey[A_Index][PRESS_ACTION] = "Freedom")
@@ -642,12 +642,12 @@ Loop, 14
 					Button_Index := A_Index
 
 					ForceInventory := false
-					; Loops over and repeats input until a new cursor position is determined	
+					; Loops over and repeats input until a new cursor position is determined
 					Loop
 					{
 						PrevInventoryX := InventoryX
 						PrevInventoryY := InventoryY
-					
+
 						if(Button_Index = UpButton)
 						{
 							if((InventoryX > 4 || InventoryY > 2) && InventoryY != 1)
@@ -662,7 +662,7 @@ Loop, 14
 
 								ForceInventory := true
 							}
-							else 
+							else
 								ForceInventory := true
 						}
 						if(Button_Index = DownButton)
@@ -699,9 +699,9 @@ Loop, 14
 
 								ForceInventory := true
 							}
-							else 
+							else
 								ForceInventory := true
-						}	
+						}
 						if(Button_Index = RightButton)
 						{
 							if(InventoryX != 10)
@@ -723,7 +723,7 @@ Loop, 14
 								ForceInventory := true
 						}
 					}Until ForceInventory
-					
+
 					if(InventoryGridX[PrevInventoryX,PrevInventoryY] != InventoryGridX[InventoryX,InventoryY] || InventoryGridY[PrevInventoryX,PrevInventoryY] != InventoryGridY[InventoryX,InventoryY])
 						MouseMove, InventoryGridX[InventoryX,InventoryY] * (Width / 1920), InventoryGridY[InventoryX,InventoryY] * (Height / 1080)
 					else
@@ -745,18 +745,18 @@ Loop, 14
 						else if(ButtonKey[A_Index][PRESS_ACTION] = "Inventory")
 							ToggleInventoryMode()
 					}
-					
+
 					if(ButtonKey[A_Index][PRESS_MODIFIER])
 						ActionUp(ButtonKey[A_Index][PRESS_MODIFIER], "", ButtonKey[A_Index][HOLD_ACTION])
 				}
 				else
 					ActionUp(ButtonKey[A_Index][PRESS_ACTION], ButtonKey[A_Index][PRESS_MODIFIER], ButtonKey[A_Index][HOLD_ACTION])
-			}	
+			}
 		}
-		else if(ButtonKey[A_Index][HOLD_ACTION] && Buttons[A_Index] && ButtonKey[A_Index][HELD_DURATION] && A_TickCount >= ButtonKey[A_Index][HELD_DURATION] + Delay)    
+		else if(ButtonKey[A_Index][HOLD_ACTION] && Buttons[A_Index] && ButtonKey[A_Index][HELD_DURATION] && A_TickCount >= ButtonKey[A_Index][HELD_DURATION] + Delay)
 		{
-			Loop, 4 
-			{ 
+			Loop, 4
+			{
 				if XInput_GetState(A_Index-1)
 					XInput_SetState(A_Index-1, VibeStrength, VibeStrength) ;MAX 65535
 			}
@@ -799,7 +799,7 @@ ActionDown(Action, Modifier)
 			if(Action = UsesMouse[A_Index][ACTION_INDEX] && Modifier = UsesMouse[A_Index][MODIFIER_INDEX])
 			{
 				found := true
-				break					
+				break
 			}
 		} Until !UsesMouse[A_Index+1]
 
@@ -811,10 +811,10 @@ ActionDown(Action, Modifier)
 				{
 					ReleaseKey(ForceMoveKey)
 					ForceMoveKey := Array(Action, Modifier)
-					
+
 					local tempX, local tempY
 					if(Pressed > 0)
-					{						
+					{
 						MouseGetPos, tempX, tempY
 						MouseMove, MouseX, MouseY
 
@@ -835,7 +835,7 @@ ActionDown(Action, Modifier)
 					skip := true
 					break
 				}
-			} Until !IgnoreTarget[A_Index+1]			
+			} Until !IgnoreTarget[A_Index+1]
 		}
 
 		if(!found)
@@ -852,7 +852,7 @@ ActionDown(Action, Modifier)
 ActionUp(Action, Modifier, HasHoldAction)
 {
 	local skip := false
-	
+
 	if (UsesMouse[1])
 	{
 		local found := false
@@ -906,7 +906,7 @@ ActionUp(Action, Modifier, HasHoldAction)
 			if(HasHoldAction)
 				PressKey(Array(Action, Modifier))
 
-			ReleaseKey(Array(Action, Modifier))	
+			ReleaseKey(Array(Action, Modifier))
 
 			skip := true
 		}
@@ -915,7 +915,7 @@ ActionUp(Action, Modifier, HasHoldAction)
 	if (!skip)
 	{
 		if(HasHoldAction)
-			TargetActionDown(Action, Modifier)		
+			TargetActionDown(Action, Modifier)
 
 		TargetActionUp(Action, Modifier)
 	}
@@ -932,7 +932,7 @@ TargetActionDown(Action, Modifier)
 		;Move := false
 		ReleaseKey(ForceMoveKey)
 	}
-	
+
 	Pressed += 1
 	if(Target || ForceTarget)
 	{
@@ -942,22 +942,22 @@ TargetActionDown(Action, Modifier)
 		if(TargetingDelay > 0)
 			Sleep, %TargetingDelay%
 	}
-	
-	PressKey(Array(Action, Modifier))	
+
+	PressKey(Array(Action, Modifier))
 	return ; Do nothing
 }
 TargetActionUp(Action, Modifier)
-{ 
-	Pressed -= 1	
+{
+	Pressed -= 1
 	ReleaseKey(Array(Action, Modifier))
-	
+
 	if(Pressed = 0)
 	{
 		Move := false
 		ForceMove := true
 		ReleaseKey(ForceMove)
 		MouseMove, PrevMouseX, PrevMouseY
-		
+
 		if(Target || ForceTarget)
 		{
 			bufferx := TargetX - ImageW/2
@@ -985,7 +985,7 @@ ReleaseKey(Key)
 	local Modifier := Key[MODIFIER_INDEX]
 
 	;AddToDebugLog("Pressing " . Action " + " . Modifier)
-	
+
 	Send {%Action% Up}
 	if(Modifier)
 		Send {%Modifier% Up}
@@ -999,7 +999,7 @@ ToggleCursorMode()
 		DisableCursorMode()
 }
 EnableCursorMode()
-{		
+{
 	global
 	if(Inventory)
 		DisableInventoryMode()
@@ -1061,7 +1061,7 @@ ToggleInventoryMode()
 }
 EnableInventoryMode()
 {
-	global 
+	global
 	DisableCursorMode()
 
 	Inventory := true
@@ -1096,7 +1096,7 @@ DisableInventoryMode()
 		ButtonKey[A_Index+4][HOLD_ACTION] := temp
 	}
 
-	if(ShowInventoryModeNotification)	
+	if(ShowInventoryModeNotification)
 		ToolTip
 }
 
@@ -1120,7 +1120,7 @@ EnableTooltipOverlay()
 }
 DisableTooltipOverlay()
 {
-	
+
 }
 
 AddToDebugLog(NewText)
@@ -1156,7 +1156,7 @@ FindButtonString(Key)
 	{
 		Loop, 14
 		{
-			
+
 			if(ButtonKey[A_Index][PRESS_ACTION] = Key[ACTION_INDEX] && ButtonKey[A_Index][PRESS_MODIFIER] = Key[MODIFIER_INDEX])
 			{
 				newButtonInfo[1] := "Press"
@@ -1179,7 +1179,7 @@ FindButtonString(Key)
 
 		Loop, 14
 		{
-			
+
 			if(ButtonKey[A_Index][PRESS_ACTION] = Key[ACTION_INDEX])
 			{
 				newButtonInfo[1] := "Press"
@@ -1207,52 +1207,52 @@ InventoryInit()
 		local temp := ButtonKey[A_Index+4][PRESS_ACTION]
 		ButtonKey[A_Index+4][PRESS_ACTION] := ButtonKey[A_Index+4][HOLD_ACTION]
 		ButtonKey[A_Index+4][HOLD_ACTION] := temp
-	}	
+	}
 }
 
 Calibrate()
 {
 	global
-	
+
 	local MaxL := 32767, MaxR := 32767, Button, buffer
-	
+
 	IniRead, buffer, % ConfigurationPath, Calibration, Calibrate
 	if(!%buffer%)
-		return ; Calibrate is false	
-	
+		return ; Calibrate is false
+
 	MsgBox, , Calibration, Since this appears to be your first time using my program, I will be calibrating your controller for use with it.
 	MsgBox, , Instructions, To begin, I need to determine the range that your controller is able to move at.`n`nMove both the Left *and* Right analog stick straight up at the same time. Then move them both in a circle (whatever direction you feel comfortable) multiple times. Then press any button while STILL HOLDING THEM UPWARDS.
-	
+
 	Loop
 	{
-		Loop, 4 
+		Loop, 4
 		{
-			if State := XInput_GetState(A_Index-1) 
-			{					
+			if State := XInput_GetState(A_Index-1)
+			{
 				LThumbX := State.ThumbLX
 				LThumbY := State.ThumbLY
-		
+
 				RThumbX := State.ThumbRX
 				RThumbY := State.ThumbRY
 			}
 		}
-	}Until LThumbY = 32767 && RThumbY = 32767 
-	
+	}Until LThumbY = 32767 && RThumbY = 32767
+
 	Loop
 	{
-		Loop, 4 
+		Loop, 4
 		{
-			if State := XInput_GetState(A_Index-1) 
+			if State := XInput_GetState(A_Index-1)
 			{
 				Button := State.Buttons
-				
+
 				LThumbX := State.ThumbLX
 				LThumbY := State.ThumbLY
-		
+
 				RThumbX := State.ThumbRX
 				RThumbY := State.ThumbRY
 			}
-		} 
+		}
 		if(Abs(LThumbX) < MaxL && Abs(LThumbX) >= Abs(LThumbY))
 			MaxL := Abs(LThumbX)
 		if(Abs(LThumbY) < MaxL && Abs(LThumbY) > Abs(LThumbX))
@@ -1262,51 +1262,51 @@ Calibrate()
 		if(Abs(RThumbY) < MaxR && Abs(RThumbY) > Abs(RThumbX))
 			MaxR := Abs(RThumbY)
 	}Until Button
-	
+
 	LMaxThreshold := MaxL - 1000
 	RMaxThreshold := MaxR - 1000
-	
+
 	MsgBox, , Instructions, Now I need to determine where the sticks rest when you aren't pressing them.`n`nMove both sticks around a bunch in random directions, then do not touch them at all. Once they are completely still, press any button on the controller.
-	
+
 	Button := 0
 	Loop
 	{
-		Loop, 4 
+		Loop, 4
 		{
-			if State := XInput_GetState(A_Index-1) 
+			if State := XInput_GetState(A_Index-1)
 			{
 				Button := State.Buttons
 			}
 		}
 	}Until Button
-	
-	Loop, 4 
+
+	Loop, 4
 	{
-		if State := XInput_GetState(A_Index-1) 
-		{					
+		if State := XInput_GetState(A_Index-1)
+		{
 			LThumbX := State.ThumbLX
 			LThumbY := State.ThumbLY
-	
+
 			RThumbX := State.ThumbRX
 			RThumbY := State.ThumbRY
 		}
 	}
 	LThumbX0 := LThumbX
 	LThumbY0 := LThumbY
-	
+
 	RThumbX0 := RThumbX
 	RThumbY0 := RThumbY
-	
+
 	MsgBox, , Calibration Complete, That concludes the calibration. `n`nIf for any reason you think these values  are incorrect, you can either edit them yourself (not recommended) or set 'Calibrate = true' in %ConfigurationPath% to 'true' to run this again.
-	
+
 	IniWrite, false, % ConfigurationPath, Calibration, Calibrate
-	
+
 	IniWrite, %MaxL%, % ConfigurationPath, Calibration, Left_Analog_Max
 	IniWrite, %MaxR%, % ConfigurationPath, Calibration, Right_Analog_Max
-	
+
 	IniWrite, %LThumbX0%, % ConfigurationPath, Calibration, Left_Analog_XZero
 	IniWrite, %LThumbY0%, % ConfigurationPath, Calibration, Left_Analog_YZero
-	
+
 	IniWrite, %RThumbX0%, % ConfigurationPath, Calibration, Right_Analog_XZero
 	IniWrite, %RThumbY0%, % ConfigurationPath, Calibration, Right_Analog_YZero
 }
@@ -1316,28 +1316,28 @@ ReadConfig()
 	; Set Profile Path
 	IniRead, ProfilePath, % ConfigurationPath, Other, Profile_Location
 	ProfilePath := A_WorkingDir . ProfilePath
-	
+
 	global ButtonKey := Array()
-	
+
 	global LTriggerKey := PassKeys("Left_Trigger")
 	global RTriggerKey := PassKeys("Right_Trigger")
-	
+
 	ButtonKey[AButton] := PassKeys("A_Button")
 	ButtonKey[BButton] := PassKeys("B_Button")
 	ButtonKey[XButton] := PassKeys("X_Button")
 	ButtonKey[YButton] := PassKeys("Y_Button")
-	
+
 	ButtonKey[UpButton] := PassKeys("D-Pad_Up")
 	ButtonKey[DownButton] := PassKeys("D-Pad_Down")
 	ButtonKey[LeftButton] := PassKeys("D-Pad_Left")
 	ButtonKey[RightButton] := PassKeys("D-Pad_Right")
-	
+
 	ButtonKey[StartButton] := PassKeys("Start_Button")
 	ButtonKey[BackButton] := PassKeys("Back_Button")
-	
+
 	ButtonKey[LShoulderButton] := PassKeys("Left_Shoulder")
 	ButtonKey[RShoulderButton] := PassKeys("Right_Shoulder")
-	
+
 	ButtonKey[LThumbButton] := PassKeys("Left_Analog_Button")
 	ButtonKey[RThumbButton] := PassKeys("Right_Analog_Button")
 
@@ -1347,7 +1347,7 @@ ReadConfig()
 
 	global UsesMouse := Array()
 	IniRead, temp, % ProfilePath, Buttons, Uses_Mouse
-	
+
 	Loop
 	{
 		;AddToDebugLog("temp = " . temp)
@@ -1355,12 +1355,12 @@ ReadConfig()
 		; 'i' will be the position in the string that a comma was found
 		; if there is no comma, 'i' will be 0
 		i := InStr(temp,", ")
-		
+
 		; If a comma was found in the string
 		if(i)
 		{
 			UsesMouse[A_Index] := ParseKeyBinding(SubStr(temp, 1, i - 1))
-			temp := SubStr(temp, i + 1)			
+			temp := SubStr(temp, i + 1)
 		}
 		else
 		{
@@ -1369,43 +1369,43 @@ ReadConfig()
 		}
 
 		;AddToDebugLog("UsesMouse[" . A_Index . "] is: " . UsesMouse[A_Index][ACTION_INDEX] . " " . UsesMouse[A_Index][MODIFIER_INDEX])
-		
+
 	}Until false
 
-	global IgnoreTarget := Array()	
+	global IgnoreTarget := Array()
 	IniRead, temp, % ProfilePath, Buttons, Ignore_Target
-	
+
 	Loop
 	{
 		; 'i' will be the position in the string that a comma was found
 		; if there is no comma, 'i' will be 0
 		i := InStr(temp,", ")
-		
+
 		; If a comma was found in the string
 		if(i)
 		{
 			IgnoreTarget[A_Index] := ParseKeyBinding(SubStr(temp, 1, i - 1))
-			temp := SubStr(temp, i + 1)			
+			temp := SubStr(temp, i + 1)
 		}
 		else
 		{
 			IgnoreTarget[A_Index] := ParseKeyBinding(temp)
 			break
 		}
-		
+
 		;AddToDebugLog("IgnoreTarget[" . A_Index . "] is: " . IgnoreTarget[A_Index][ACTION_INDEX] . " " . IgnoreTarget[A_Index][MODIFIER_INDEX])
-		
+
 	}Until false
-	
+
 	IniRead, LMaxThreshold, % ConfigurationPath, Calibration, Left_Analog_Max
 	IniRead, RMaxThreshold, % ConfigurationPath, Calibration, Right_Analog_Max
-	
+
 	IniRead, LThumbX0, % ConfigurationPath, Calibration, Left_Analog_XZero
 	IniRead, LThumbY0, % ConfigurationPath, Calibration, Left_Analog_YZero
-	
+
 	IniRead, RThumbX0, % ConfigurationPath, Calibration, Right_Analog_XZero
 	IniRead, RThumbY0, % ConfigurationPath, Calibration, Right_Analog_YZero
-	
+
 	IniRead, ApplicationName, % ProfilePath, Preferences, Application_Name
 
 	IniRead, ShowCursorModeNotification, % ProfilePath, Preferences, Show_Cursor_Mode_Notification
@@ -1421,7 +1421,7 @@ ReadConfig()
 	ShowPausedNotification := %ShowPausedNotification%
 
 	IniRead, LootDelay, % ProfilePath, Preferences, Loot_Delay
-	IniRead, TargetingDelay, % ProfilePath, Preferences, Targeting_Delay	
+	IniRead, TargetingDelay, % ProfilePath, Preferences, Targeting_Delay
 
 	IniRead, VibeStrength, % ProfilePath, Preferences, Vibration_Strength
 	IniRead, VibeDuration, % ProfilePath, Preferences, Vibration_Duration
@@ -1436,25 +1436,25 @@ ReadConfig()
 	temp := %temp%
 	if(temp)
 		EnableFreeTargetMode()
-	
+
 	IniRead, LMaxRadiusX, % ProfilePath, Analog Stick, Left_Analog_XRadius
 	IniRead, LMaxRadiusY, % ProfilePath, Analog Stick, Left_Analog_YRadius
-	
+
 	IniRead, LThreshold, % ProfilePath, Analog Stick, Left_Analog_Deadzone
-	
+
 	IniRead, RMaxRadiusX, % ProfilePath, Analog Stick, Right_Analog_XRadius
 	IniRead, RMaxRadiusY, % ProfilePath, Analog Stick, Right_Analog_YRadius
-	
+
 	IniRead, RThreshold, % ProfilePath, Analog Stick, Right_Analog_Deadzone
-	
+
 	IniRead, CenterOffsetX, % ProfilePath, Analog Stick, Center_XOffset
 	IniRead, CenterOffsetY, % ProfilePath, Analog Stick, Center_YOffset
-	
+
 	IniRead, LRadiusOffsetX, % ProfilePath, Analog Stick, Left_Analog_Center_XOffset
 	IniRead, LRadiusOffsetY, % ProfilePath, Analog Stick, Left_Analog_Center_YOffset
-	
+
 	IniRead, RRadiusOffsetX, % ProfilePath, Analog Stick, Right_Analog_Center_XOffset
-	IniRead, RRadiusOffsetY, % ProfilePath, Analog Stick, Right_Analog_Center_YOffset	
+	IniRead, RRadiusOffsetY, % ProfilePath, Analog Stick, Right_Analog_Center_YOffset
 
 	IniRead, LSensitivityX, % ProfilePath, Analog Stick, Left_Analog_Cursor_XSensitivity
 	IniRead, LSensitivityY, % ProfilePath, Analog Stick, Left_Analog_Cursor_YSensitivity
@@ -1462,7 +1462,7 @@ ReadConfig()
 	IniRead, RSensitivityX, % ProfilePath, Analog Stick, Right_Analog_Cursor_XSensitivity
 	IniRead, RSensitivityY, % ProfilePath, Analog Stick, Right_Analog_Cursor_YSensitivity
 
-	global OverlayTooltip := Array()	
+	global OverlayTooltip := Array()
 	Loop
 	{
 		buffer := "Tooltip" . A_Index . "_KeyValue"
@@ -1484,42 +1484,42 @@ ReadConfig()
 		buffer := "Tooltip" . A_Index . "_YPos"
 		IniRead, temp, % ProfilePath, Tooltip Overlay, % buffer
 
-		OverlayTooltip[A_Index][3] := temp		
-	} Until false	
+		OverlayTooltip[A_Index][3] := temp
+	} Until false
 
 	;SetTimer, DelayedEnableTooltipOverlay, 5000
 }
 PassKeys(ButtonName)
-{	
+{
 	local key
 	IniRead, key, % ProfilePath, Buttons, %ButtonName%
 
 	local newKeyBinding := Array()
-	
+
 	; Returns an error when the requested button is not in the current profile
 	if key = ERROR
 		return ERROR
 
 	commaPos := InStr(key,",")
-	
+
 	local tempKeyBinding := Array()
 	if(commaPos)
-	{	
+	{
 		tempKeyBinding := ParseKeyBinding(SubStr(key, 1, commaPos - 1))
 		newKeyBinding[1] := tempKeyBinding[1]
 		newKeyBinding[2] := tempKeyBinding[2]
 
 		tempKeyBinding := ParseKeyBinding(SubStr(key, commaPos + 1))
 		newKeyBinding[3] := tempKeyBinding[1]
-		newKeyBinding[4] := tempKeyBinding[2]	
+		newKeyBinding[4] := tempKeyBinding[2]
 	}
-	else 
+	else
 	{
 		tempKeyBinding := ParseKeyBinding(key)
 		newKeyBinding[1] := tempKeyBinding[1]
 		newKeyBinding[2] := tempKeyBinding[2]
 	}
-	
+
 	;AddToDebugLog("Key " . key . " parsed as [1]-" . newKeyBinding[1] " [2]-" . newKeyBinding[2] " [3]-" . newKeyBinding[3] " [4]-" . newKeyBinding[4])
 
 	return newKeyBinding
@@ -1530,7 +1530,7 @@ ParseKeyBinding(Key)
 	local newKeyBinding := Array()
 
 	Key := Trim(Key)
-	plusPos := InStr(Key,"+") 
+	plusPos := InStr(Key,"+")
 
 	if(plusPos)
 	{
@@ -1557,8 +1557,8 @@ MouseMove, PrevX, PrevY
 return
 
 VibeOff:
-Loop, 4 
-{ 
+Loop, 4
+{
 	if XInput_GetState(A_Index-1)
 		XInput_SetState(A_Index-1, 0, 0) ;MAX 65535
 }
@@ -1637,7 +1637,7 @@ Loop, 4
 		{
 			InventoryGridX[temp,A_Index] := 1524.5
 			InventoryGridY[temp,A_Index] := 511
-		}	
+		}
 		else
 		{
 			InventoryGridX[temp,A_Index] := 1524.5
@@ -1739,7 +1739,7 @@ InventoryGridY[9,1] := 232.5
 InventoryGridX[10,1] := 1808.5
 InventoryGridY[10,1] := 232.5
 
-;1785 209 47 47 
+;1785 209 47 47
 Calibrate()
 ReadConfig()
 
@@ -1749,7 +1749,7 @@ if WinExist(ApplicationName)
 	WinActivate ; Activate Application Window if it exists
 
 Gosub TriggerState
-	
+
 MouseGetPos, MouseX, MouseY
 TargetX := MouseX
 TargetY := MouseY

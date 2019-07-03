@@ -1,5 +1,4 @@
 #Include Input\Binding.ahk
-#Include Joystick to Keyboard Emulation.ahk
 
 class Input
 {
@@ -11,13 +10,13 @@ class Input
         this.m_Key          := p_Key
 
         this.m_State        := False
-        this.m_PrevState    := this.m_State  
+        this.m_PrevState    := this.m_State
 
         this.m_PressTick    := -1
 
         this.m_Inputbind   := IniUtility.ParseInputbind(this.m_Key)
 
-        AddToDebugLog(this.m_Name . " bound to " . this.m_Inputbind)
+        AddToDebugLog(this.m_Name . " bound to " . this.m_Inputbind.Press.Action)
     }
 
     Name[]
@@ -41,7 +40,7 @@ class Input
     Key[]
     {
         get {
-            return this.m_Key			 
+            return this.m_Key
         }
     }
 
@@ -84,7 +83,7 @@ class Input
 
     RefreshState(p_State)
     {
-        this.m_PrevState := this.m_State		  
+        this.m_PrevState := this.m_State
     }
 }
 class Button extends Input

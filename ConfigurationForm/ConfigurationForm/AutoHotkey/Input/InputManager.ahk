@@ -4,8 +4,6 @@
 
 #Include Input\Input.ahk
 
-#Include Joystick to Keyboard Emulation.ahk
-
 class InputManager
 {
     static __singleton :=
@@ -13,7 +11,7 @@ class InputManager
     Init()
     {
         InputManager.__singleton := new InputManager()
-    } 
+    }
 
     __New()
     {
@@ -41,11 +39,11 @@ class InputManager
         RThumbButton     := 15
 
         LTriggerIndex    := 16
-        RTriggerIndex    := 17 
+        RTriggerIndex    := 17
 
         this.m_Buttons := Array()
-        
-        AddToDebugLog("A: " . XINPUT_GAMEPAD_A)
+
+        ;AddToDebugLog("A: " . XINPUT_GAMEPAD_A)
         this.m_Buttons[AButton] := new Button("A Button", "A", AButton, "A_Button", XINPUT_GAMEPAD_A)
         this.m_Buttons[BButton] := new Button("B Button", "B", BButton, "B_Button", XINPUT_GAMEPAD_B)
         this.m_Buttons[XButton] := new Button("X Button", "X", XButton, "X_Button", XINPUT_GAMEPAD_X)
@@ -60,16 +58,16 @@ class InputManager
         this.m_Buttons[BackButton] := new Button("Back Button", "Back", BackButton, "Back_Button", XINPUT_GAMEPAD_BACK)
         this.m_Buttons[BackButton] := new Button("Guide Button", "Guide", BackButton, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
 
-        this.m_Buttons[LShoulderButton] 
+        this.m_Buttons[LShoulderButton]
             := new Button("Left Bumper", "LB", LShoulderButton, "Left_Shoulder", XINPUT_GAMEPAD_LEFT_SHOULDER)
-        this.m_Buttons[RShoulderButton] 
+        this.m_Buttons[RShoulderButton]
             := new Button("Right Bumper", "RB", RShoulderButton, "Right_Shoulder", XINPUT_GAMEPAD_RIGHT_SHOULDER)
 
-        this.m_Buttons[LThumbButton] 
+        this.m_Buttons[LThumbButton]
             := new Button("Left Stick Button", "LS", LThumbButton, "Left_Analog_Button", XINPUT_GAMEPAD_LEFT_THUMB)
-        this.m_Buttons[RThumbButton] 
+        this.m_Buttons[RThumbButton]
             := new Button("Right Stick Button", "RS", RThumbButton, "Right_Analog_Button", XINPUT_GAMEPAD_RIGHT_THUMB)
-        
+
         this.m_Buttons[LTriggerIndex] := new Trigger("Left Trigger", "LT", LTriggerIndex, "Left_Trigger", "Left")
         this.m_Buttons[RTriggerIndex] := new Trigger("Right Trigger", "RT", RTriggerIndex, "Right_Trigger", "Right")
     }
@@ -85,12 +83,12 @@ class InputManager
     {
         global
 
-        Loop, 4 
+        Loop, 4
         {
             local _state := XInput_GetState(A_Index - 1)
             if (!_state)
                 Continue
-            
+
             For i, _button in InputManager.Buttons
                 _button.RefreshState(_state)
         }
@@ -104,7 +102,7 @@ class InputManager
         {
             if (!_button.IsValidInput)
                 Continue
-            
+
             ;AddToDebugLog(_button.Name . " State: " . _button.State . " PrevState:" . _button.PrevState)
             if (_button.State != _button.PrevState)
             {
@@ -112,7 +110,7 @@ class InputManager
                 {
                     ; The first frame a button is pressed
                     _button.PressTick := A_TickCount
-                    AddToDebugLog(_button.Name . " pressed: " . _button.Inputbind.Press.Action . " Delay:" . Delay)                    
+                    AddToDebugLog(_button.Name . " pressed: " . _button.Inputbind.Press.Action)
                 }
                 else if (_button.Inputbind.Hold.Action and _button.PressTick = 0)
                 {
@@ -125,10 +123,11 @@ class InputManager
                     AddToDebugLog(_button.Name . " pressed and released")
                 }
             }
-            else if (_button.Inputbind.Hold.Action and _button.State 
+            else if (_button.Inputbind.Hold.Action and _button.State
                     and _button.PressTick > 0 and A_TickCount >= _button.PressTick + Delay)
             {
                 ; The first frame a button has been held down long enough to trigger the hold action
+                _button.PressTick := 0
                 AddToDebugLog(_button.Name . " held down")
             }
         }
