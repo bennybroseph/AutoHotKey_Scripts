@@ -5,8 +5,13 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directoTargety.
 
-#Include Library/XInput.ahk
-#Include Library/Gdip.ahk
+; Compile the library files
+#Include Library\XInput.ahk
+#Include Library\Gdip.ahk
+
+; Compile the button class
+#Include Input\InputManager.ahk
+#Include Utility\IniUtility.ahk
 
 XInput_Init() ; Initialize XInput
 Gdip_Startup()
@@ -469,6 +474,8 @@ WatchAxisR()
 
 TriggerState:
 
+InputManager.RefreshState(State)
+
 Loop, 4 
 {
     if State := XInput_GetState(A_Index-1) 
@@ -557,12 +564,14 @@ PrevRThumbX := RThumbX
 PrevRThumbY := RThumbY
 
 if(DebugMode)
-	ToolTip, Inventory: (%InventoryX% %InventoryY%) `nMove: %Move% `nPressed: %Pressed% `nIgnorePressed: %IgnorePressed% `nDebug Log: `n%DebugLog%, 0, 90, 6
+	ToolTip, Inventory: (%InventoryX% %InventoryY%) `nTriggers: (%LTrigger% %RTrigger%) `nMove: %Move% `nPressed: %Pressed% `nIgnorePressed: %IgnorePressed% `nDebug Log: `n%DebugLog%, 0, 90, 6
 
 return
 ; /TriggerState
 
 WatchAxisT:
+
+InputManager.ProcessInput()
 
 if(LTrigger != PrevLTrigger)
 { 
@@ -1116,7 +1125,16 @@ DisableTooltipOverlay()
 
 AddToDebugLog(NewText)
 {
+	local static _length := 0
+
 	DebugLog := DebugLog . "`n" . NewText
+
+	_length++
+	if (_length > 75)
+	{
+		DebugLog := ""
+		_length := 0
+	}
 }
 
 FindButtonString(Key)
@@ -1724,6 +1742,8 @@ InventoryGridY[10,1] := 232.5
 ;1785 209 47 47 
 Calibrate()
 ReadConfig()
+
+InputManager.Init()
 
 if WinExist(ApplicationName)
 	WinActivate ; Activate Application Window if it exists

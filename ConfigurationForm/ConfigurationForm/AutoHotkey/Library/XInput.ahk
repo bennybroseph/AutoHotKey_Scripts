@@ -1,4 +1,4 @@
-/*  XInput by Lexikos
+﻿/*  XInput by Lexikos
  *  This version of the script uses objects, so requires AutoHotkey_L.
  */
 
@@ -77,6 +77,7 @@ XInput_Init(dll="xinput1_3.dll")
     XINPUT_GAMEPAD_RIGHT_THUMB      := 0x0080
     XINPUT_GAMEPAD_LEFT_SHOULDER    := 0x0100
     XINPUT_GAMEPAD_RIGHT_SHOULDER   := 0x0200
+    XINPUT_GAMEPAD_GUIDE            := 0x0400
     XINPUT_GAMEPAD_A                := 0x1000
     XINPUT_GAMEPAD_B                := 0x2000
     XINPUT_GAMEPAD_X                := 0x4000
@@ -267,7 +268,7 @@ XInput_GetState(UserIndex = 0)
 *           VirtualKey   ; VirtualKey   ; Virtual-key code of the key, button, or stick movement. 
 *           ;Unicode     ; (unused) This member is unused and the value is zero.
 *           Flags        ; Flags that indicate the keyboard state at the time of the input event. 
-*           UserIndex    ; Index of the signed-in gamer associated with the device. Can be a value in the range 0–3.
+*           UserIndex    ; Index of the signed-in gamer associated with the device. Can be a value in the range 0-3.
 *           HidCode      ; HID code corresponding to the input. If there is no corresponding HID code, this value is zero.
 *       }   
 *
