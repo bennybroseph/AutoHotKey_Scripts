@@ -1,4 +1,5 @@
 #Include Input\Binding.ahk
+#Include Input\InputManager.ahk
 
 class Input
 {
@@ -15,8 +16,6 @@ class Input
         this.m_PressTick    := -1
 
         this.m_Inputbind   := IniUtility.ParseInputbind(this.m_Key)
-
-        AddToDebugLog(this.m_Name . " bound to " . this.m_Inputbind.Press.Action)
     }
 
     Name[]
@@ -80,6 +79,31 @@ class Input
             return True
         }
     }
+
+	ParseTargeting()
+	{
+		For i, _keybind in InputManager.TargetedKeybinds
+		{
+			if (this.m_Inputbind.Press.Action = _keybind.Action
+			and this.m_Inputbind.Press.Modifier = _keybind.Modifier)
+				this.m_Inputbind.Press.IsTargeted := True
+
+			if (this.m_Inputbind.Hold.Action = _keybind.Action
+			and this.m_Inputbind.Hold.Modifier = _keybind.Modifier)
+				this.m_Inputbind.Hold.IsTargeted := True
+		}
+
+		For i, _keybind in InputManager.IgnoreReticuleKeybinds
+		{
+			if (this.m_Inputbind.Press.Action = _keybind.Action
+			and this.m_Inputbind.Press.Modifier = _keybind.Modifier)
+				this.m_Inputbind.Press.IgnoreReticule := True
+
+			if (this.m_Inputbind.Hold.Action = _keybind.Action
+			and this.m_Inputbind.Hold.Modifier = _keybind.Modifier)
+				this.m_Inputbind.Hold.IgnoreReticule := True
+		}
+	}
 
     RefreshState(p_State)
     {

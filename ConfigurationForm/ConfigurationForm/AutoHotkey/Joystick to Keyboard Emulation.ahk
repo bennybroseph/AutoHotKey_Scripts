@@ -1743,6 +1743,7 @@ InventoryGridY[10,1] := 232.5
 Calibrate()
 ReadConfig()
 
+IniUtility.Init()
 InputManager.Init()
 
 if WinExist(ApplicationName)
