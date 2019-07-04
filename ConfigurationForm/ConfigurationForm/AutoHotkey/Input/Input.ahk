@@ -14,7 +14,7 @@ class Control
 
         this.m_PressTick    := -1
 
-        this.m_Inputbind   := IniUtility.ParseInputbind(this.m_Key)
+        this.m_Controlbind   := IniReader.ParseControlbind(this.m_Key)
     }
 
     Name[]
@@ -65,10 +65,10 @@ class Control
         }
     }
 
-    Inputbind[]
+    Controlbind[]
     {
         get {
-            return this.m_Inputbind
+            return this.m_Controlbind
         }
     }
 
@@ -83,24 +83,24 @@ class Control
 	{
 		For i, _keybind in Controller.TargetedKeybinds
 		{
-			if (this.m_Inputbind.Press.Action = _keybind.Action
-			and this.m_Inputbind.Press.Modifier = _keybind.Modifier)
-				this.m_Inputbind.Press.IsTargeted := True
+			if (this.m_Controlbind.OnPress.Action = _keybind.Action
+			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnPress.IsTargeted := True
 
-			if (this.m_Inputbind.Hold.Action = _keybind.Action
-			and this.m_Inputbind.Hold.Modifier = _keybind.Modifier)
-				this.m_Inputbind.Hold.IsTargeted := True
+			if (this.m_Controlbind.OnHold.Action = _keybind.Action
+			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnHold.IsTargeted := True
 		}
 
 		For i, _keybind in Controller.IgnoreReticuleKeybinds
 		{
-			if (this.m_Inputbind.Press.Action = _keybind.Action
-			and this.m_Inputbind.Press.Modifier = _keybind.Modifier)
-				this.m_Inputbind.Press.IgnoreReticule := True
+			if (this.m_Controlbind.OnPress.Action = _keybind.Action
+			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnPress.IgnoreReticule := True
 
-			if (this.m_Inputbind.Hold.Action = _keybind.Action
-			and this.m_Inputbind.Hold.Modifier = _keybind.Modifier)
-				this.m_Inputbind.Hold.IgnoreReticule := True
+			if (this.m_Controlbind.OnHold.Action = _keybind.Action
+			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnHold.IgnoreReticule := True
 		}
 	}
 

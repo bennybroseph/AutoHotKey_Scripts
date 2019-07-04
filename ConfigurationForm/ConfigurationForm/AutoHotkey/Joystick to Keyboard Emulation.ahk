@@ -11,11 +11,12 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 ; Compile the utility classes
 #Include Utility\Debug.ahk
-#Include Utility\IniUtility.ahk
+#Include Utility\IniReader.ahk
 
 ; Compile the input classes
 #Include Input\Binding.ahk
 #Include Input\Input.ahk
+#Include Input\InputHelper.ahk
 #Include Input\Controller.ahk
 
 XInput_Init() ; Initialize XInput
@@ -1748,7 +1749,7 @@ InventoryGridY[10,1] := 232.5
 Calibrate()
 ReadConfig()
 
-IniUtility.Init()
+IniReader.Init()
 Controller.Init()
 
 if WinExist(ApplicationName)

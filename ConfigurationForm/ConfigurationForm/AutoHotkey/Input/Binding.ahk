@@ -1,4 +1,4 @@
-; Defines both keybindings and Inputbindings
+; Defines both keybindings and controlbindings
 
 class Keybind
 {
@@ -49,30 +49,30 @@ class Keybind
 		}
 	}
 }
-class Inputbind
+class Controlbind
 {
     __New()
     {
-        this.m_Press  := new Keybind()
-        this.m_Hold   := new Keybind()
+        this.m_OnPress  := new Keybind()
+        this.m_OnHold   := new Keybind()
     }
 
-    Press[]
+    OnPress[]
     {
         get {
-            return this.m_Press
+            return this.m_OnPress
         }
         set {
-            return this.m_Press := value
+            return this.m_OnPress := value
         }
     }
-    Hold[]
+    OnHold[]
     {
         get {
-            return this.m_Hold
+            return this.m_OnHold
         }
         set {
-            return this.m_Hold := value
+            return this.m_OnHold := value
         }
     }
 }

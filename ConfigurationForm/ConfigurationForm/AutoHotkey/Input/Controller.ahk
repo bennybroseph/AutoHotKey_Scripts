@@ -45,8 +45,8 @@ class Controller
     {
         ;AddToDebugLog("Creating instance...")
 
-        this.m_TargetedKeybinds			:= IniUtility.ParseKeybindArray("Targeted_Actions")
-        this.m_IgnoreReticuleKeybinds	:= IniUtility.ParseKeybindArray("Ignore_Reticule_Actions")
+        this.m_TargetedKeybinds			:= IniReader.ParseKeybindArray("Targeted_Actions")
+        this.m_IgnoreReticuleKeybinds	:= IniReader.ParseKeybindArray("Ignore_Reticule_Actions")
 
         this.m_Buttons := Array()
 
@@ -137,9 +137,9 @@ class Controller
                 {
                     ; The first frame a button is pressed
                     _button.PressTick := A_TickCount
-                    AddToDebugLog(_button.Name . " pressed: " . _button.Inputbind.Press.Action)
+                    AddToDebugLog(_button.Name . " pressed: " . _button.Controlbind.OnPress.Action)
                 }
-                else if (_button.Inputbind.Hold.Action and _button.PressTick = 0)
+                else if (_button.Controlbind.OnHold.Action and _button.PressTick = 0)
                 {
                     ; The first frame after a button was held long enough to trigger the hold action and then released
                     AddToDebugLog(_button.Name . " released after being held")
@@ -150,7 +150,7 @@ class Controller
                     AddToDebugLog(_button.Name . " pressed and released")
                 }
             }
-            else if (_button.Inputbind.Hold.Action and _button.State
+            else if (_button.Controlbind.OnHold.Action and _button.State
                     and _button.PressTick > 0 and A_TickCount >= _button.PressTick + Delay)
             {
                 ; The first frame a button has been held down long enough to trigger the hold action

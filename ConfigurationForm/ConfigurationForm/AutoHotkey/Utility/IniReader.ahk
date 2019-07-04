@@ -14,23 +14,23 @@ class ProfileSection
 	static TooltipOverlay	:= "Tooltip Overlay"
 }
 
-class IniUtility
+class IniReader
 {
     static __singleton :=
     static __init := False
 
     Init()
     {
-        IniUtility.__singleton := new IniUtility()
+        IniReader.__singleton := new IniReader()
 
-        IniUtility.__init := True
+        IniReader.__init := True
     }
 
     __New()
     {
         this.m_ConfigPath := "config.ini"
 
-        this.m_ProfilePath := A_WorkingDir . IniUtility.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Location")
+        this.m_ProfilePath := A_WorkingDir . IniReader.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Location")
     }
 
     ReadKey(p_IniPath, p_Section, p_Key)
@@ -42,11 +42,11 @@ class IniUtility
     }
     ReadConfigKey(p_Section, p_Key)
     {
-        return IniUtility.ReadKey(IniUtility.ConfigPath, p_Section, p_Key)
+        return IniReader.ReadKey(IniReader.ConfigPath, p_Section, p_Key)
     }
     ReadProfileKey(p_Section, p_Key)
     {
-        return IniUtility.ReadKey(IniUtility.ProfilePath, p_Section, p_Key)
+        return IniReader.ReadKey(IniReader.ProfilePath, p_Section, p_Key)
     }
 
     ParseKeybind(p_KeybindString)
@@ -66,9 +66,9 @@ class IniUtility
 
         return _newKeybind
     }
-    ParseInputbind(p_Key)
+    ParseControlbind(p_Key)
     {
-        local _inputbindString := IniUtility.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+        local _inputbindString := IniReader.ReadProfileKey(ProfileSection.Keybindings, p_Key)
 
         ; Returns an error when the requested key is not in the current profile
         if _inputbindString = ERROR
@@ -76,33 +76,33 @@ class IniUtility
 
         local _commaPos := InStr(_inputbindString,",")
 
-		local _newInputBind := new Inputbind()
+		local _newControlbind := new Controlbind()
         local _tempKeybind := new Keybind()
         if(_commaPos)
         {
-            _tempKeybind := IniUtility.ParseKeybind(SubStr(_inputbindString, 1, _commaPos - 1))
-            _newInputBind.Press.Action := _tempKeybind.Action
-            _newInputBind.Press.Modifier := _tempKeybind.Modifier
+            _tempKeybind := IniReader.ParseKeybind(SubStr(_inputbindString, 1, _commaPos - 1))
+            _newControlbind.OnPress.Action := _tempKeybind.Action
+            _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
 
-            _tempKeybind := IniUtility.ParseKeybind(SubStr(_inputbindString, _commaPos + 1))
-            _newInputBind.Hold.Action := _tempKeybind.Action
-            _newInputBind.Hold.Modifier := _tempKeybind.Modifier
+            _tempKeybind := IniReader.ParseKeybind(SubStr(_inputbindString, _commaPos + 1))
+            _newControlbind.OnHold.Action := _tempKeybind.Action
+            _newControlbind.OnHold.Modifier := _tempKeybind.Modifier
         }
         else
         {
-            _tempKeybind := IniUtility.ParseKeybind(_inputbindString)
-            _newInputBind.Press.Action := _tempKeybind.Action
-            _newInputBind.Press.Modifier := _tempKeybind.Modifier
+            _tempKeybind := IniReader.ParseKeybind(_inputbindString)
+            _newControlbind.OnPress.Action := _tempKeybind.Action
+            _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
         }
         ;AddToDebugLog(
-        ;    "p_Key " . _inputbindString . " parsed as [1]-" . _newInputBind[1] " [2]-"
-        ;    . _newInputBind[2] " [3]-" . _newInputBind[3] " [4]-" . _newInputBind[4])
+        ;    "p_Key " . _inputbindString . " parsed as [1]-" . _newControlbind[1] " [2]-"
+        ;    . _newControlbind[2] " [3]-" . _newControlbind[3] " [4]-" . _newControlbind[4])
 
-        return _newInputBind
+        return _newControlbind
     }
     ParseKeybindArray(p_Key)
     {
-		local _keybindArrayString := IniUtility.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+		local _keybindArrayString := IniReader.ReadProfileKey(ProfileSection.Keybindings, p_Key)
 
 		if _keybindArrayString = ERROR
 			return ERROR
@@ -113,12 +113,12 @@ class IniUtility
 			local _commaPos := InStr(_keybindArrayString, ",")
 			if (_commaPos)
 			{
-				_newKeybindArray[A_Index] := IniUtility.ParseKeybind(SubStr(_keybindArrayString, 1, _commaPos - 1))
+				_newKeybindArray[A_Index] := IniReader.ParseKeybind(SubStr(_keybindArrayString, 1, _commaPos - 1))
 				_keybindArrayString := SubStr(_keybindArrayString, _commaPos + 1)
 			}
 			else
 			{
-				_newKeybindArray[A_Index] := IniUtility.ParseKeybind(_keybindArrayString)
+				_newKeybindArray[A_Index] := IniReader.ParseKeybind(_keybindArrayString)
 				break
 			}
 		} Until False
@@ -129,13 +129,13 @@ class IniUtility
     ConfigPath[]
     {
         get {
-            return IniUtility.__singleton.m_ConfigPath
+            return IniReader.__singleton.m_ConfigPath
         }
     }
     ProfilePath[]
     {
         get {
-            return IniUtility.__singleton.m_ProfilePath
+            return IniReader.__singleton.m_ProfilePath
         }
     }
 }
