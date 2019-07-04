@@ -9,9 +9,14 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Library\XInput.ahk
 #Include Library\Gdip.ahk
 
-; Compile the button class
-#Include Input\InputManager.ahk
+; Compile the utility classes
+#Include Utility\Debug.ahk
 #Include Utility\IniUtility.ahk
+
+; Compile the input classes
+#Include Input\Binding.ahk
+#Include Input\Input.ahk
+#Include Input\Controller.ahk
 
 XInput_Init() ; Initialize XInput
 Gdip_Startup()
@@ -474,7 +479,7 @@ WatchAxisR()
 
 TriggerState:
 
-InputManager.RefreshState(State)
+Controller.RefreshState(State)
 
 Loop, 4
 {
@@ -571,7 +576,7 @@ return
 
 WatchAxisT:
 
-InputManager.ProcessInput()
+Controller.ProcessInput()
 
 if(LTrigger != PrevLTrigger)
 {
@@ -1744,7 +1749,7 @@ Calibrate()
 ReadConfig()
 
 IniUtility.Init()
-InputManager.Init()
+Controller.Init()
 
 if WinExist(ApplicationName)
 	WinActivate ; Activate Application Window if it exists

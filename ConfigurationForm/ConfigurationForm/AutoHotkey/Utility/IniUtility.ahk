@@ -1,4 +1,5 @@
-#Include Input\Binding.ahk
+; Helps with reading from '.ini' files
+; Contains functions to quickly parse keybind information
 
 class ConfigSection
 {

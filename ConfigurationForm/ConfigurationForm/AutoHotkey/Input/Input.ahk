@@ -1,7 +1,6 @@
-#Include Input\Binding.ahk
-#Include Input\InputManager.ahk
+; Stores classes for all types of input
 
-class Input
+class Control
 {
     __New(p_Name, p_Nickname, p_Index, p_Key)
     {
@@ -82,7 +81,7 @@ class Input
 
 	ParseTargeting()
 	{
-		For i, _keybind in InputManager.TargetedKeybinds
+		For i, _keybind in Controller.TargetedKeybinds
 		{
 			if (this.m_Inputbind.Press.Action = _keybind.Action
 			and this.m_Inputbind.Press.Modifier = _keybind.Modifier)
@@ -93,7 +92,7 @@ class Input
 				this.m_Inputbind.Hold.IsTargeted := True
 		}
 
-		For i, _keybind in InputManager.IgnoreReticuleKeybinds
+		For i, _keybind in Controller.IgnoreReticuleKeybinds
 		{
 			if (this.m_Inputbind.Press.Action = _keybind.Action
 			and this.m_Inputbind.Press.Modifier = _keybind.Modifier)
@@ -110,7 +109,7 @@ class Input
         this.m_PrevState := this.m_State
     }
 }
-class Button extends Input
+class Button extends Control
 {
     __New(p_Name, p_Nickname, p_Index, p_Key, p_Bitmask)
     {
@@ -123,11 +122,10 @@ class Button extends Input
     {
         base.RefreshState(p_State)
 
-        ;AddToDebugLog("m_Bitmask: " . this.m_Bitmask)
         this.m_State := p_State.Buttons & this.m_Bitmask
     }
 }
-class Trigger extends Input
+class Trigger extends Control
 {
    __New(p_Name, p_Nickname, p_Index, p_Key, p_Direction)
     {
