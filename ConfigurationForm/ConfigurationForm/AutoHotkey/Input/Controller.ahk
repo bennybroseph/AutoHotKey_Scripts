@@ -1,6 +1,6 @@
 ; Stores Keybinds
 
-class ButtonIndex
+class ControlIndex
 {
     static A			:= 1
     static B			:= 2
@@ -12,18 +12,19 @@ class ButtonIndex
     static DPadLeft		:= 7
     static DPadRight	:= 8
 
-    static Start		:= 9
-    static Back         := 10
-    static Guide        := 11
+    static LShoulder	:= 9
+    static RShoulder	:= 10
 
-    static LShoulder	:= 12
-    static RShoulder	:= 13
+    static LTrigger		:= 11
+    static RTrigger		:= 12
 
-    static LThumb		:= 14
-    static RThumb		:= 15
+	static Start		:= 13
+    static Back         := 14
 
-    static LTrigger		:= 16
-    static RTrigger		:= 17
+	static LThumb		:= 15
+    static RThumb		:= 16
+
+    static Guide        := 17
 }
 
 class Controller
@@ -33,57 +34,60 @@ class Controller
 
     Init()
     {
+		global
+
         Controller.__singleton := new Controller()
 
-		For i, _button in Controller.Buttons
-			_button.ParseTargeting()
+		For i, _control in Controller.Controls
+			_control.ParseTargeting()
 
+		Debug.AddToOnTooltip(new Delegate(Controller, "OnTooltip"))
         Controller.__init := True
     }
 
     __New()
     {
-        ;AddToDebugLog("Creating instance...")
+		global
 
         this.m_TargetedKeybinds			:= IniReader.ParseKeybindArray("Targeted_Actions")
         this.m_IgnoreReticuleKeybinds	:= IniReader.ParseKeybindArray("Ignore_Reticule_Actions")
 
-        this.m_Buttons := Array()
+        this.m_Controls := Array()
 
-        ;AddToDebugLog("A: " . XINPUT_GAMEPAD_A)
-        this.m_Buttons[ButtonIndex.A] := new Button("A Button", "A", ButtonIndex.A, "A_Button", XINPUT_GAMEPAD_A)
-        this.m_Buttons[ButtonIndex.B] := new Button("B Button", "B", ButtonIndex.B, "B_Button", XINPUT_GAMEPAD_B)
-        this.m_Buttons[ButtonIndex.X] := new Button("X Button", "X", ButtonIndex.X, "X_Button", XINPUT_GAMEPAD_X)
-        this.m_Buttons[ButtonIndex.Y] := new Button("Y Button", "Y", ButtonIndex.Y, "Y_Button", XINPUT_GAMEPAD_Y)
+        this.m_Controls[ControlIndex.A] := new Button("A Button", "A", ControlIndex.A, "A_Button", XINPUT_GAMEPAD_A)
+        this.m_Controls[ControlIndex.B] := new Button("B Button", "B", ControlIndex.B, "B_Button", XINPUT_GAMEPAD_B)
+        this.m_Controls[ControlIndex.X] := new Button("X Button", "X", ControlIndex.X, "X_Button", XINPUT_GAMEPAD_X)
+        this.m_Controls[ControlIndex.Y] := new Button("Y Button", "Y", ControlIndex.Y, "Y_Button", XINPUT_GAMEPAD_Y)
 
-        this.m_Buttons[ButtonIndex.DPadUp]
-			:= new Button("D-pad Up", "Up", ButtonIndex.DPadUp, "D-Pad_Up", XINPUT_GAMEPAD_DPAD_UP)
-        this.m_Buttons[ButtonIndex.DPadDown]
-			:= new Button("D-pad Down", "Down", ButtonIndex.DPadDown, "D-Pad_Down", XINPUT_GAMEPAD_DPAD_DOWN)
-        this.m_Buttons[ButtonIndex.DPadLeft]
-			:= new Button("D-pad Left", "Left", ButtonIndex.DPadLeft, "D-Pad_Left", XINPUT_GAMEPAD_DPAD_LEFT)
-        this.m_Buttons[ButtonIndex.DPadRight]
-			:= new Button("D-pad Right", "Right", ButtonIndex.DPadRight, "D-Pad_Right", XINPUT_GAMEPAD_DPAD_RIGHT)
+        this.m_Controls[ControlIndex.DPadUp]
+			:= new Button("D-pad Up", "Up", ControlIndex.DPadUp, "D-Pad_Up", XINPUT_GAMEPAD_DPAD_UP)
+        this.m_Controls[ControlIndex.DPadDown]
+			:= new Button("D-pad Down", "Down", ControlIndex.DPadDown, "D-Pad_Down", XINPUT_GAMEPAD_DPAD_DOWN)
+        this.m_Controls[ControlIndex.DPadLeft]
+			:= new Button("D-pad Left", "Left", ControlIndex.DPadLeft, "D-Pad_Left", XINPUT_GAMEPAD_DPAD_LEFT)
+        this.m_Controls[ControlIndex.DPadRight]
+			:= new Button("D-pad Right", "Right", ControlIndex.DPadRight, "D-Pad_Right", XINPUT_GAMEPAD_DPAD_RIGHT)
 
-        this.m_Buttons[ButtonIndex.Start]
-			:= new Button("Start Button", "Start", ButtonIndex.Start, "Start_Button", XINPUT_GAMEPAD_START)
-        this.m_Buttons[ButtonIndex.Back]
-			:= new Button("Back Button", "Back", ButtonIndex.Back, "Back_Button", XINPUT_GAMEPAD_BACK)
-        this.m_Buttons[ButtonIndex.Guide]
-			:= new Button("Guide Button", "Guide", ButtonIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
+		this.m_Controls[ControlIndex.LShoulder]
+            := new Button("Left Bumper", "LB", ControlIndex.LShoulder, "Left_Shoulder", XINPUT_GAMEPAD_LEFT_SHOULDER)
+        this.m_Controls[ControlIndex.RShoulder]
+            := new Button("Right Bumper", "RB", ControlIndex.RShoulder, "Right_Shoulder", XINPUT_GAMEPAD_RIGHT_SHOULDER)
 
-        this.m_Buttons[ButtonIndex.LShoulder]
-            := new Button("Left Bumper", "LB", ButtonIndex.LShoulder, "Left_Shoulder", XINPUT_GAMEPAD_LEFT_SHOULDER)
-        this.m_Buttons[ButtonIndex.RShoulder]
-            := new Button("Right Bumper", "RB", ButtonIndex.RShoulder, "Right_Shoulder", XINPUT_GAMEPAD_RIGHT_SHOULDER)
+		this.m_Controls[ControlIndex.LTrigger] := new Trigger("Left Trigger", "LT", ControlIndex.LTrigger, "Left_Trigger", "Left")
+        this.m_Controls[ControlIndex.RTrigger] := new Trigger("Right Trigger", "RT", ControlIndex.RTrigger, "Right_Trigger", "Right")
 
-        this.m_Buttons[ButtonIndex.LThumb]
+        this.m_Controls[ControlIndex.Start]
+			:= new Button("Start Button", "Start", ControlIndex.Start, "Start_Button", XINPUT_GAMEPAD_START)
+        this.m_Controls[ControlIndex.Back]
+			:= new Button("Back Button", "Back", ControlIndex.Back, "Back_Button", XINPUT_GAMEPAD_BACK)
+
+        this.m_Controls[ControlIndex.LThumb]
             := new Button("Left Stick Button", "LS", LThumbButton, "Left_Analog_Button", XINPUT_GAMEPAD_LEFT_THUMB)
-        this.m_Buttons[ButtonIndex.RThumb]
+        this.m_Controls[ControlIndex.RThumb]
             := new Button("Right Stick Button", "RS", RThumbButton, "Right_Analog_Button", XINPUT_GAMEPAD_RIGHT_THUMB)
 
-        this.m_Buttons[ButtonIndex.LTrigger] := new Trigger("Left Trigger", "LT", ButtonIndex.LTrigger, "Left_Trigger", "Left")
-        this.m_Buttons[ButtonIndex.RTrigger] := new Trigger("Right Trigger", "RT", ButtonIndex.RTrigger, "Right_Trigger", "Right")
+		this.m_Controls[ControlIndex.Guide]
+			:= new Button("Guide Button", "Guide", ControlIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
     }
 
 	TargetedKeybinds[]
@@ -99,10 +103,10 @@ class Controller
 		}
 	}
 
-    Buttons[]
+    Controls[]
     {
         get {
-            return Controller.__singleton.m_Buttons
+            return Controller.__singleton.m_Controls
         }
     }
 
@@ -116,8 +120,8 @@ class Controller
             if (!_state)
                 Continue
 
-            For i, _button in Controller.Buttons
-                _button.RefreshState(_state)
+            For i, _control in Controller.Controls
+                _control.RefreshState(_state)
         }
     }
 
@@ -125,38 +129,49 @@ class Controller
     {
         global
 
-        For i, _button in Controller.Buttons
+        For i, _control in Controller.Controls
         {
-            if (!_button.IsValidInput)
-                Continue
-
-            ;AddToDebugLog(_button.Name . " State: " . _button.State . " PrevState:" . _button.PrevState)
-            if (_button.State != _button.PrevState)
+            ;Debug.AddToLog(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
+            if (_control.State != _control.PrevState)
             {
-                if (_button.State)
+                if (_control.State)
                 {
                     ; The first frame a button is pressed
-                    _button.PressTick := A_TickCount
-                    AddToDebugLog(_button.Name . " pressed: " . _button.Controlbind.OnPress.Action)
+                    _control.PressTick := A_TickCount
+                    Debug.AddToLog(_control.Name . " pressed: " . _control.Controlbind.OnPress.Action)
                 }
-                else if (_button.Controlbind.OnHold.Action and _button.PressTick = 0)
+                else if (_control.Controlbind.OnHold.Action and _control.PressTick = 0)
                 {
                     ; The first frame after a button was held long enough to trigger the hold action and then released
-                    AddToDebugLog(_button.Name . " released after being held")
+                    Debug.AddToLog(_control.Name . " released after being held")
                 }
-                else if (_button.PressTick != -1)
+                else if (_control.PressTick != -1)
                 {
                     ; The first frame a button is released but was not held long enough to trigger the hold action
-                    AddToDebugLog(_button.Name . " pressed and released")
+                    Debug.AddToLog(_control.Name . " pressed and released")
                 }
             }
-            else if (_button.Controlbind.OnHold.Action and _button.State
-                    and _button.PressTick > 0 and A_TickCount >= _button.PressTick + Delay)
+            else if (_control.Controlbind.OnHold.Action and _control.State
+                    and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
             {
                 ; The first frame a button has been held down long enough to trigger the hold action
-                _button.PressTick := 0
-                AddToDebugLog(_button.Name . " held down")
+                _control.PressTick := 0
+                Debug.AddToLog(_control.Name . " held down")
             }
         }
     }
+
+	OnTooltip()
+	{
+		local _debugText :=
+
+		For i, _control in Controller.Controls
+		{
+			_debugText := _debugText . _control.Nickname . ": " . _control.State . "   "
+			if (Mod(i, 4) = 0)
+				_debugText := _debugText . "`n"
+		}
+
+		return _debugText
+	}
 }

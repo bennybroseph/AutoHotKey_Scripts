@@ -8,6 +8,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 ; Compile the library files
 #Include Library\XInput.ahk
 #Include Library\Gdip.ahk
+#Include Library\Delegate.ahk
 
 ; Compile the utility classes
 #Include Utility\Debug.ahk
@@ -480,7 +481,7 @@ WatchAxisR()
 
 TriggerState:
 
-Controller.RefreshState(State)
+Controller.RefreshState()
 
 Loop, 4
 {
@@ -570,8 +571,8 @@ PrevRThumbX := RThumbX
 PrevRThumbY := RThumbY
 
 if(DebugMode)
-	ToolTip, Inventory: (%InventoryX% %InventoryY%) `nTriggers: (%LTrigger% %RTrigger%) `nMove: %Move% `nPressed: %Pressed% `nIgnorePressed: %IgnorePressed% `nDebug Log: `n%DebugLog%, 0, 90, 6
-
+	;ToolTip, Inventory: (%InventoryX% %InventoryY%) `nTriggers: (%LTrigger% %RTrigger%) `nMove: %Move% `nPressed: %Pressed% `nIgnorePressed: %IgnorePressed% `nDebug Log: `n%DebugLog%, 0, 90, 6
+	Debug.DrawTooltip()
 return
 ; /TriggerState
 
@@ -1749,6 +1750,7 @@ InventoryGridY[10,1] := 232.5
 Calibrate()
 ReadConfig()
 
+Debug.Init()
 IniReader.Init()
 Controller.Init()
 

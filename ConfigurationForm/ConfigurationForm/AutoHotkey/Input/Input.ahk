@@ -15,6 +15,13 @@ class Control
         this.m_PressTick    := -1
 
         this.m_Controlbind   := IniReader.ParseControlbind(this.m_Key)
+
+		Debug.AddToLog(this.m_Name . " OnPress: "
+			. this.m_Controlbind.OnPress.Action
+			. (this.m_Controlbind.OnPress.Modifier ? " + " . this.m_Controlbind.OnPress.Modifier : ""))
+		Debug.AddToLog(this.m_Name . " OnHold: "
+			. this.m_Controlbind.OnHold.Action
+			. (this.m_Controlbind.OnHold.Modifier ? " + " . this.m_Controlbind.OnHold.Modifier : ""))
     }
 
     Name[]
@@ -72,13 +79,6 @@ class Control
         }
     }
 
-    IsValidInput[]
-    {
-        get {
-            return True
-        }
-    }
-
 	ParseTargeting()
 	{
 		For i, _keybind in Controller.TargetedKeybinds
@@ -132,19 +132,21 @@ class Trigger extends Control
         base.__New(p_Name, p_Nickname, p_Index, p_Key)
 
         this.m_Direction := p_Direction
+
+		this.m_TriggerValue := -1
     }
 
-    IsValidInput[]
-    {
-        get {
-            return this.m_State > 64
-        }
-    }
-
+	TriggerValue[]
+	{
+		get {
+			return this.m_TriggerValue
+		}
+	}
     RefreshState(p_State)
     {
         base.RefreshState(p_State)
 
-        this.m_State := (this.m_Direction = "Left") ? p_State.LeftTrigger : p_State.RightTrigger
+        this.m_TriggerValue := (this.m_Direction = "Left") ? p_State.LeftTrigger : p_State.RightTrigger
+		this.m_State := (this.m_TriggerValue > 64) ? 1 : 0
     }
 }

@@ -33,6 +33,19 @@ class IniReader
         this.m_ProfilePath := A_WorkingDir . IniReader.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Location")
     }
 
+	ConfigPath[]
+    {
+        get {
+            return IniReader.__singleton.m_ConfigPath
+        }
+    }
+    ProfilePath[]
+    {
+        get {
+            return IniReader.__singleton.m_ProfilePath
+        }
+    }
+
     ReadKey(p_IniPath, p_Section, p_Key)
     {
         local _temp :=
@@ -68,34 +81,34 @@ class IniReader
     }
     ParseControlbind(p_Key)
     {
-        local _inputbindString := IniReader.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+        local _controlbindString := IniReader.ReadProfileKey(ProfileSection.Keybindings, p_Key)
 
         ; Returns an error when the requested key is not in the current profile
-        if _inputbindString = ERROR
+        if _controlbindString = ERROR
             return ERROR
 
-        local _commaPos := InStr(_inputbindString,",")
+        local _commaPos := InStr(_controlbindString,",")
 
 		local _newControlbind := new Controlbind()
         local _tempKeybind := new Keybind()
         if(_commaPos)
         {
-            _tempKeybind := IniReader.ParseKeybind(SubStr(_inputbindString, 1, _commaPos - 1))
+            _tempKeybind := IniReader.ParseKeybind(SubStr(_controlbindString, 1, _commaPos - 1))
             _newControlbind.OnPress.Action := _tempKeybind.Action
             _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
 
-            _tempKeybind := IniReader.ParseKeybind(SubStr(_inputbindString, _commaPos + 1))
+            _tempKeybind := IniReader.ParseKeybind(SubStr(_controlbindString, _commaPos + 1))
             _newControlbind.OnHold.Action := _tempKeybind.Action
             _newControlbind.OnHold.Modifier := _tempKeybind.Modifier
         }
         else
         {
-            _tempKeybind := IniReader.ParseKeybind(_inputbindString)
+            _tempKeybind := IniReader.ParseKeybind(_controlbindString)
             _newControlbind.OnPress.Action := _tempKeybind.Action
             _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
         }
         ;AddToDebugLog(
-        ;    "p_Key " . _inputbindString . " parsed as [1]-" . _newControlbind[1] " [2]-"
+        ;    "p_Key " . _controlbindString . " parsed as [1]-" . _newControlbind[1] " [2]-"
         ;    . _newControlbind[2] " [3]-" . _newControlbind[3] " [4]-" . _newControlbind[4])
 
         return _newControlbind
@@ -124,18 +137,5 @@ class IniReader
 		} Until False
 
 		return _newKeybindArray
-    }
-
-    ConfigPath[]
-    {
-        get {
-            return IniReader.__singleton.m_ConfigPath
-        }
-    }
-    ProfilePath[]
-    {
-        get {
-            return IniReader.__singleton.m_ProfilePath
-        }
     }
 }
