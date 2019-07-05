@@ -30,7 +30,7 @@ class IniReader
     {
         this.m_ConfigPath := "config.ini"
 
-        this.m_ProfilePath := A_WorkingDir . IniReader.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Location")
+        this.m_ProfilePath := A_WorkingDir . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Location")
     }
 
 	ConfigPath[]
@@ -51,15 +51,21 @@ class IniReader
         local _temp :=
         IniRead, _temp, % p_IniPath, % p_Section, % p_Key
 
+		if (_temp = "ERROR")
+		{
+			Debug.AddToLog("Could not find key '" . p_Key . "' in '" . p_IniPath . "' in section '" . p_Section . "'")
+			return ERROR
+		}
+
         return _temp
     }
     ReadConfigKey(p_Section, p_Key)
     {
-        return IniReader.ReadKey(IniReader.ConfigPath, p_Section, p_Key)
+        return this.ReadKey(this.ConfigPath, p_Section, p_Key)
     }
     ReadProfileKey(p_Section, p_Key)
     {
-        return IniReader.ReadKey(IniReader.ProfilePath, p_Section, p_Key)
+        return this.ReadKey(this.ProfilePath, p_Section, p_Key)
     }
 
     ParseKeybind(p_KeybindString)
@@ -81,11 +87,14 @@ class IniReader
     }
     ParseControlbind(p_Key)
     {
-        local _controlbindString := IniReader.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+        local _controlbindString := this.ReadProfileKey(ProfileSection.Keybindings, p_Key)
 
         ; Returns an error when the requested key is not in the current profile
-        if _controlbindString = ERROR
+        if (_controlbindString = "ERROR")
+		{
+			Debug.AddToLog("Could not find key '" . p_Key . "' in the profile ini's keybindings")
             return ERROR
+		}
 
         local _commaPos := InStr(_controlbindString,",")
 
@@ -93,17 +102,17 @@ class IniReader
         local _tempKeybind := new Keybind()
         if(_commaPos)
         {
-            _tempKeybind := IniReader.ParseKeybind(SubStr(_controlbindString, 1, _commaPos - 1))
+            _tempKeybind := this.ParseKeybind(SubStr(_controlbindString, 1, _commaPos - 1))
             _newControlbind.OnPress.Action := _tempKeybind.Action
             _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
 
-            _tempKeybind := IniReader.ParseKeybind(SubStr(_controlbindString, _commaPos + 1))
+            _tempKeybind := this.ParseKeybind(SubStr(_controlbindString, _commaPos + 1))
             _newControlbind.OnHold.Action := _tempKeybind.Action
             _newControlbind.OnHold.Modifier := _tempKeybind.Modifier
         }
         else
         {
-            _tempKeybind := IniReader.ParseKeybind(_controlbindString)
+            _tempKeybind := this.ParseKeybind(_controlbindString)
             _newControlbind.OnPress.Action := _tempKeybind.Action
             _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
         }
@@ -115,10 +124,13 @@ class IniReader
     }
     ParseKeybindArray(p_Key)
     {
-		local _keybindArrayString := IniReader.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+		local _keybindArrayString := this.ReadProfileKey(ProfileSection.Keybindings, p_Key)
 
-		if _keybindArrayString = ERROR
+		if (_keybindArrayString = "ERROR")
+		{
+			Debug.AddToLog("Could not find key '" . p_Key . "' in the profile ini's keybindings")
 			return ERROR
+		}
 
 		local _newKeybindArray := Array()
 		Loop
@@ -126,12 +138,12 @@ class IniReader
 			local _commaPos := InStr(_keybindArrayString, ",")
 			if (_commaPos)
 			{
-				_newKeybindArray[A_Index] := IniReader.ParseKeybind(SubStr(_keybindArrayString, 1, _commaPos - 1))
+				_newKeybindArray[A_Index] := this.ParseKeybind(SubStr(_keybindArrayString, 1, _commaPos - 1))
 				_keybindArrayString := SubStr(_keybindArrayString, _commaPos + 1)
 			}
 			else
 			{
-				_newKeybindArray[A_Index] := IniReader.ParseKeybind(_keybindArrayString)
+				_newKeybindArray[A_Index] := this.ParseKeybind(_keybindArrayString)
 				break
 			}
 		} Until False

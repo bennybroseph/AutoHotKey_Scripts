@@ -122,7 +122,7 @@ class Button extends Control
     {
         base.RefreshState(p_State)
 
-        this.m_State := p_State.Buttons & this.m_Bitmask
+        this.m_State := p_State.Buttons & this.m_Bitmask != 0
     }
 }
 class Trigger extends Control
@@ -146,7 +146,96 @@ class Trigger extends Control
     {
         base.RefreshState(p_State)
 
-        this.m_TriggerValue := (this.m_Direction = "Left") ? p_State.LeftTrigger : p_State.RightTrigger
-		this.m_State := (this.m_TriggerValue > 64) ? 1 : 0
+        this.m_TriggerValue := this.m_Direction = "Left" ? p_State.LeftTrigger : p_State.RightTrigger
+		this.m_State := this.m_TriggerValue > 64
     }
+}
+class Stick extends Control
+{
+	__New(p_Name, p_Nickname, p_Index, p_Key, p_Direction)
+	{
+		base.__New(p_Name, p_Nickname, p_Index, p_Key)
+
+		this.m_Direction := p_Direction
+
+		this.m_StickValue 		:= new Vector2()
+		this.m_PrevStickValue 	:= new Vector2()
+
+		this.m_StickDelta := new Vector2()
+
+		this.m_MaxValue :=
+			new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max")
+						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max"))
+		this.m_MinValue :=
+			new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_XZero")
+						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_YZero"))
+
+		this.m_Deadzone := IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Deadzone")
+
+		this.m_Sensitivity :=
+			new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_XSensitivity")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_YSensitivity"))
+	}
+
+	StickValue[]
+	{
+		get {
+			return this.m_StickValue
+		}
+	}
+	PrevStickValue[]
+	{
+		get {
+			return this.m_PrevStickValue
+		}
+	}
+
+	StickDelta[]
+	{
+		get {
+			return this.m_StickDelta
+		}
+	}
+
+	MaxValue[]
+	{
+		get {
+			return this.m_MaxValue
+		}
+	}
+	MinValue[]
+	{
+		get {
+			return this.m_MinValue
+		}
+	}
+
+	Deadzone[]
+	{
+		get {
+			return this.m_Deadzone
+		}
+	}
+
+	Sensitivity[]
+	{
+		get {
+			return this.m_Sensitivity
+		}
+	}
+
+	RefreshState(p_State)
+	{
+		base.RefreshState(p_State)
+
+		this.m_PrevStickValue := new Vector2(this.m_StickValue.X, this.m_StickValue.Y)
+
+		this.m_StickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) - this.m_MinValue.X
+		this.m_StickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) - this.m_MinValue.Y
+
+		this.m_StickDelta.X := (this.m_StickValue.X - this.m_PrevStickValue.X) * this.m_Sensitivity.X
+		this.m_StickDelta.Y := (this.m_StickValue.Y - this.m_PrevStickValue.Y) * this.m_Sensitivity.Y
+
+		this.m_State := Abs(this.m_StickValue.X) > this.m_Deadzone or Abs(this.m_StickValue.Y) > this.m_Deadzone
+	}
 }

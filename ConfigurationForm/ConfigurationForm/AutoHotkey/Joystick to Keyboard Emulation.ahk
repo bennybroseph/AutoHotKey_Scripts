@@ -11,6 +11,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Library\Delegate.ahk
 
 ; Compile the utility classes
+#Include Utility\Vector2.ahk
 #Include Utility\Debug.ahk
 #Include Utility\IniReader.ahk
 

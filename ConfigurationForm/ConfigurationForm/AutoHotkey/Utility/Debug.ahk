@@ -30,7 +30,7 @@ class Debug
 	CurrentRuntime[]
 	{
 		get {
-			local _ticksRemaining := Debug.CurrentTickDelta
+			local _ticksRemaining := this.CurrentTickDelta
 
 			local _hours 	:= Floor(_ticksRemaining / 1000 / 60 / 60)
 			_ticksRemaining := _ticksRemaining - (_hours * 1000 * 60 * 60)
@@ -65,12 +65,12 @@ class Debug
 	{
 		local _debugText :=
 
-		For i, _delegate in Debug.OnTooltip
+		For i, _delegate in this.OnTooltip
 			_debugText := %_delegate%() . "`n"
 
 		_debugText := _debugText . "`n`nDebug Log:`n"
 
-		For i, _entry in Debug.LogEntries
+		For i, _entry in this.LogEntries
 			_debugText := _debugText . _entry . "`n"
 
 		ToolTip, % _debugText, 0, 90, 7
@@ -78,14 +78,14 @@ class Debug
 
 	AddToLog(p_Entry)
 	{
-		if (Debug.LogEntries.Length() >= 60)
-			Debug.LogEntries.RemoveAt(1)
+		if (this.LogEntries.Length() >= 60)
+			this.LogEntries.RemoveAt(1)
 
-		Debug.LogEntries.Push("[" . Debug.CurrentRuntime . "]: " . p_Entry)
+		this.LogEntries.Push("[" . this.CurrentRuntime . "]: " . p_Entry)
 	}
 
 	AddToOnTooltip(p_Delegate)
 	{
-		Debug.OnTooltip.Push(p_Delegate)
+		this.OnTooltip.Push(p_Delegate)
 	}
 }

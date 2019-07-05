@@ -26,6 +26,11 @@ class ControlIndex
 
     static Guide        := 17
 }
+class StickIndex
+{
+	static Left 	:= 1
+	static Right 	:= 2
+}
 
 class Controller
 {
@@ -82,12 +87,16 @@ class Controller
 			:= new Button("Back Button", "Back", ControlIndex.Back, "Back_Button", XINPUT_GAMEPAD_BACK)
 
         this.m_Controls[ControlIndex.LThumb]
-            := new Button("Left Stick Button", "LS", LThumbButton, "Left_Analog_Button", XINPUT_GAMEPAD_LEFT_THUMB)
+            := new Button("Left Stick Button", "LS", ControlIndex.LThumb, "Left_Analog_Button", XINPUT_GAMEPAD_LEFT_THUMB)
         this.m_Controls[ControlIndex.RThumb]
-            := new Button("Right Stick Button", "RS", RThumbButton, "Right_Analog_Button", XINPUT_GAMEPAD_RIGHT_THUMB)
+            := new Button("Right Stick Button", "RS", ControlIndex.RThumb, "Right_Analog_Button", XINPUT_GAMEPAD_RIGHT_THUMB)
 
 		this.m_Controls[ControlIndex.Guide]
 			:= new Button("Guide Button", "Guide", ControlIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
+
+		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "ERROR", "Left")
+		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "ERROR", "Right")
+
     }
 
 	TargetedKeybinds[]
@@ -110,6 +119,19 @@ class Controller
         }
     }
 
+	LeftStick[]
+	{
+		get {
+			return Controller.__singleton.m_LeftStick
+		}
+	}
+	RightStick[]
+	{
+		get {
+			return Controller.__singleton.m_RightStick
+		}
+	}
+
     RefreshState()
     {
         global
@@ -120,8 +142,11 @@ class Controller
             if (!_state)
                 Continue
 
-            For i, _control in Controller.Controls
+            For i, _control in this.Controls
                 _control.RefreshState(_state)
+
+			this.LeftStick.RefreshState(_state)
+			this.RightStick.RefreshState(_state)
         }
     }
 
@@ -129,7 +154,7 @@ class Controller
     {
         global
 
-        For i, _control in Controller.Controls
+        For i, _control in this.Controls
         {
             ;Debug.AddToLog(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
             if (_control.State != _control.PrevState)
@@ -138,7 +163,7 @@ class Controller
                 {
                     ; The first frame a button is pressed
                     _control.PressTick := A_TickCount
-                    Debug.AddToLog(_control.Name . " pressed: " . _control.Controlbind.OnPress.Action)
+                    Debug.AddToLog(_control.Name . " pressed")
                 }
                 else if (_control.Controlbind.OnHold.Action and _control.PressTick = 0)
                 {
@@ -165,12 +190,22 @@ class Controller
 	{
 		local _debugText :=
 
-		For i, _control in Controller.Controls
+		For i, _control in this.Controls
 		{
-			_debugText := _debugText . _control.Nickname . ": " . _control.State . "   "
+			_debugText := _debugText . _control.Nickname . ": "
+			if (_control.Index = ControlIndex.LTrigger or _control.Index = ControlIndex.RTrigger)
+				_debugText := _debugText . _control.TriggerValue . "   "
+			else
+				_debugText := _debugText . _control.State . "   "
+
 			if (Mod(i, 4) = 0)
 				_debugText := _debugText . "`n"
 		}
+
+		_debugText := _debugText . this.LeftStick.Nickname . ": ("
+					. this.LeftStick.StickValue.X . ", " . this.LeftStick.StickValue.Y ")   "
+		_debugText := _debugText . this.RightStick.Nickname . ": ("
+					. this.RightStick.StickValue.X . ", " . this.RightStick.StickValue.Y ")   "
 
 		return _debugText
 	}
