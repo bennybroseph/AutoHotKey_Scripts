@@ -13,7 +13,7 @@ class InputHelper
 			this.PressKey(p_Keybind.Modifier)
 		this.PressKey(p_Keybind.Action)
 	}
-	ReleaseKeybind(p_Keyind)
+	ReleaseKeybind(p_Keybind)
 	{
 		this.ReleaseKey(p_Keybind.Action)
 		if (p_Keybind.Modifier)

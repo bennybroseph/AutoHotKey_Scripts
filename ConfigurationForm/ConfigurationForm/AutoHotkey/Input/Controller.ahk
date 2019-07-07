@@ -97,6 +97,8 @@ class Controller
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_XOffset")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_YOffset"))
 
+        Debug.AddToLog("MouseOffset: (" . this.m_MouseOffset.X . ", " . this.m_MouseOffset.Y . ")")
+
         this.m_TargetedKeybinds			:= IniReader.ParseKeybindArray("Targeted_Actions")
         this.m_IgnoreReticuleKeybinds	:= IniReader.ParseKeybindArray("Ignore_Reticule_Actions")
 
@@ -326,7 +328,9 @@ class Controller
             }
         }
 
-        if (this.MovementStick.State != this.MovementStick.PrevState or this.ForceMovement)
+        if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
+        or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
+        or this.ForceMovement)
             this.ProcessMovementStick()
         this.ProcessTargetStick()
     }
@@ -367,15 +371,19 @@ class Controller
 
         if (!this.CursorMode)
         {
-            this.MousePos.X := (_stick.StickValue.X) + (_stick.Radius.X * _stick.Radius.Y)
+            local _centerOffset
+                := new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
+                            , Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
+
+            this.MousePos.X := (_centerOffset.X) + (_stick.Radius.X * _stick.Radius.Y)
                             / Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-            this.MousePos.Y := (_stick.StickValue.Y) + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
+            this.MousePos.Y := (_centerOffset.Y) + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
                             / Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
 
-            if (_stick.AngleDeg > 90 and _stick.AngleDeg <= 270)
+            if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
             {
-                this.MousePos.X := _stick.StickValue.X - (this.MousePos.X - _stick.StickValue.X)
-                this.MousePos.Y := _stick.StickValue.Y - (this.MousePos.Y - _stick.StickValue.Y)
+                this.MousePos.X := _centerOffset.X - (this.MousePos.X - _centerOffset.X)
+                this.MousePos.Y := _centerOffset.Y - (this.MousePos.Y - _centerOffset.Y)
             }
 
             if ((this.PressCount.Targeted = 0 or (!this.UsingReticule and !this.ForceReticule))

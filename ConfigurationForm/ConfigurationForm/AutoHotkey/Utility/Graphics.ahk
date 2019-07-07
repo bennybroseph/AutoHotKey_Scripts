@@ -77,8 +77,8 @@ class Graphics
 
 		this.m_ActiveWinStats := new WinStats()
 		this.m_CenterOffset
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_YOffset")
-						, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_XOffset"))
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_XOffset")
+						, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_YOffset"))
 	}
 
 	ApplicationTitle[]

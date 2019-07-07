@@ -537,9 +537,9 @@ if(!IsInitializing)
 		ScreenCenterY := ScreenCenterY + CenterOffsetY
 	}
 
-	if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
+	;if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
 		;WatchAxisL()
-	if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY || ForceTarget)
+	;if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY || ForceTarget)
 		;WatchAxisR()
 	Gosub WatchAxisT
 	GoSub WatchButtons
