@@ -163,17 +163,23 @@ class Stick extends Control
 
 		this.m_StickDelta := new Vector2()
 
-		this.m_MaxValue :=
-			new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max")
+		this.m_StickAngleDeg := new Vector2()
+		this.m_StickAngleRad := new Vector2()
+
+		this.m_MaxValue
+			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max")
 						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max"))
-		this.m_MinValue :=
-			new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_XZero")
+		this.m_MinValue
+			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_XZero")
 						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_YZero"))
 
+		this.m_Radius
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_XRadius")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_YRadius"))
 		this.m_Deadzone := IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Deadzone")
 
-		this.m_Sensitivity :=
-			new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_XSensitivity")
+		this.m_Sensitivity
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_XSensitivity")
 						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_YSensitivity"))
 	}
 
@@ -197,6 +203,19 @@ class Stick extends Control
 		}
 	}
 
+	StickAngleDeg[]
+	{
+		get {
+			return this.m_StickAngleDeg
+		}
+	}
+	StickAngleRad[]
+	{
+		get {
+			return this.m_StickAngleRad
+		}
+	}
+
 	MaxValue[]
 	{
 		get {
@@ -210,6 +229,12 @@ class Stick extends Control
 		}
 	}
 
+	Radius[]
+	{
+		get {
+			return this.m_Radius
+		}
+	}
 	Deadzone[]
 	{
 		get {
@@ -237,5 +262,22 @@ class Stick extends Control
 		this.m_StickDelta.Y := (this.m_StickValue.Y - this.m_PrevStickValue.Y) * this.m_Sensitivity.Y
 
 		this.m_State := Abs(this.m_StickValue.X) > this.m_Deadzone or Abs(this.m_StickValue.Y) > this.m_Deadzone
+
+		if (this.m_StickValue.X < 0 and this.m_StickValue.Y < 0)          ; 3rd Quadrant
+            this.m_StickAngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI)) + 180
+        else if (this.m_StickValue.X < 0 and this.m_StickValue.Y > 0)     ; 2nd Quadrant
+            this.m_StickAngleDeg := 180 - Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
+        else if (this.m_StickValue.X > 0 and this.m_StickValue.Y < 0)     ; 4th Quadrant
+            this.m_StickAngleDeg := 360 - Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
+        else if (this.m_StickValue.X = 0 and this.m_StickValue.Y > 0)
+            this.m_StickAngleDeg := 90
+        else if (this.m_StickValue.X = 0 and this.m_StickValue.Y < 0)
+            this.m_StickAngleDeg := 270
+        else if (this.m_StickValue.X < 0 and this.m_StickValue.Y = 0)
+            this.m_StickAngleDeg := 180
+        else															; 1st Quadrant
+            this.m_StickAngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
+
+        this.m_StickAngleRad := -this.m_StickAngleDeg * (PI / 180)
 	}
 }

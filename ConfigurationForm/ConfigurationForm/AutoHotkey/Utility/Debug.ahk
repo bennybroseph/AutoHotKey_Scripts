@@ -66,9 +66,9 @@ class Debug
 		local _debugText :=
 
 		For i, _delegate in this.OnTooltip
-			_debugText := %_delegate%() . "`n"
+			_debugText := _debugText . %_delegate%() . "`n`n"
 
-		_debugText := _debugText . "`n`nDebug Log:`n"
+		_debugText := _debugText . "Debug Log:`n"
 
 		For i, _entry in this.LogEntries
 			_debugText := _debugText . _entry . "`n"

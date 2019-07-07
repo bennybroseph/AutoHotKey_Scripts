@@ -14,6 +14,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Utility\Vector2.ahk
 #Include Utility\Debug.ahk
 #Include Utility\IniReader.ahk
+#Include Utility\Graphics.ahk
 
 ; Compile the input classes
 #Include Input\Binding.ahk
@@ -525,6 +526,8 @@ if(!IsInitializing)
 	if(!TooltipOverlayShowing)
 		EnableTooltipOverlay()
 
+	Graphics.SetActiveWinStats()
+
 	ScreenCenterX := Width / 2
 	ScreenCenterY := Height / 2
 	; if the Diablo window is active then the center of the screen is a lot higher than normal. This sets it to that value.
@@ -535,9 +538,9 @@ if(!IsInitializing)
 	}
 
 	if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
-		WatchAxisL()
+		;WatchAxisL()
 	if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY || ForceTarget)
-		WatchAxisR()
+		;WatchAxisR()
 	Gosub WatchAxisT
 	GoSub WatchButtons
 	;ToolTip, ForceMove = %ForceMove% Move = %Move% `nPressed = %Pressed% `nIgnoreIt = %IgnoreIt% IgnorePress = %IgnorePress% `nForceMoveKey = %ForceMoveKey%, 0, 0
@@ -1753,6 +1756,7 @@ ReadConfig()
 
 Debug.Init()
 IniReader.Init()
+Graphics.Init()
 Controller.Init()
 
 if WinExist(ApplicationName)
