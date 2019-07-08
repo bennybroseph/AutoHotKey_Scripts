@@ -48,6 +48,18 @@ class Keybind
 			return this.m_IgnoreReticule := value
 		}
 	}
+
+	String[]
+	{
+		get {
+			local _string :=
+			if (this.m_Modifier)
+				_string := this.m_Modifier . "+"
+			_string := _string . this.m_Action
+
+			return _string
+		}
+	}
 }
 class Controlbind
 {

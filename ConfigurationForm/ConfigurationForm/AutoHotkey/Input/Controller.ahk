@@ -86,6 +86,13 @@ class Controller
         this.m_FreeTargetMode   := False
         this.m_InventoryMode    := False
 
+        this.m_ShowCursorModeNotification
+			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Cursor_Mode_Notification")
+		this.m_ShowFreeTargetModeNotification
+			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_FreeTarget_Mode_Notification")
+		this.m_ShowInventoryModeNotification
+			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Inventory_Mode_Notification")
+
         this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadProfileKey(ProfileSection.Keybindings, "Force_Move"))
         this.m_Moving := False
         this.m_ForceMovement := False
@@ -96,6 +103,9 @@ class Controller
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_XOffset")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_YOffset"))
+        this.m_TargetOffset
+            := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_Center_XOffset")
+                        , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_Center_YOffset"))
 
         Debug.AddToLog("MouseOffset: (" . this.m_MouseOffset.X . ", " . this.m_MouseOffset.Y . ")")
 
@@ -144,8 +154,8 @@ class Controller
 		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "ERROR", "Left")
 		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "ERROR", "Right")
 
-        this.m_MovementStick := this.m_LeftStick
-        this.m_TargetStick := this.m_RightStick
+        this.m_MovementStick    := this.m_LeftStick
+        this.m_TargetStick      := this.m_RightStick
 
         this.m_MousePos := new Vector2()
         this.m_TargetPos := new Vector2()
@@ -169,6 +179,25 @@ class Controller
             return Controller.__singleton.m_InventoryMode
         }
     }
+
+	ShowCursorModeNotification[]
+	{
+		get {
+			return Controller.__singleton.m_ShowCursorModeNotification
+		}
+	}
+	ShowFreeTargetModeNotification[]
+	{
+		get {
+			return Controller.__singleton.m_ShowFreeTargetModeNotification
+		}
+	}
+	ShowInventoryModeNotification[]
+	{
+		get {
+			return Controller.__singleton.m_ShowInventoryModeNotification
+		}
+	}
 
     MoveOnlyKey[]
     {
@@ -206,6 +235,12 @@ class Controller
     {
         get {
             return Controller.__singleton.m_MouseOffset
+        }
+    }
+    TargetOffset[]
+    {
+        get {
+            return Controller.__singleton.m_TargetOffset
         }
     }
 
@@ -305,26 +340,44 @@ class Controller
                 if (_control.State)
                 {
                     ; The first frame a button is pressed
-                    _control.PressTick := A_TickCount
-                    Debug.AddToLog(_control.Name . " pressed")
+					if (_control.Controlbind.OnHold.Action)
+                    	_control.PressTick := A_TickCount
+					else
+					{
+                    	Debug.AddToLog(_control.Name . " pressed " . _control.Controlbind.OnPress.String)
+						InputHelper.PressKeybind(_control.Controlbind.OnPress)
+					}
                 }
                 else if (_control.Controlbind.OnHold.Action and _control.PressTick = 0)
                 {
                     ; The first frame after a button was held long enough to trigger the hold action and then released
                     Debug.AddToLog(_control.Name . " released after being held")
+					InputHelper.ReleaseKeybind(_control.Controlbind.OnHold)
                 }
-                else if (_control.PressTick != -1)
+                else
                 {
                     ; The first frame a button is released but was not held long enough to trigger the hold action
-                    Debug.AddToLog(_control.Name . " pressed and released")
+					if (_control.Controlbind.OnHold.Action and _control.PressTick != -1)
+					{
+						Debug.AddToLog(_control.Name . " pressed and released")
+						InputHelper.PressKeybind(_control.Controlbind.OnPress)
+						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
+					}
+					else
+					{
+                    	Debug.AddToLog(_control.Name . " released")
+						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
+					}
                 }
             }
             else if (_control.Controlbind.OnHold.Action and _control.State
-                    and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
+                and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
             {
                 ; The first frame a button has been held down long enough to trigger the hold action
-                _control.PressTick := 0
                 Debug.AddToLog(_control.Name . " held down")
+				InputHelper.PressKeybind(_control.Controlbind.OnHold)
+
+				_control.PressTick := 0
             }
         }
 
@@ -332,7 +385,10 @@ class Controller
         or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
         or this.ForceMovement)
             this.ProcessMovementStick()
-        this.ProcessTargetStick()
+        if ((this.TargetStick.StickValue.X != this.TargetStick.PrevStickValue.X
+        or this.TargetStick.StickValue.Y != this.TargetStick.PrevStickValue.Y)
+        or this.ForceReticule)
+            this.ProcessTargetStick()
     }
 
 	ProcessMovementStick()
@@ -360,7 +416,7 @@ class Controller
             {
                 if (this.PressCount.UnTargeted = 0 and !this.CursorMode)
                 {
-                    Debug.AddToLog("Release " . this.MoveOnlyKey.Action)
+                    Debug.AddToLog("Releasing " . this.MoveOnlyKey.Action)
                     InputHelper.ReleaseKeybind(this.MoveOnlyKey)
                 }
 
@@ -375,9 +431,9 @@ class Controller
                 := new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
                             , Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
 
-            this.MousePos.X := (_centerOffset.X) + (_stick.Radius.X * _stick.Radius.Y)
+            this.MousePos.X := _centerOffset.X + (_stick.Radius.X * _stick.Radius.Y)
                             / Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-            this.MousePos.Y := (_centerOffset.Y) + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
+            this.MousePos.Y := _centerOffset.Y + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
                             / Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
 
             if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
@@ -419,18 +475,179 @@ class Controller
             else
                 _radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue - _stick.Deadzone))
 
-            this.MousePos
+            local _mouseDelta
                 := new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
                             ,_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.Y)
 
             if (this.Moving)
-                InputHelper.MoveMouse(this.MousePos, , "R")
+                InputHelper.MoveMouse(_mouseDelta, , "R")
         }
 	}
     ProcessTargetStick()
     {
+        global
+        local _stick := this.TargetStick
+
+        if (_stick.State)
+            this.UsingReticule := True
+        else
+        {
+            this.UsingReticule := False
+
+            if (!this.FreeTargetMode)
+                Gui, 1:Hide
+        }
+
+        if (!this.FreeTargetMode)
+        {
+            local _centerOffset
+                := new Vector2(Graphics.ActiveWinStats.Center.X + this.TargetOffset.X
+                            , Graphics.ActiveWinStats.Center.Y + this.TargetOffset.Y)
+
+            local _stickValue := _stick.StickValue
+            if (Abs(_stickValue.X) > _stick.MaxValue.X)
+            {
+                if (_stickValue.X > 0)
+                    _stickValue.X := _stick.MaxValue.X
+                else
+                    _stickValue.X := -_stick.MaxValue.X
+            }
+            if (Abs(_stickValue.Y) > _stick.MaxValue.Y)
+            {
+                if (_stickValue.Y > 0)
+                    _stickValue.Y := _stick.MaxValue.Y
+                else
+                    _stickValue.Y := -_stick.MaxValue.Y
+            }
+
+            local _radius := new Vector2()
+            if (Abs(_stickValue.X) >= Abs(_stickValue.Y))
+            {
+                _radius.X := _stick.Radius.X * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+                _radius.Y := _stick.Radius.Y * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+            }
+            else
+            {
+                _radius.X := _stick.Radius.X * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+                _radius.Y := _stick.Radius.Y * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+            }
+
+            this.TargetPos.X := _centerOffset.X + (_radius.X *_radius.Y)
+                            / Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
+            this.TargetPos.Y := _centerOffset.Y + (_radius.X * _radius.Y * Tan(-_stick.StickAngleRad))
+                            / Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
+
+
+            if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
+            {
+                this.TargetPos.X := _centerOffset.X - (this.TargetPos.X - _centerOffset.X)
+                this.TargetPos.Y := _centerOffset.Y - (this.TargetPos.Y - _centerOffset.Y)
+            }
+
+            if (this.UsingReticule and this.PressCount.Targeted > 0)
+                InputHelper.MoveMouse(this.TargetPos.X, this.TargetPos.Y)
+            else if (this.UsingReticule and this.PressCount.Targeted = 0)
+            {
+                local _targetPosX := this.TargetPos.X - ImageW / 2
+                local _targetPosY := this.TargetPos.Y - ImageH / 2
+
+                Gui, 1:Show, x%_targetPosX% y%_targetPosY% NoActivate
+            }
+        }
+        else
+        {
+            local _radius :=
+            if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
+                _radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+            else
+                _radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+
+
+            local _targetDelta
+                := new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
+                            , _radius * Sin(_stick.StickAngleRad) * _stick.Sensitivity.Y)
+
+            if (this.UsingReticule)
+            {
+                this.TargetPos.X := this.TargetPos.X + _targetDelta.X
+                this.TargetPos.Y := this.TargetPos.Y + _targetDelta.Y
+            }
+
+            local _targetPosX := this.TargetPos.X - ImageW / 2
+            local _targetPosY := this.TargetPos.Y - ImageH / 2
+
+            if (this.PressCount.Targeted > 0)
+                InputHelper.MoveMouse(_targetPosX, _targetPosY)
+            else
+                Gui, 1:Show, x%_targetPosX% y%_targetPosY% NoActivate
+        }
+    }
+
+    ToggleCursorMode()
+    {
+        if (!this.CursorMode)
+            this.EnableCursorMode()
+        else
+            this.DisableCursorMode()
+    }
+    EnableCursorMode()
+    {
+        global
+        if (this.InventoryMode)
+            this.DisableInventoryMode()
+
+		if (this.ShowCursorModeNotification)
+		{
+			local _matchingControl := this.FindControlString(IniReader.ParseKeybind("Freedom"))
+
+			ToolTip, % "Cursor Mode: Enabled `n" . _matchingControl.Name . " on the controller to disable", 0, 0, 1
+		}
+
+		this.CursorMode := True
+    }
+    DisableCursorMode()
+    {
+		global
+		if (this.ShowCursorModeNotification)
+			Tooltip, , , , 1
+
+		this.CursorMode := False
+    }
+
+    DisableInventoryMode()
+    {
 
     }
+
+	FindControlString(p_Keybind)
+	{
+		global
+
+		local _isSpecial
+			:= p_Keybind.Action = "Freedom" or p_Keybind.Action = "Loot"
+			or p_Keybind.Action = "FreeTarget" or p_Keybind.Action = "Inventory"
+			or p_Keybind.Modifier = "Freedom" or p_Keybind.Modifier = "Loot"
+			or p_Keybind.Modifier = "FreeTarget" or p_Keybind.Modifier = "Inventory"
+
+		if (_isSpecial)
+		{
+			For i, _control in this.Controls
+			{
+				if (_control.Controlbind.OnPress.Action = p_Keybind.Action or _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier)
+					return _control.Controlbind
+				if (_control.Controlbind.OnHold.Action = p_Keybind.Action or _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier)
+					return _control.Controlbind
+			}
+		}
+
+		For i, _control in this.Controls
+		{
+			if (_control.Controlbind.OnPress.Action = p_Keybind.Action and _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier)
+				return _control.Controlbind
+			if (_control.Controlbind.OnHold.Action = p_Keybind.Action and _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier)
+				return _control.Controlbind
+		}
+	}
 
 	OnTooltip()
 	{
@@ -440,7 +657,10 @@ class Controller
         _debugText := _debugText . "Moving: " . this.Moving . "`n"
         _debugText := _debugText . this.LeftStick.Nickname . " - State: " . this.LeftStick.State " ("
 					. this.LeftStick.StickValue.X . ", " . this.LeftStick.StickValue.Y ") "
-                    . "Angle: " . this.LeftStick.StickAngleDeg . "`n"
+                    . "Angle: " . this.LeftStick.StickAngleDeg . "`n`n"
+
+        _debugText := _debugText . "TargetPos: (" . this.TargetPos.X . ", " . this.TargetPos.Y . ") `n"
+        _debugText := _debugText . "UsingReticule: " . this.UsingReticule . "`n"
 		_debugText := _debugText . this.RightStick.Nickname . " - State: " . this.RightStick.State " ("
 					. this.RightStick.StickValue.X . ", " . this.RightStick.StickValue.Y ") "
                     . "Angle: " . this.RightStick.StickAngleDeg . "`n"

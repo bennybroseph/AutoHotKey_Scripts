@@ -263,11 +263,11 @@ class Stick extends Control
 
 		this.m_State := Abs(this.m_StickValue.X) > this.m_Deadzone or Abs(this.m_StickValue.Y) > this.m_Deadzone
 
-		if (this.m_StickValue.X < 0 and this.m_StickValue.Y < 0)          ; 3rd Quadrant
+		if (this.m_StickValue.X < 0 and this.m_StickValue.Y < 0)		; 3rd Quadrant
             this.m_StickAngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI)) + 180
-        else if (this.m_StickValue.X < 0 and this.m_StickValue.Y > 0)     ; 2nd Quadrant
+        else if (this.m_StickValue.X < 0 and this.m_StickValue.Y > 0)	; 2nd Quadrant
             this.m_StickAngleDeg := 180 - Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
-        else if (this.m_StickValue.X > 0 and this.m_StickValue.Y < 0)     ; 4th Quadrant
+        else if (this.m_StickValue.X > 0 and this.m_StickValue.Y < 0)	; 4th Quadrant
             this.m_StickAngleDeg := 360 - Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
         else if (this.m_StickValue.X = 0 and this.m_StickValue.Y > 0)
             this.m_StickAngleDeg := 90
@@ -278,6 +278,6 @@ class Stick extends Control
         else															; 1st Quadrant
             this.m_StickAngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
 
-        this.m_StickAngleRad := -this.m_StickAngleDeg * (PI / 180)
+        this.m_StickAngleRad := (this.m_Direction = "Left" ? -1 : 1) * this.m_StickAngleDeg * (PI / 180)
 	}
 }

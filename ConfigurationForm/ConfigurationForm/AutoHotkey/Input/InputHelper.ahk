@@ -22,10 +22,28 @@ class InputHelper
 
 	PressKey(p_Key)
 	{
-		Send { %p_Key% Down }
+		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "Inventory"
+		if (_isSpecial)
+			this.PressSpecialKey(p_Key)
+		else
+			Send { %p_Key% Down }
 	}
 	ReleaseKey(p_Key)
 	{
-		Send { %p_Key% Up }
+		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "Inventory"
+		if (_isSpecial)
+			this.ReleaseSpecialKey(p_Key)
+		else
+			Send { %p_Key% Up }
+	}
+
+	PressSpecialKey(p_SpecialKey)
+	{
+		if (p_SpecialKey = "Freedom")
+			Controller.ToggleCursorMode()
+	}
+	ReleaseSpecialKey(p_SpecialKey)
+	{
+
 	}
 }

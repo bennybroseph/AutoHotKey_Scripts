@@ -414,7 +414,7 @@ WatchAxisR()
 
 		; This is where I calculate the X and Y radius of the oval I'm about to draw
 
-		;Which ever value is higher (either RThumbXCenter or RThumbYCenter), that value is used to calculate the radii
+		; Which ever value is higher (either RThumbXCenter or RThumbYCenter), that value is used to calculate the radii
 		if(Abs(RThumbXCenter) >= Abs(RThumbYCenter))
 		{
 			RadiusX := RMaxRadiusX * ((Abs(RThumbXCenter)-RThreshold)/(RMaxThreshold-RThreshold))
@@ -537,12 +537,13 @@ if(!IsInitializing)
 		ScreenCenterY := ScreenCenterY + CenterOffsetY
 	}
 
+	Controller.ProcessInput()
 	;if(LThumbX != PrevLThumbX || LThumbY != PrevLThumbY || ForceMove)
 		;WatchAxisL()
 	;if(RThumbX != PrevRThumbX || RThumbY != PrevRThumbY || ForceTarget)
 		;WatchAxisR()
-	Gosub WatchAxisT
-	GoSub WatchButtons
+	;Gosub WatchAxisT
+	;GoSub WatchButtons
 	;ToolTip, ForceMove = %ForceMove% Move = %Move% `nPressed = %Pressed% `nIgnoreIt = %IgnoreIt% IgnorePress = %IgnorePress% `nForceMoveKey = %ForceMoveKey%, 0, 0
 }
 
@@ -582,7 +583,7 @@ return
 
 WatchAxisT:
 
-Controller.ProcessInput()
+
 
 if(LTrigger != PrevLTrigger)
 {
