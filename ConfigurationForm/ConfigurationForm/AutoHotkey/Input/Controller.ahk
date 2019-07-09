@@ -135,8 +135,8 @@ class Controller
         this.m_Moving := False
         this.m_ForceMouseUpdate := False
 
-        this.m_UsingReticule := False
-        this.m_ForceReticuleUpdate := False
+        this.m_UsingReticule 		:= False
+        this.m_ForceReticuleUpdate 	:= False
 
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_XOffset")
@@ -152,6 +152,9 @@ class Controller
 
 		this.m_PressStack := new PressStack()
         this.m_PressCount := new PressCounter()
+
+		this.m_VibeStrength := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Strength")
+		this.m_VibeDuration := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Duration")
 
         this.m_Controls := Array()
 
@@ -315,6 +318,19 @@ class Controller
         }
     }
 
+	VibeStrength[]
+	{
+		get {
+			return Controller.__singleton.m_VibeStrength
+		}
+	}
+	VibeDuration[]
+	{
+		get {
+			return Controller.__singleton.m_VibeDuration
+		}
+	}
+
     Controls[]
     {
         get {
@@ -426,6 +442,13 @@ class Controller
             else if (_control.Controlbind.OnHold.Action and _control.State
                 and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
             {
+				Loop, 4
+				{
+					if XInput_GetState(A_Index-1)
+						XInput_SetState(A_Index-1, this.VibeStrength, this.VibeStrength) ; MAX 65535
+				}
+				SetTimer, VibeOff, % this.VibeDuration
+
                 ; The first frame a button has been held down long enough to trigger the hold action
 				Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnHold.String)
 				InputHelper.PressKeybind(_control.Controlbind.OnHold)
@@ -544,8 +567,8 @@ class Controller
 			if (_stick.State)
 			{
 				local _centerOffset
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.TargetOffset.X
-								, Graphics.ActiveWinStats.Center.Y + this.TargetOffset.Y)
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X + this.TargetOffset.X
+								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y + this.TargetOffset.Y)
 
 				local _stickValue := _stick.StickValue
 				if (Abs(_stickValue.X) > _stick.MaxValue.X)
@@ -588,7 +611,9 @@ class Controller
 			}
 			else
 			{
-				this.TargetPos := new Vector2(Graphics.ActiveWinStats.Center.X, Graphics.ActiveWinStats.Center.Y)
+				this.TargetPos
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X
+								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y)
 			}
 
             if (this.UsingReticule and this.PressStack.Peek.Type = KeybindType.Targeted)
@@ -736,17 +761,17 @@ class Controller
 	{
 		local _debugText :=
 
-        _debugText := _debugText . "MousePos: (" . this.MousePos.X . ", " . this.MousePos.Y . ") `n"
+        _debugText := _debugText . "MousePos: (" . Round(this.MousePos.X, 2) . ", " . Round(this.MousePos.Y, 2) . ") `n"
         _debugText := _debugText . "Moving: " . this.Moving . " ForceMouseUpdate: " . this.ForceMouseUpdate . "`n"
         _debugText := _debugText . this.LeftStick.Nickname . " - State: " . this.LeftStick.State " ("
-					. this.LeftStick.StickValue.X . ", " . this.LeftStick.StickValue.Y ") "
-                    . "Angle: " . this.LeftStick.StickAngleDeg . "`n`n"
+					. Round(this.LeftStick.StickValue.X, 2) . ", " . Round(this.LeftStick.StickValue.Y, 2) ") "
+                    . "Angle: " . Round(this.LeftStick.StickAngleDeg, 2) . "`n`n"
 
-        _debugText := _debugText . "TargetPos: (" . this.TargetPos.X . ", " . this.TargetPos.Y . ") `n"
+        _debugText := _debugText . "TargetPos: (" . Round(this.TargetPos.X, 2) . ", " . Round(this.TargetPos.Y, 2) . ") `n"
         _debugText := _debugText . "UsingReticule: " . this.UsingReticule . " ForceReticuleUpdate: " . this.ForceReticuleUpdate . "`n"
 		_debugText := _debugText . this.RightStick.Nickname . " - State: " . this.RightStick.State " ("
-					. this.RightStick.StickValue.X . ", " . this.RightStick.StickValue.Y ") "
-                    . "Angle: " . this.RightStick.StickAngleDeg . "`n"
+					. Round(this.RightStick.StickValue.X, 2) . ", " . Round(this.RightStick.StickValue.Y, 2) ") "
+                    . "Angle: " . Round(this.RightStick.StickAngleDeg, 2) . "`n"
 
         _debugText := _debugText . "PressStack - Length: " . this.PressStack.Length . " Peek: " . this.PressStack.Peek.Type . "`n"
 					. "PressCount - "

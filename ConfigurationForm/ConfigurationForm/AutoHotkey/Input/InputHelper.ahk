@@ -104,13 +104,18 @@ class InputHelper
 
 	PressSpecialKey(p_SpecialKey)
 	{
+		global
+
 		if (p_SpecialKey = "Freedom")
 			Controller.ToggleCursorMode()
 		else if (p_SpecialKey = "FreeTarget")
 			Controller.ToggleFreeTargetMode()
+		else if (p_SpecialKey = "Loot")
+			SetTimer, SpamLoot, 100
 	}
 	ReleaseSpecialKey(p_SpecialKey)
 	{
-
+		if (p_SpecialKey = "Loot")
+			SetTimer, SpamLoot, Off
 	}
 }

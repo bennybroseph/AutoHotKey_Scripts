@@ -155,8 +155,8 @@ class Graphics
 	{
 		this.ActiveWinStats := this.GetActiveWinStats()
 
-		this.ActiveWinStats.Center.X := this.ActiveWinStats.Pos.X + (this.ActiveWinStats.Size.Width / 2)
-		this.ActiveWinStats.Center.Y := this.ActiveWinStats.Pos.Y + (this.ActiveWinStats.Size.Height / 2)
+		this.ActiveWinStats.Center.X := (this.ActiveWinStats.Size.Width / 2)
+		this.ActiveWinStats.Center.Y := (this.ActiveWinStats.Size.Height / 2)
 
 		if (WinActive(this.ApplicationTitle))
 		{
@@ -187,7 +187,7 @@ class Graphics
 	{
 		local _debugText
 			:= "'" . this.ActiveWinStats.Title . "' "
-					. "Size: (" . this.ActiveWinStats.Size.Width . ", " . this.ActiveWinStats.Size.Height . ") "
+					. "Size: (" . Round(this.ActiveWinStats.Size.Width, 2) . ", " . Round(this.ActiveWinStats.Size.Height, 2) . ") "
 					. "Pos: (" . this.ActiveWinStats.Pos.X . ", " . this.ActiveWinStats.Pos.Y . ") "
 					. "Center: (" . this.ActiveWinStats.Center.X . ", " . this.ActiveWinStats.Center.Y . ")"
 

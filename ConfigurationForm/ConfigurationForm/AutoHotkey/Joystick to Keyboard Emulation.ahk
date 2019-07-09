@@ -151,7 +151,7 @@ if(DebugMode)
 else
 {
 	Tooltip, , , , 5
-	Tooltip, , , , 6
+	Tooltip, , , , 7
 }
 return
 
@@ -176,12 +176,21 @@ return
 
 ; Closes the program. The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F12::
-SelectObject(hdc, obm)
-DeleteObject(hbm)
-DeleteDC(hdc)
-Gdip_DeleteGraphics(pGraphics)
-Gdip_Shutdown(pToken)
+SelectObject(Graphics.m_HDC, Graphics.m_OBM)
+DeleteObject(Graphics.m_HBM)
+DeleteDC(Graphics.m_HDC)
+Gdip_DeleteGraphics(Graphics.m_Graphic)
+Gdip_Shutdown(Graphics.m_Token)
 ExitApp
+return
+
+VibeOff:
+Loop, 4
+{
+	if XInput_GetState(A_Index-1)
+		XInput_SetState(A_Index-1, 0, 0) ;MAX 65535
+}
+SetTimer, VibeOff, Off
 return
 
 ; This controls the left analog stick's values and behaviour
@@ -1566,15 +1575,6 @@ MouseMove, ScreenCenterX, ScreenCenterY
 Send {LButton Down}
 Send {LButton Up}
 MouseMove, PrevX, PrevY
-return
-
-VibeOff:
-Loop, 4
-{
-	if XInput_GetState(A_Index-1)
-		XInput_SetState(A_Index-1, 0, 0) ;MAX 65535
-}
-SetTimer, VibeOff, Off
 return
 
 Startup:
