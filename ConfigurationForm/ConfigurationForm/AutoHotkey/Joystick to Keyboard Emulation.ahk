@@ -1755,15 +1755,15 @@ InventoryGridY[10,1] := 232.5
 Calibrate()
 ReadConfig()
 
+if WinExist(ApplicationName)
+	WinActivate ; Activate Application Window if it exists
+
 Debug.Init()
 IniReader.Init()
 Graphics.Init()
 Controller.Init()
 
-if WinExist(ApplicationName)
-	WinActivate ; Activate Application Window if it exists
-
-Gosub TriggerState
+; Gosub TriggerState
 
 MouseGetPos, MouseX, MouseY
 TargetX := MouseX
@@ -1771,34 +1771,34 @@ TargetY := MouseY
 
 IsInitializing := false
 
-Gui, +LastFound -Caption +E0x80000 +Owner +AlwaysOnTop +ToolWindow
-WinSet, ExStyle, +0x20
-hGui := WinExist()
+; Gui, +LastFound -Caption +E0x80000 +Owner +AlwaysOnTop +ToolWindow
+; WinSet, ExStyle, +0x20
+; hGui := WinExist()
 
-pToken    := Gdip_Startup()
+; pToken    := Gdip_Startup()
 
-hbm := CreateDIBSection(300,300)
-hdc := CreateCompatibleDC()
-obm := SelectObject(hdc, hbm)
-pGraphics := Gdip_GraphicsFromHDC(hdc)
-Gui, Show, NoActivate
+; hbm := CreateDIBSection(300,300)
+; hdc := CreateCompatibleDC()
+; obm := SelectObject(hdc, hbm)
+; pGraphics := Gdip_GraphicsFromHDC(hdc)
+; Gui, Show, NoActivate
 
-UpdateLayeredWindow(hGui, hdc,0,0,300,300)
-sFile   := "Images/Target.png"
+; UpdateLayeredWindow(hGui, hdc,0,0,300,300)
+; sFile   := "Images/Target.png"
 
-Gdip_SetCompositingMode(pGraphics,1)
-pBrush:=Gdip_BrushCreateSolid(0x0000000)
-Gdip_FillRectangle(pGraphics, pBrush, 0, 0, 300, 300)
+; Gdip_SetCompositingMode(pGraphics,1)
+; pBrush:=Gdip_BrushCreateSolid(0x0000000)
+; Gdip_FillRectangle(pGraphics, pBrush, 0, 0, 300, 300)
 
-pImage    := Gdip_CreateBitmapFromFile(sFile)
-global ImageW        := Gdip_GetImageWidth(pImage)
-global ImageH        := Gdip_GetImageHeight(pImage)
+; pImage    := Gdip_CreateBitmapFromFile(sFile)
+; global ImageW        := Gdip_GetImageWidth(pImage)
+; global ImageH        := Gdip_GetImageHeight(pImage)
 
-Gdip_DrawImage(pGraphics, pImage, 0, 0, ImageW, ImageH)
-UpdateLayeredWindow(hGui, hdc)
+; Gdip_DrawImage(pGraphics, pImage, 0, 0, ImageW, ImageH)
+; UpdateLayeredWindow(hGui, hdc)
 
-Gdip_DeleteBrush(pBrush)
-Gdip_DisposeImage(pImage)
+; Gdip_DeleteBrush(pBrush)
+; Gdip_DisposeImage(pImage)
 
 SetTimer, TriggerState, 1
 SetTimer, Startup, off

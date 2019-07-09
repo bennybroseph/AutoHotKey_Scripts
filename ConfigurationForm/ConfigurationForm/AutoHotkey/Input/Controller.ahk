@@ -32,12 +32,49 @@ class StickIndex
 	static Right 	:= 2
 }
 
+class PressStack
+{
+	__New()
+	{
+		this.m_Stack := Array()
+	}
+
+	Length[]
+	{
+		get {
+			return this.m_Stack.MaxIndex()
+		}
+	}
+	Peek[]
+	{
+		get {
+			return this.m_Stack[this.Length]
+		}
+	}
+
+	Push(p_Keybind)
+	{
+		this.m_Stack.Push(p_Keybind)
+	}
+	Remove(p_Keybind)
+	{
+		local i, _keybind
+		For i, _keybind in this.m_Stack
+		{
+			if (_keybind = p_Keybind)
+			{
+				this.m_Stack.RemoveAt(i)
+				return
+			}
+		}
+	}
+}
 class PressCounter
 {
     __New()
     {
-        this.m_Targeted     := 0
-        this.m_UnTargeted   := 0
+        this.m_Targeted     	:= 0
+        this.m_Movement	:= 0
     }
 
     Targeted[]
@@ -49,13 +86,13 @@ class PressCounter
             return this.m_Targeted := value
         }
     }
-    UnTargeted[]
+    Movement[]
     {
         get {
-            return this.m_UnTargeted
+            return this.m_Movement
         }
         set {
-            return this.m_UnTargeted := value
+            return this.m_Movement := value
         }
     }
 }
@@ -71,6 +108,7 @@ class Controller
 
         Controller.__singleton := new Controller()
 
+		local i, _control
 		For i, _control in Controller.Controls
 			_control.ParseTargeting()
 
@@ -95,10 +133,10 @@ class Controller
 
         this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadProfileKey(ProfileSection.Keybindings, "Force_Move"))
         this.m_Moving := False
-        this.m_ForceMovement := False
+        this.m_ForceMouseUpdate := False
 
         this.m_UsingReticule := False
-        this.m_ForceReticule := False
+        this.m_ForceReticuleUpdate := False
 
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_XOffset")
@@ -109,9 +147,10 @@ class Controller
 
         Debug.AddToLog("MouseOffset: (" . this.m_MouseOffset.X . ", " . this.m_MouseOffset.Y . ")")
 
-        this.m_TargetedKeybinds			:= IniReader.ParseKeybindArray("Targeted_Actions")
-        this.m_IgnoreReticuleKeybinds	:= IniReader.ParseKeybindArray("Ignore_Reticule_Actions")
+        this.m_TargetedKeybinds	:= IniReader.ParseKeybindArray("Targeted_Actions")
+        this.m_MovementKeybinds	:= IniReader.ParseKeybindArray("Movement_Actions")
 
+		this.m_PressStack := new PressStack()
         this.m_PressCount := new PressCounter()
 
         this.m_Controls := Array()
@@ -157,8 +196,8 @@ class Controller
         this.m_MovementStick    := this.m_LeftStick
         this.m_TargetStick      := this.m_RightStick
 
-        this.m_MousePos := new Vector2()
-        this.m_TargetPos := new Vector2()
+        this.m_MousePos := InputHelper.GetMousePos()
+        this.m_TargetPos := new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
     }
 
     CursorMode[]
@@ -211,11 +250,14 @@ class Controller
             return Controller.__singleton.m_Moving
         }
     }
-    ForceMovement[]
+    ForceMouseUpdate[]
     {
         get {
-            return Controller.__singleton.m_ForceMovement
+            return Controller.__singleton.m_ForceMouseUpdate
         }
+		set {
+			return Controller.__singleton.m_ForceMouseUpdate := value
+		}
     }
 
     UsingReticule[]
@@ -224,11 +266,14 @@ class Controller
             return Controller.__singleton.m_UsingReticule
         }
     }
-    ForceReticule[]
+    ForceReticuleUpdate[]
     {
         get {
-            return Controller.__singleton.m_ForceReticule
+            return Controller.__singleton.m_ForceReticuleUpdate
         }
+		set {
+			return Controller.__singleton.m_ForceReticuleUpdate := value
+		}
     }
 
     MouseOffset[]
@@ -250,13 +295,19 @@ class Controller
 			return Controller.__singleton.m_TargetedKeybinds
 		}
 	}
-	IgnoreReticuleKeybinds[]
+	MovementKeybinds[]
 	{
 		get {
-			return Controller.__singleton.m_IgnoreReticuleKeybinds
+			return Controller.__singleton.m_MovementKeybinds
 		}
 	}
 
+	PressStack[]
+	{
+		get {
+			return Controller.__singleton.m_PressStack
+		}
+	}
     PressCount[]
     {
         get {
@@ -320,6 +371,7 @@ class Controller
             if (!_state)
                 Continue
 
+			local i, _control
             For i, _control in this.Controls
                 _control.RefreshState(_state)
 
@@ -332,6 +384,7 @@ class Controller
     {
         global
 
+		local i, _control
         For i, _control in this.Controls
         {
             ;Debug.AddToLog(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
@@ -351,7 +404,7 @@ class Controller
                 else if (_control.Controlbind.OnHold.Action and _control.PressTick = 0)
                 {
                     ; The first frame after a button was held long enough to trigger the hold action and then released
-                    Debug.AddToLog(_control.Name . " released after being held")
+                    Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnHold.String . " after being held")
 					InputHelper.ReleaseKeybind(_control.Controlbind.OnHold)
                 }
                 else
@@ -359,13 +412,13 @@ class Controller
                     ; The first frame a button is released but was not held long enough to trigger the hold action
 					if (_control.Controlbind.OnHold.Action and _control.PressTick != -1)
 					{
-						Debug.AddToLog(_control.Name . " pressed and released")
+						Debug.AddToLog(_control.Name . " pressed and released " . _control.Controlbind.OnPress.String)
 						InputHelper.PressKeybind(_control.Controlbind.OnPress)
 						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
 					}
 					else
 					{
-                    	Debug.AddToLog(_control.Name . " released")
+                    	Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnPress.String)
 						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
 					}
                 }
@@ -374,20 +427,20 @@ class Controller
                 and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
             {
                 ; The first frame a button has been held down long enough to trigger the hold action
-                Debug.AddToLog(_control.Name . " held down")
+				Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnHold.String)
 				InputHelper.PressKeybind(_control.Controlbind.OnHold)
 
 				_control.PressTick := 0
             }
         }
 
-        if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
+		if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
         or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
-        or this.ForceMovement)
+        or this.ForceMouseUpdate or this.CursorMode)
             this.ProcessMovementStick()
         if ((this.TargetStick.StickValue.X != this.TargetStick.PrevStickValue.X
         or this.TargetStick.StickValue.Y != this.TargetStick.PrevStickValue.Y)
-        or this.ForceReticule)
+        or this.ForceReticuleUpdate or this.FreeTargetMode)
             this.ProcessTargetStick()
     }
 
@@ -396,190 +449,181 @@ class Controller
         global
         local _stick := this.MovementStick
 
-        if (_stick.State)
-        {
-            if (!this.Moving or this.ForceMovement)
-            {
-                if ((this.PressCount.Targeted = 0 and !this.CursorMode) or this.PressCount.UnTargeted > 0)
-                {
-                    Debug.AddToLog("Pressing " . this.MoveOnlyKey.Action)
-                    InputHelper.PressKeybind(this.MoveOnlyKey)
-                }
-
-                this.Moving := True
-                this.ForceMovement := False
-            }
-        }
-        else
-        {
-            if (this.Moving)
-            {
-                if (this.PressCount.UnTargeted = 0 and !this.CursorMode)
-                {
-                    Debug.AddToLog("Releasing " . this.MoveOnlyKey.Action)
-                    InputHelper.ReleaseKeybind(this.MoveOnlyKey)
-                }
-
-                this.Moving := False
-                this.ForceMovement := False
-            }
-        }
-
         if (!this.CursorMode)
         {
-            local _centerOffset
-                := new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
-                            , Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
+			if (_stick.State)
+			{
+				if (!this.Moving or this.ForceMouseUpdate)
+				{
+					if (this.PressStack.Peek.Type != KeybindType.Targeted)
+					{
+						Debug.AddToLog("Pressing " . this.MoveOnlyKey.Action)
+						InputHelper.PressKeybind(this.MoveOnlyKey)
+					}
 
-            this.MousePos.X := _centerOffset.X + (_stick.Radius.X * _stick.Radius.Y)
-                            / Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-            this.MousePos.Y := _centerOffset.Y + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
-                            / Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
+					this.Moving := True
+				}
 
-            if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
-            {
-                this.MousePos.X := _centerOffset.X - (this.MousePos.X - _centerOffset.X)
-                this.MousePos.Y := _centerOffset.Y - (this.MousePos.Y - _centerOffset.Y)
-            }
+				local _centerOffset
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
+								, Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
 
-            if ((this.PressCount.Targeted = 0 or (!this.UsingReticule and !this.ForceReticule))
-            and (!this.InventoryMode or this.Moving))
-            {
-                if (this.Moving)
-                    InputHelper.MoveMouse(this.MousePos)
-                else
-                    InputHelper.MoveMouse(Graphics.ActiveWinStats.Center)
-            }
-            else if ((this.UsingReticule or this.ForceReticule) and this.PressCount.Targeted > 0)
-            {
-                if (this.Moving)
-                {
+				this.MousePos.X := _centerOffset.X + (_stick.Radius.X * _stick.Radius.Y)
+								/ Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
+				this.MousePos.Y := _centerOffset.Y + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
+								/ Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
 
-                }
-                else
-                {
+				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
+				{
+					this.MousePos.X := _centerOffset.X - (this.MousePos.X - _centerOffset.X)
+					this.MousePos.Y := _centerOffset.Y - (this.MousePos.Y - _centerOffset.Y)
+				}
+			}
+			else if (this.Moving)
+			{
+				if (this.PressCount.Movement = 0)
+				{
+					Debug.AddToLog("Releasing " . this.MoveOnlyKey.Action)
+					InputHelper.ReleaseKeybind(this.MoveOnlyKey)
+				}
 
-                }
-            }
-            else if (!this.Moving and this.InventoryMode)
-            {
+				this.Moving := False
 
-            }
+				this.MousePos := new Vector2(Graphics.ActiveWinStats.Center.X, Graphics.ActiveWinStats.Center.Y)
+			}
+
+			if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
+				InputHelper.MoveMouse(this.MousePos)
+			else if (this.InventoryMode and !this.Moving)
+			{
+				; Move to designated inventory coordinates
+			}
+			else
+				Graphics.DrawReticule(this.MousePos)
         }
         else
         {
-            local _radius :=
+			if (_stick.State)
+			{
+				local _radius :=
 
-            if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
-                _radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue - _stick.Deadzone))
-            else
-                _radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue - _stick.Deadzone))
+				if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
+					_radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+				else
+					_radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 
-            local _mouseDelta
-                := new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
-                            ,_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.Y)
+				local _mouseDelta
+					:= new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
+								,_radius * Sin(_stick.StickAngleRad) * _stick.Sensitivity.Y)
 
-            if (this.Moving)
-                InputHelper.MoveMouse(_mouseDelta, , "R")
+				this.MousePos.X := this.MousePos.X + _mouseDelta.X
+				this.MousePos.Y := this.MousePos.Y + _mouseDelta.Y
+			}
+
+			if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
+				InputHelper.MoveMouse(this.MousePos)
+			else
+				Graphics.DrawReticule(this.MousePos)
         }
+
+		this.ForceMouseUpdate := False
 	}
-    ProcessTargetStick()
+	ProcessTargetStick()
     {
         global
         local _stick := this.TargetStick
 
-        if (_stick.State)
-            this.UsingReticule := True
-        else
-        {
-            this.UsingReticule := False
-
-            if (!this.FreeTargetMode)
-                Gui, 1:Hide
-        }
+		if ((_stick.State and this.PressStack.Peek.Type = KeybindType.Targeted)
+		or (this.FreeTargetMode))
+			this.UsingReticule := True
+		else
+			this.UsingReticule := False
 
         if (!this.FreeTargetMode)
         {
-            local _centerOffset
-                := new Vector2(Graphics.ActiveWinStats.Center.X + this.TargetOffset.X
-                            , Graphics.ActiveWinStats.Center.Y + this.TargetOffset.Y)
+			if (_stick.State)
+			{
+				local _centerOffset
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.TargetOffset.X
+								, Graphics.ActiveWinStats.Center.Y + this.TargetOffset.Y)
 
-            local _stickValue := _stick.StickValue
-            if (Abs(_stickValue.X) > _stick.MaxValue.X)
-            {
-                if (_stickValue.X > 0)
-                    _stickValue.X := _stick.MaxValue.X
-                else
-                    _stickValue.X := -_stick.MaxValue.X
-            }
-            if (Abs(_stickValue.Y) > _stick.MaxValue.Y)
-            {
-                if (_stickValue.Y > 0)
-                    _stickValue.Y := _stick.MaxValue.Y
-                else
-                    _stickValue.Y := -_stick.MaxValue.Y
-            }
+				local _stickValue := _stick.StickValue
+				if (Abs(_stickValue.X) > _stick.MaxValue.X)
+				{
+					if (_stickValue.X > 0)
+						_stickValue.X := _stick.MaxValue.X
+					else
+						_stickValue.X := -_stick.MaxValue.X
+				}
+				if (Abs(_stickValue.Y) > _stick.MaxValue.Y)
+				{
+					if (_stickValue.Y > 0)
+						_stickValue.Y := _stick.MaxValue.Y
+					else
+						_stickValue.Y := -_stick.MaxValue.Y
+				}
 
-            local _radius := new Vector2()
-            if (Abs(_stickValue.X) >= Abs(_stickValue.Y))
-            {
-                _radius.X := _stick.Radius.X * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-                _radius.Y := _stick.Radius.Y * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
-            }
-            else
-            {
-                _radius.X := _stick.Radius.X * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-                _radius.Y := _stick.Radius.Y * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
-            }
+				local _radius := new Vector2()
+				if (Abs(_stickValue.X) >= Abs(_stickValue.Y))
+				{
+					_radius.X := _stick.Radius.X * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+					_radius.Y := _stick.Radius.Y * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+				}
+				else
+				{
+					_radius.X := _stick.Radius.X * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+					_radius.Y := _stick.Radius.Y * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+				}
 
-            this.TargetPos.X := _centerOffset.X + (_radius.X *_radius.Y)
-                            / Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-            this.TargetPos.Y := _centerOffset.Y + (_radius.X * _radius.Y * Tan(-_stick.StickAngleRad))
-                            / Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
+				this.TargetPos.X := _centerOffset.X + (_radius.X *_radius.Y)
+								/ Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
+				this.TargetPos.Y := _centerOffset.Y + (_radius.X * _radius.Y * Tan(-_stick.StickAngleRad))
+								/ Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
 
+				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
+				{
+					this.TargetPos.X := _centerOffset.X - (this.TargetPos.X - _centerOffset.X)
+					this.TargetPos.Y := _centerOffset.Y - (this.TargetPos.Y - _centerOffset.Y)
+				}
+			}
+			else
+			{
+				this.TargetPos := new Vector2(Graphics.ActiveWinStats.Center.X, Graphics.ActiveWinStats.Center.Y)
+			}
 
-            if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
-            {
-                this.TargetPos.X := _centerOffset.X - (this.TargetPos.X - _centerOffset.X)
-                this.TargetPos.Y := _centerOffset.Y - (this.TargetPos.Y - _centerOffset.Y)
-            }
-
-            if (this.UsingReticule and this.PressCount.Targeted > 0)
-                InputHelper.MoveMouse(this.TargetPos.X, this.TargetPos.Y)
-            else if (this.UsingReticule and this.PressCount.Targeted = 0)
-            {
-                local _targetPosX := this.TargetPos.X - ImageW / 2
-                local _targetPosY := this.TargetPos.Y - ImageH / 2
-
-                Gui, 1:Show, x%_targetPosX% y%_targetPosY% NoActivate
-            }
+            if (this.UsingReticule and this.PressStack.Peek.Type = KeybindType.Targeted)
+                InputHelper.MoveMouse(this.TargetPos)
+            else if (_stick.state and this.PressStack.Peek.Type != KeybindType.Targeted)
+                Graphics.DrawReticule(this.TargetPos)
+			else
+				Graphics.HideReticule()
         }
         else
         {
-            local _radius :=
-            if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
-                _radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-            else
-                _radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+			if (_stick.State)
+			{
+				local _radius :=
+				if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
+					_radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+				else
+					_radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 
 
-            local _targetDelta
-                := new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
-                            , _radius * Sin(_stick.StickAngleRad) * _stick.Sensitivity.Y)
+				local _targetDelta
+					:= new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
+								, _radius * Sin(_stick.StickAngleRad) * _stick.Sensitivity.Y)
 
-            if (this.UsingReticule)
-            {
-                this.TargetPos.X := this.TargetPos.X + _targetDelta.X
-                this.TargetPos.Y := this.TargetPos.Y + _targetDelta.Y
-            }
+				if (this.UsingReticule)
+				{
+					this.TargetPos.X := this.TargetPos.X + _targetDelta.X
+					this.TargetPos.Y := this.TargetPos.Y - _targetDelta.Y
+				}
+			}
 
-            local _targetPosX := this.TargetPos.X - ImageW / 2
-            local _targetPosY := this.TargetPos.Y - ImageH / 2
-
-            if (this.PressCount.Targeted > 0)
-                InputHelper.MoveMouse(_targetPosX, _targetPosY)
-            else
-                Gui, 1:Show, x%_targetPosX% y%_targetPosY% NoActivate
+			if (this.PressStack.Peek.Type = KeybindType.Targeted)
+                InputHelper.MoveMouse(this.TargetPos)
+			else
+                Graphics.DrawReticule(this.TargetPos)
         }
     }
 
@@ -598,10 +642,14 @@ class Controller
 
 		if (this.ShowCursorModeNotification)
 		{
-			local _matchingControl := this.FindControlString(IniReader.ParseKeybind("Freedom"))
+			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("Freedom"))
 
-			ToolTip, % "Cursor Mode: Enabled `n" . _matchingControl.Name . " on the controller to disable", 0, 0, 1
+			ToolTip, % "Cursor Mode: Enabled `n"
+					. _controlInfo.Act . " the " _controlInfo.Control.Name . " button on the controller to disable", 0, 0, 1
 		}
+
+		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
+		this.Moving := False
 
 		this.CursorMode := True
     }
@@ -614,12 +662,43 @@ class Controller
 		this.CursorMode := False
     }
 
+	ToggleFreeTargetMode()
+	{
+		if (!this.FreeTargetMode)
+			this.EnableFreeTargetMode()
+		else
+			this.DisableFreeTargetMode()
+	}
+	EnableFreeTargetMode()
+	{
+		global
+		if(this.ShowFreeTargetModeNotification)
+		{
+			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("FreeTarget"))
+
+			Tooltip, % "Free Target Mode: Enabled `n"
+					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable", 0, 40, 2
+		}
+
+		this.ForceReticuleUpdate := True
+		this.FreeTargetMode := True
+	}
+	DisableFreeTargetMode()
+	{
+		global
+		if (this.ShowFreeTargetModeNotification)
+			Tooltip, , , , 2
+
+		this.ForceReticuleUpdate := False
+		this.FreeTargetMode := False
+	}
+
     DisableInventoryMode()
     {
 
     }
 
-	FindControlString(p_Keybind)
+	FindControlInfo(p_Keybind)
 	{
 		global
 
@@ -629,23 +708,27 @@ class Controller
 			or p_Keybind.Modifier = "Freedom" or p_Keybind.Modifier = "Loot"
 			or p_Keybind.Modifier = "FreeTarget" or p_Keybind.Modifier = "Inventory"
 
+		local i, _control
 		if (_isSpecial)
 		{
+			Debug.AddToLog("Looking for special key " . p_Keybind.Action . " " . p_Keybind.Modifier)
 			For i, _control in this.Controls
 			{
-				if (_control.Controlbind.OnPress.Action = p_Keybind.Action or _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier)
-					return _control.Controlbind
-				if (_control.Controlbind.OnHold.Action = p_Keybind.Action or _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier)
-					return _control.Controlbind
+				if (_control.Controlbind.OnPress.Action = p_Keybind.Action
+				or (p_Keybind.Modifier and _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier))
+					return new this.ControlInfo(_control, "Press")
+				if (_control.Controlbind.OnHold.Action = p_Keybind.Action
+				or (p_Keybind.Modifier and _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier))
+					return new this.ControlInfo(_control, "Hold")
 			}
 		}
 
 		For i, _control in this.Controls
 		{
 			if (_control.Controlbind.OnPress.Action = p_Keybind.Action and _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier)
-				return _control.Controlbind
+				return new this.ControlInfo(_control, "Press")
 			if (_control.Controlbind.OnHold.Action = p_Keybind.Action and _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier)
-				return _control.Controlbind
+				return new this.ControlInfo(_control, "Hold")
 		}
 	}
 
@@ -654,21 +737,23 @@ class Controller
 		local _debugText :=
 
         _debugText := _debugText . "MousePos: (" . this.MousePos.X . ", " . this.MousePos.Y . ") `n"
-        _debugText := _debugText . "Moving: " . this.Moving . "`n"
+        _debugText := _debugText . "Moving: " . this.Moving . " ForceMouseUpdate: " . this.ForceMouseUpdate . "`n"
         _debugText := _debugText . this.LeftStick.Nickname . " - State: " . this.LeftStick.State " ("
 					. this.LeftStick.StickValue.X . ", " . this.LeftStick.StickValue.Y ") "
                     . "Angle: " . this.LeftStick.StickAngleDeg . "`n`n"
 
         _debugText := _debugText . "TargetPos: (" . this.TargetPos.X . ", " . this.TargetPos.Y . ") `n"
-        _debugText := _debugText . "UsingReticule: " . this.UsingReticule . "`n"
+        _debugText := _debugText . "UsingReticule: " . this.UsingReticule . " ForceReticuleUpdate: " . this.ForceReticuleUpdate . "`n"
 		_debugText := _debugText . this.RightStick.Nickname . " - State: " . this.RightStick.State " ("
 					. this.RightStick.StickValue.X . ", " . this.RightStick.StickValue.Y ") "
                     . "Angle: " . this.RightStick.StickAngleDeg . "`n"
 
-        _debugText := _debugText . "PressCount - "
+        _debugText := _debugText . "PressStack - Length: " . this.PressStack.Length . " Peek: " . this.PressStack.Peek.Type . "`n"
+					. "PressCount - "
                     . "Targeted: " . this.PressCount.Targeted . " "
-                    . " UnTargeted: " . this.PressCount.UnTargeted . "`n`n"
+                    . "Movement: " . this.PressCount.Movement . "`n`n"
 
+		local i, _control
 		For i, _control in this.Controls
 		{
 			_debugText := _debugText . _control.Nickname . ": "
@@ -682,5 +767,27 @@ class Controller
 		}
 
 		return _debugText
+	}
+
+	class ControlInfo
+	{
+		__New(p_Control, p_Act)
+		{
+			this.m_Control := p_Control
+			this.m_Act := p_Act
+		}
+
+		Control[]
+		{
+			get {
+				return this.m_Control
+			}
+		}
+		Act[]
+		{
+			get {
+				return this.m_Act
+			}
+		}
 	}
 }

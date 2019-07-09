@@ -81,26 +81,29 @@ class Control
 
 	ParseTargeting()
 	{
+		global
+
+		local i, _keybind
 		For i, _keybind in Controller.TargetedKeybinds
 		{
 			if (this.m_Controlbind.OnPress.Action = _keybind.Action
 			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnPress.IsTargeted := True
+				this.m_Controlbind.OnPress.Type := KeybindType.Targeted
 
 			if (this.m_Controlbind.OnHold.Action = _keybind.Action
 			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnHold.IsTargeted := True
+				this.m_Controlbind.OnHold.Type := KeybindType.Targeted
 		}
 
-		For i, _keybind in Controller.IgnoreReticuleKeybinds
+		For i, _keybind in Controller.MovementKeybinds
 		{
 			if (this.m_Controlbind.OnPress.Action = _keybind.Action
 			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnPress.IgnoreReticule := True
+				this.m_Controlbind.OnPress.Type := KeybindType.Movement
 
 			if (this.m_Controlbind.OnHold.Action = _keybind.Action
 			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnHold.IgnoreReticule := True
+				this.m_Controlbind.OnHold.Type := KeybindType.Movement
 		}
 	}
 

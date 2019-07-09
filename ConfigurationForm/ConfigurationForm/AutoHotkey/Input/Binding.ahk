@@ -1,5 +1,13 @@
 ; Defines both keybindings and controlbindings
 
+class KeybindType
+{
+	static Untargeted 	:= "Untargeted"
+
+	static Targeted 	:= "Targeted"
+	static Movement 	:= "Movement"
+}
+
 class Keybind
 {
     __New()
@@ -7,8 +15,7 @@ class Keybind
         this.m_Action   :=
         this.m_Modifier :=
 
-		this.m_IsTargeted := False
-		this.m_IgnoreReticule := False
+		this.m_Type := KeybindType.Untargeted
     }
 
     Action[]
@@ -30,22 +37,13 @@ class Keybind
         }
     }
 
-	IsTargeted[]
+	Type[]
 	{
 		get {
-			return this.m_IsTargeted
+			return this.m_Type
 		}
 		set {
-			return this.m_IsTargeted := value
-		}
-	}
-	IgnoreReticule[]
-	{
-		get {
-			return this.m_IgnoreReticule
-		}
-		set {
-			return this.m_IgnoreReticule := value
+			return this.m_Type := value
 		}
 	}
 

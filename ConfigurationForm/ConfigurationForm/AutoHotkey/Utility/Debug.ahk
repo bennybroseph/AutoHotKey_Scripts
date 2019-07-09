@@ -63,8 +63,11 @@ class Debug
 
 	DrawTooltip()
 	{
+		global
+
 		local _debugText :=
 
+		local i, _delegate
 		For i, _delegate in this.OnTooltip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
