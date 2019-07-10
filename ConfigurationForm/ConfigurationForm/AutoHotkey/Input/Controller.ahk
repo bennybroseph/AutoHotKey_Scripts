@@ -32,48 +32,11 @@ class StickIndex
 	static Right 	:= 2
 }
 
-class PressStack
-{
-	__New()
-	{
-		this.m_Stack := Array()
-	}
-
-	Length[]
-	{
-		get {
-			return this.m_Stack.MaxIndex()
-		}
-	}
-	Peek[]
-	{
-		get {
-			return this.m_Stack[this.Length]
-		}
-	}
-
-	Push(p_Keybind)
-	{
-		this.m_Stack.Push(p_Keybind)
-	}
-	Remove(p_Keybind)
-	{
-		local i, _keybind
-		For i, _keybind in this.m_Stack
-		{
-			if (_keybind = p_Keybind)
-			{
-				this.m_Stack.RemoveAt(i)
-				return
-			}
-		}
-	}
-}
 class PressCounter
 {
     __New()
     {
-        this.m_Targeted     	:= 0
+        this.m_Targeted	:= 0
         this.m_Movement	:= 0
     }
 
@@ -106,14 +69,14 @@ class Controller
     {
 		global
 
-        Controller.__singleton := new Controller()
+        this.__singleton := new Controller()
 
 		local i, _control
-		For i, _control in Controller.Controls
+		For i, _control in this.Controls
 			_control.ParseTargeting()
 
 		Debug.AddToOnTooltip(new Delegate(Controller, "OnTooltip"))
-        Controller.__init := True
+        this.__init := True
     }
 
     __New()
@@ -122,14 +85,11 @@ class Controller
 
         this.m_CursorMode       := False
         this.m_FreeTargetMode   := False
-        this.m_InventoryMode    := False
 
         this.m_ShowCursorModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Cursor_Mode_Notification")
 		this.m_ShowFreeTargetModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_FreeTarget_Mode_Notification")
-		this.m_ShowInventoryModeNotification
-			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Inventory_Mode_Notification")
 
         this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadProfileKey(ProfileSection.Keybindings, "Force_Move"))
         this.m_Moving := False
@@ -145,12 +105,10 @@ class Controller
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_Center_XOffset")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_Center_YOffset"))
 
-        Debug.AddToLog("MouseOffset: (" . this.m_MouseOffset.X . ", " . this.m_MouseOffset.Y . ")")
-
         this.m_TargetedKeybinds	:= IniReader.ParseKeybindArray("Targeted_Actions")
         this.m_MovementKeybinds	:= IniReader.ParseKeybindArray("Movement_Actions")
 
-		this.m_PressStack := new PressStack()
+		this.m_PressStack := new LooseStack()
         this.m_PressCount := new PressCounter()
 
 		this.m_VibeStrength := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Strength")
@@ -206,174 +164,168 @@ class Controller
     CursorMode[]
     {
         get {
-            return Controller.__singleton.m_CursorMode
+            return this.__singleton.m_CursorMode
         }
     }
     FreeTargetMode[]
     {
         get {
-            return Controller.__singleton.m_FreeTargetMode
-        }
-    }
-    InventoryMode[]
-    {
-        get {
-            return Controller.__singleton.m_InventoryMode
+            return this.__singleton.m_FreeTargetMode
         }
     }
 
 	ShowCursorModeNotification[]
 	{
 		get {
-			return Controller.__singleton.m_ShowCursorModeNotification
+			return this.__singleton.m_ShowCursorModeNotification
 		}
 	}
 	ShowFreeTargetModeNotification[]
 	{
 		get {
-			return Controller.__singleton.m_ShowFreeTargetModeNotification
+			return this.__singleton.m_ShowFreeTargetModeNotification
 		}
 	}
 	ShowInventoryModeNotification[]
 	{
 		get {
-			return Controller.__singleton.m_ShowInventoryModeNotification
+			return this.__singleton.m_ShowInventoryModeNotification
 		}
 	}
 
     MoveOnlyKey[]
     {
         get {
-            return Controller.__singleton.m_MoveOnlyKey
+            return this.__singleton.m_MoveOnlyKey
         }
     }
     Moving[]
     {
         get {
-            return Controller.__singleton.m_Moving
+            return this.__singleton.m_Moving
         }
     }
     ForceMouseUpdate[]
     {
         get {
-            return Controller.__singleton.m_ForceMouseUpdate
+            return this.__singleton.m_ForceMouseUpdate
         }
 		set {
-			return Controller.__singleton.m_ForceMouseUpdate := value
+			return this.__singleton.m_ForceMouseUpdate := value
 		}
     }
 
     UsingReticule[]
     {
         get {
-            return Controller.__singleton.m_UsingReticule
+            return this.__singleton.m_UsingReticule
         }
     }
     ForceReticuleUpdate[]
     {
         get {
-            return Controller.__singleton.m_ForceReticuleUpdate
+            return this.__singleton.m_ForceReticuleUpdate
         }
 		set {
-			return Controller.__singleton.m_ForceReticuleUpdate := value
+			return this.__singleton.m_ForceReticuleUpdate := value
 		}
     }
 
     MouseOffset[]
     {
         get {
-            return Controller.__singleton.m_MouseOffset
+            return this.__singleton.m_MouseOffset
         }
     }
     TargetOffset[]
     {
         get {
-            return Controller.__singleton.m_TargetOffset
+            return this.__singleton.m_TargetOffset
         }
     }
 
 	TargetedKeybinds[]
 	{
 		get {
-			return Controller.__singleton.m_TargetedKeybinds
+			return this.__singleton.m_TargetedKeybinds
 		}
 	}
 	MovementKeybinds[]
 	{
 		get {
-			return Controller.__singleton.m_MovementKeybinds
+			return this.__singleton.m_MovementKeybinds
 		}
 	}
 
 	PressStack[]
 	{
 		get {
-			return Controller.__singleton.m_PressStack
+			return this.__singleton.m_PressStack
 		}
 	}
     PressCount[]
     {
         get {
-            return Controller.__singleton.m_PressCount
+            return this.__singleton.m_PressCount
         }
     }
 
 	VibeStrength[]
 	{
 		get {
-			return Controller.__singleton.m_VibeStrength
+			return this.__singleton.m_VibeStrength
 		}
 	}
 	VibeDuration[]
 	{
 		get {
-			return Controller.__singleton.m_VibeDuration
+			return this.__singleton.m_VibeDuration
 		}
 	}
 
     Controls[]
     {
         get {
-            return Controller.__singleton.m_Controls
+            return this.__singleton.m_Controls
         }
     }
 
 	LeftStick[]
 	{
 		get {
-			return Controller.__singleton.m_LeftStick
+			return this.__singleton.m_LeftStick
 		}
 	}
 	RightStick[]
 	{
 		get {
-			return Controller.__singleton.m_RightStick
+			return this.__singleton.m_RightStick
 		}
 	}
 
     MovementStick[]
     {
         get {
-            return Controller.__singleton.m_MovementStick
+            return this.__singleton.m_MovementStick
         }
     }
     TargetStick[]
     {
         get {
-            return Controller.__singleton.m_TargetStick
+            return this.__singleton.m_TargetStick
         }
     }
 
     MousePos[]
     {
         get {
-            return Controller.__singleton.m_MousePos
+            return this.__singleton.m_MousePos
         }
     }
     TargetPos[]
     {
         get {
-            return Controller.__singleton.m_TargetPos
+            return this.__singleton.m_TargetPos
         }
     }
 
@@ -408,8 +360,15 @@ class Controller
             {
                 if (_control.State)
                 {
-                    ; The first frame a button is pressed
-					if (_control.Controlbind.OnHold.Action)
+					; The first frame a button is pressed
+					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
+					{
+						if (_control.Controlbind.OnPress.Action)
+							_control.PressTick := A_TickCount
+						else
+							Inventory.HoldControl(_control.Index)
+					}
+					else if (_control.Controlbind.OnHold.Action)
                     	_control.PressTick := A_TickCount
 					else
 					{
@@ -417,16 +376,23 @@ class Controller
 						InputHelper.PressKeybind(_control.Controlbind.OnPress)
 					}
                 }
-                else if (_control.Controlbind.OnHold.Action and _control.PressTick = 0)
+                else if (_control.PressTick = 0)
                 {
                     ; The first frame after a button was held long enough to trigger the hold action and then released
-                    Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnHold.String . " after being held")
-					InputHelper.ReleaseKeybind(_control.Controlbind.OnHold)
+					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
+						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
+					else
+					{
+						Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnHold.String . " after being held")
+						InputHelper.ReleaseKeybind(_control.Controlbind.OnHold)
+					}
                 }
                 else
                 {
                     ; The first frame a button is released but was not held long enough to trigger the hold action
-					if (_control.Controlbind.OnHold.Action and _control.PressTick != -1)
+					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
+						Inventory.PressControl(_control.Index)
+					else if (_control.Controlbind.OnHold.Action and _control.PressTick != -1)
 					{
 						Debug.AddToLog(_control.Name . " pressed and released " . _control.Controlbind.OnPress.String)
 						InputHelper.PressKeybind(_control.Controlbind.OnPress)
@@ -439,8 +405,7 @@ class Controller
 					}
                 }
             }
-            else if (_control.Controlbind.OnHold.Action and _control.State
-                and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
+            else if (_control.State and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
             {
 				Loop, 4
 				{
@@ -450,12 +415,22 @@ class Controller
 				SetTimer, VibeOff, % this.VibeDuration
 
                 ; The first frame a button has been held down long enough to trigger the hold action
-				Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnHold.String)
-				InputHelper.PressKeybind(_control.Controlbind.OnHold)
+				if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
+				{
+					Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnPress.String)
+					InputHelper.PressKeybind(_control.Controlbind.OnPress)
+				}
+				else
+				{
+					Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnHold.String)
+					InputHelper.PressKeybind(_control.Controlbind.OnHold)
+				}
 
 				_control.PressTick := 0
             }
         }
+
+		Inventory.ProcessControlStack()
 
 		if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
         or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
@@ -516,10 +491,11 @@ class Controller
 			}
 
 			if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
-				InputHelper.MoveMouse(this.MousePos)
-			else if (this.InventoryMode and !this.Moving)
 			{
-				; Move to designated inventory coordinates
+				if (Inventory.Enabled and !this.Moving)
+					InputHelper.MoveMouse(Inventory.GetGridPos())
+				else
+					InputHelper.MoveMouse(this.MousePos)
 			}
 			else
 				Graphics.DrawReticule(this.MousePos)
@@ -662,8 +638,9 @@ class Controller
     EnableCursorMode()
     {
         global
-        if (this.InventoryMode)
-            this.DisableInventoryMode()
+
+        if (Inventory.Enabled)
+            Inventory.Disable()
 
 		if (this.ShowCursorModeNotification)
 		{
@@ -676,7 +653,7 @@ class Controller
 		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
 		this.Moving := False
 
-		this.CursorMode := True
+		this.CursorMode 	:= True
     }
     DisableCursorMode()
     {
@@ -697,7 +674,7 @@ class Controller
 	EnableFreeTargetMode()
 	{
 		global
-		if(this.ShowFreeTargetModeNotification)
+		if (this.ShowFreeTargetModeNotification)
 		{
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("FreeTarget"))
 
@@ -705,8 +682,8 @@ class Controller
 					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable", 0, 40, 2
 		}
 
-		this.ForceReticuleUpdate := True
-		this.FreeTargetMode := True
+		this.ForceReticuleUpdate 	:= True
+		this.FreeTargetMode 		:= True
 	}
 	DisableFreeTargetMode()
 	{
@@ -714,14 +691,9 @@ class Controller
 		if (this.ShowFreeTargetModeNotification)
 			Tooltip, , , , 2
 
-		this.ForceReticuleUpdate := False
-		this.FreeTargetMode := False
+		this.ForceReticuleUpdate	:= False
+		this.FreeTargetMode			:= False
 	}
-
-    DisableInventoryMode()
-    {
-
-    }
 
 	FindControlInfo(p_Keybind)
 	{
@@ -736,7 +708,6 @@ class Controller
 		local i, _control
 		if (_isSpecial)
 		{
-			Debug.AddToLog("Looking for special key " . p_Keybind.Action . " " . p_Keybind.Modifier)
 			For i, _control in this.Controls
 			{
 				if (_control.Controlbind.OnPress.Action = p_Keybind.Action

@@ -11,10 +11,11 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Library\Delegate.ahk
 
 ; Compile the utility classes
-#Include Utility\Vector2.ahk
+#Include Utility\DataStructures.ahk
 #Include Utility\Debug.ahk
 #Include Utility\IniReader.ahk
 #Include Utility\Graphics.ahk
+#Include Utility\Inventory.ahk
 
 ; Compile the input classes
 #Include Input\Binding.ahk
@@ -125,7 +126,7 @@ global ShowInventoryModeNotification ; Whether or not to show the cursor mode no
 global ShowPausedNotification ; Whether or not to show the cursor mode notification when the application is paused
 global ShowFreeTargetModeNotification ; Whether or not to show the free target notification when in free target mode
 
-global Inventory := false ; This value is true when then Inventory hotkey is triggered, and is toggled by that button. While true, the D-Pad is used to navigate the inventory screen
+;global Inventory := false ; This value is true when then Inventory hotkey is triggered, and is toggled by that button. While true, the D-Pad is used to navigate the inventory screen
 global InventoryX := 1 ; The X value of the Inventory grid the user is currently on
 global InventoryY := 6 ; The Y value of the Inventory grid the user is currently on
 
@@ -1761,6 +1762,7 @@ if WinExist(ApplicationName)
 Debug.Init()
 IniReader.Init()
 Graphics.Init()
+Inventory.Init()
 Controller.Init()
 
 ; Gosub TriggerState

@@ -114,30 +114,30 @@ class Graphics
 	ApplicationTitle[]
 	{
 		get {
-			return Graphics.__singleton.m_ApplicationTitle
+			return this.__singleton.m_ApplicationTitle
 		}
 	}
 
 	ActiveWinStats[]
 	{
 		get {
-			return Graphics.__singleton.m_ActiveWinStats
+			return this.__singleton.m_ActiveWinStats
 		}
 		set {
-			return Graphics.__singleton.m_ActiveWinStats := value
+			return this.__singleton.m_ActiveWinStats := value
 		}
 	}
 	CenterOffset[]
 	{
 		get {
-			return Graphics.__singleton.m_CenterOffset
+			return this.__singleton.m_CenterOffset
 		}
 	}
 
 	ReticuleSize
 	{
 		get {
-			return Graphics.__singleton.m_ReticuleSize
+			return this.__singleton.m_ReticuleSize
 		}
 	}
 

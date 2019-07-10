@@ -110,6 +110,8 @@ class InputHelper
 			Controller.ToggleCursorMode()
 		else if (p_SpecialKey = "FreeTarget")
 			Controller.ToggleFreeTargetMode()
+		else if (p_SpecialKey = "Inventory")
+			Inventory.Toggle()
 		else if (p_SpecialKey = "Loot")
 			SetTimer, SpamLoot, 100
 	}

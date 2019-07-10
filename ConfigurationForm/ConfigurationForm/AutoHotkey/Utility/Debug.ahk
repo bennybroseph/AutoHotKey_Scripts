@@ -50,14 +50,14 @@ class Debug
 	LogEntries[]
 	{
 		get {
-			return Debug.__singleton.m_LogEntries
+			return this.__singleton.m_LogEntries
 		}
 	}
 
 	OnTooltip[]
 	{
 		get {
-			return Debug.__singleton.m_OnTooltip
+			return this.__singleton.m_OnTooltip
 		}
 	}
 

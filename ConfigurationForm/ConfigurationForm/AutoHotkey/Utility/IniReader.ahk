@@ -36,13 +36,13 @@ class IniReader
 	ConfigPath[]
     {
         get {
-            return IniReader.__singleton.m_ConfigPath
+            return this.__singleton.m_ConfigPath
         }
     }
     ProfilePath[]
     {
         get {
-            return IniReader.__singleton.m_ProfilePath
+            return this.__singleton.m_ProfilePath
         }
     }
 
