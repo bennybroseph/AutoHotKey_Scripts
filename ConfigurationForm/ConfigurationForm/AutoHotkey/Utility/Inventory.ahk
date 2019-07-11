@@ -22,16 +22,15 @@ class Inventory
 
 		this.m_Enabled := False
 
-		this.m_Pos := new Vector2(1, 1)
+		this.m_Pos := new Vector2(1, 6)
 		this.m_Grid := InventoryGrids.CreateGrid()
 
-		Debug.AddToLog(this.m_Grid.MaxIndex())
-		Debug.AddToLog(this.m_Grid[1].MaxIndex())
-
-		this.m_ControlStack := new LooseStack()
+		this.m_HoldToMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Inventory_Hold_To_Move")
+		this.m_HoldDelay := IniReader.ReadProfileKey(ProfileSection.Preferences, "Inventory_Hold_Delay")
 
 		this.m_ShowInventoryModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Inventory_Mode_Notification")
+
 		this.m_BaseResolution := new Vector2(1920, 1080)
 	}
 
@@ -55,10 +54,23 @@ class Inventory
 		}
 	}
 
-	ControlStack[]
+	DPadStack[]
 	{
 		get {
 			return this.__singleton.m_ControlStack
+		}
+	}
+
+	HoldToMove[]
+	{
+		get {
+			return this.__singleton.m_HoldToMove
+		}
+	}
+	HoldDelay[]
+	{
+		get {
+			return this.__singleton.m_HoldDelay
 		}
 	}
 
@@ -92,6 +104,55 @@ class Inventory
 		return _gridPos
 	}
 
+	ProcessPress(p_DPadButton)
+	{
+		if (p_DPadButton.Controlbind.OnPress.Action or this.HoldToMove)
+			p_DPadButton.PressTick := A_TickCount
+
+		if (!p_DPadButton.Controlbind.OnPress.Action or this.HoldToMove)
+			this.PressControl(p_DPadButton.Index)
+	}
+	ProcessReleaseHold(p_DPadButton)
+	{
+		if (!this.HoldToMove)
+			InputHelper.ReleaseKeybind(p_DPadButton.Controlbind.OnPress)
+		else
+			p_DPadButton.HoldTick := 0
+	}
+	ProcessReleasePress(p_DPadButton)
+	{
+		if (!this.HoldToMove)
+			this.PressControl(p_DPadButton.Index)
+	}
+	ProcessHold(p_DPadButton)
+	{
+		if (this.HoldToMove)
+		{
+			if (p_DPadButton.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.HoldDelay)
+			{
+				this.PressControl(p_DPadButton.Index)
+
+				p_DPadButton.HoldTick	:= A_TickCount
+				p_DPadButton.PressTick 	:= 0
+			}
+			else if (p_DPadButton.HoldTick > 0 and A_TickCount >= p_DPadButton.HoldTick + Inventory.HoldDelay)
+			{
+				this.PressControl(p_DPadButton.Index)
+
+				p_DPadButton.HoldTick	:= A_TickCount
+			}
+		}
+		else if (_control.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.HoldDelay)
+		{
+			Controller.Vibrate()
+
+			Debug.AddToLog(p_DPadButton.Name . " held down " . p_DPadButton.Controlbind.OnPress.String)
+			InputHelper.PressKeybind(p_DPadButton.Controlbind.OnPress)
+
+			_control.PressTick := 0
+		}
+	}
+
 	PressControl(p_ControlIndex)
 	{
 		global
@@ -122,25 +183,6 @@ class Inventory
 
 		InputHelper.MoveMouse(this.GetGridPos())
 	}
-	HoldControl(p_ControlIndex)
-	{
-		Debug.AddToLog("Pushed " . p_ControlIndex . " into Inventory stack")
-		this.ControlStack.Push(p_ControlIndex)
-	}
-	ReleaseControl(p_ControlIndex)
-	{
-		Debug.AddToLog("Removed " . p_ControlIndex . " from Inventory stack")
-		this.ControlStack.Remove(p_ControlIndex)
-	}
-
-	ProcessControlStack()
-	{
-		global
-
-		local i, _controlIndex
-		For i, _controlIndex in this.ControlStack.Stack
-			this.PressControl(_controlIndex)
-	}
 
 	Toggle()
 	{
@@ -164,9 +206,7 @@ class Inventory
 					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable", 0, 0, 1
 		}
 
-		IniHelper.ReleaseKeybind(Controller.MoveOnlyKey)
-		InputHelper.MoveMouse(this.GetGridPos())
-
+		Controller.ForceMouseUpdate := True
 		this.Enabled := True
 	}
     Disable()
@@ -175,6 +215,7 @@ class Inventory
 		if (this.ShowInventoryModeNotification)
 			Tooltip, , , , 1
 
+		Controller.ForceMouseUpdate := True
 		this.Enabled := False
     }
 
@@ -183,7 +224,8 @@ class Inventory
 		global
 
 		local _debugText := _debugText . "Inventory - " . this.Enabled . " Pos: (" . this.Pos.X . ", " . this.Pos.Y . ") "
-						. "Value: (" . this.GetGridPos().X . ", " . this.GetGridPos().Y . ")"
+						. "Value: (" . this.GetGridPos().X . ", " . this.GetGridPos().Y . ") "
+						. "HoldToMove: " . this.HoldToMove
 
 		return _debugText
 	}

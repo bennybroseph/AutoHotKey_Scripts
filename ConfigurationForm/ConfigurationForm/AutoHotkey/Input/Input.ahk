@@ -128,6 +128,26 @@ class Button extends Control
         this.m_State := p_State.Buttons & this.m_Bitmask != 0
     }
 }
+class DPadButton extends Button
+{
+	__New(p_Name, p_Nickname, p_Index, p_Key, p_Bitmask)
+	{
+		base.__New(p_Name, p_Nickname, p_Index, p_Key, p_Bitmask)
+
+		this.m_HoldTick := -1
+	}
+
+	HoldTick[]
+	{
+		get {
+		return this.m_HoldTick
+		}
+		set {
+			return this.m_HoldTick := value
+		}
+	}
+
+}
 class Trigger extends Control
 {
    __New(p_Name, p_Nickname, p_Index, p_Key, p_Direction)

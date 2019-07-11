@@ -92,7 +92,7 @@ class Controller
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_FreeTarget_Mode_Notification")
 
         this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadProfileKey(ProfileSection.Keybindings, "Force_Move"))
-        this.m_Moving := False
+        this.m_Moving 			:= False
         this.m_ForceMouseUpdate := False
 
         this.m_UsingReticule 		:= False
@@ -111,10 +111,14 @@ class Controller
 		this.m_PressStack := new LooseStack()
         this.m_PressCount := new PressCounter()
 
+		this.m_LootDelay 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Loot_Delay")
+		this.m_TargetingDelay	:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Targeting_Delay")
+		this.m_HoldDelay 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Hold_Delay")
+
 		this.m_VibeStrength := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Strength")
 		this.m_VibeDuration := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Duration")
 
-        this.m_Controls := Array()
+		this.m_Controls := Array()
 
         this.m_Controls[ControlIndex.A] := new Button("A Button", "A", ControlIndex.A, "A_Button", XINPUT_GAMEPAD_A)
         this.m_Controls[ControlIndex.B] := new Button("B Button", "B", ControlIndex.B, "B_Button", XINPUT_GAMEPAD_B)
@@ -122,13 +126,13 @@ class Controller
         this.m_Controls[ControlIndex.Y] := new Button("Y Button", "Y", ControlIndex.Y, "Y_Button", XINPUT_GAMEPAD_Y)
 
         this.m_Controls[ControlIndex.DPadUp]
-			:= new Button("D-pad Up", "Up", ControlIndex.DPadUp, "D-Pad_Up", XINPUT_GAMEPAD_DPAD_UP)
+			:= new DPadButton("D-pad Up", "Up", ControlIndex.DPadUp, "D-Pad_Up", XINPUT_GAMEPAD_DPAD_UP)
         this.m_Controls[ControlIndex.DPadDown]
-			:= new Button("D-pad Down", "Down", ControlIndex.DPadDown, "D-Pad_Down", XINPUT_GAMEPAD_DPAD_DOWN)
+			:= new DPadButton("D-pad Down", "Down", ControlIndex.DPadDown, "D-Pad_Down", XINPUT_GAMEPAD_DPAD_DOWN)
         this.m_Controls[ControlIndex.DPadLeft]
-			:= new Button("D-pad Left", "Left", ControlIndex.DPadLeft, "D-Pad_Left", XINPUT_GAMEPAD_DPAD_LEFT)
+			:= new DPadButton("D-pad Left", "Left", ControlIndex.DPadLeft, "D-Pad_Left", XINPUT_GAMEPAD_DPAD_LEFT)
         this.m_Controls[ControlIndex.DPadRight]
-			:= new Button("D-pad Right", "Right", ControlIndex.DPadRight, "D-Pad_Right", XINPUT_GAMEPAD_DPAD_RIGHT)
+			:= new DPadButton("D-pad Right", "Right", ControlIndex.DPadRight, "D-Pad_Right", XINPUT_GAMEPAD_DPAD_RIGHT)
 
 		this.m_Controls[ControlIndex.LShoulder]
             := new Button("Left Bumper", "LB", ControlIndex.LShoulder, "Left_Shoulder", XINPUT_GAMEPAD_LEFT_SHOULDER)
@@ -151,14 +155,14 @@ class Controller
 		this.m_Controls[ControlIndex.Guide]
 			:= new Button("Guide Button", "Guide", ControlIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
 
-		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "ERROR", "Left")
-		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "ERROR", "Right")
+		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "Force_Move", "Left")
+		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "Right_Analog_Button", "Right")
 
         this.m_MovementStick    := this.m_LeftStick
         this.m_TargetStick      := this.m_RightStick
 
-        this.m_MousePos := InputHelper.GetMousePos()
-        this.m_TargetPos := new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
+        this.m_MousePos		:= InputHelper.GetMousePos()
+        this.m_TargetPos	:= new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
     }
 
     CursorMode[]
@@ -283,6 +287,25 @@ class Controller
 		}
 	}
 
+	LootDelay[]
+	{
+		get {
+			return this.__singleton.m_LootDelay
+		}
+	}
+	TargetingDelay[]
+	{
+		get {
+			return this.__singleton.m_TargetingDelay
+		}
+	}
+	HoldDelay[]
+	{
+		get {
+			return this.__singleton.m_HoldDelay
+		}
+	}
+
     Controls[]
     {
         get {
@@ -362,12 +385,7 @@ class Controller
                 {
 					; The first frame a button is pressed
 					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
-					{
-						if (_control.Controlbind.OnPress.Action)
-							_control.PressTick := A_TickCount
-						else
-							Inventory.HoldControl(_control.Index)
-					}
+						Inventory.ProcessPress(_control)
 					else if (_control.Controlbind.OnHold.Action)
                     	_control.PressTick := A_TickCount
 					else
@@ -380,7 +398,7 @@ class Controller
                 {
                     ; The first frame after a button was held long enough to trigger the hold action and then released
 					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
-						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
+						Inventory.ProcessReleaseHold(_control)
 					else
 					{
 						Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnHold.String . " after being held")
@@ -391,7 +409,7 @@ class Controller
                 {
                     ; The first frame a button is released but was not held long enough to trigger the hold action
 					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
-						Inventory.PressControl(_control.Index)
+						Inventory.ProcessReleasePress(_control)
 					else if (_control.Controlbind.OnHold.Action and _control.PressTick != -1)
 					{
 						Debug.AddToLog(_control.Name . " pressed and released " . _control.Controlbind.OnPress.String)
@@ -405,32 +423,25 @@ class Controller
 					}
                 }
             }
-            else if (_control.State and _control.PressTick > 0 and A_TickCount >= _control.PressTick + Delay)
+            else if (_control.State)
             {
-				Loop, 4
-				{
-					if XInput_GetState(A_Index-1)
-						XInput_SetState(A_Index-1, this.VibeStrength, this.VibeStrength) ; MAX 65535
-				}
-				SetTimer, VibeOff, % this.VibeDuration
-
                 ; The first frame a button has been held down long enough to trigger the hold action
 				if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
+					Inventory.ProcessHold(_control)
+				else if (_control.PressTick > 0 and A_TickCount >= _control.PressTick + this.HoldDelay)
 				{
-					Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnPress.String)
-					InputHelper.PressKeybind(_control.Controlbind.OnPress)
-				}
-				else
-				{
+					this.Vibrate()
+
 					Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnHold.String)
 					InputHelper.PressKeybind(_control.Controlbind.OnHold)
-				}
 
-				_control.PressTick := 0
+					_control.PressTick := 0
+				}
             }
         }
 
-		Inventory.ProcessControlStack()
+		if (Inventory.Enabled)
+			Inventory.ProcessControlStack()
 
 		if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
         or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
@@ -627,6 +638,16 @@ class Controller
                 Graphics.DrawReticule(this.TargetPos)
         }
     }
+
+	Vibrate()
+	{
+		Loop, 4
+		{
+			if XInput_GetState(A_Index-1)
+				XInput_SetState(A_Index-1, this.VibeStrength, this.VibeStrength) ; MAX 65535
+		}
+		SetTimer, VibeOff, % this.VibeDuration
+	}
 
     ToggleCursorMode()
     {

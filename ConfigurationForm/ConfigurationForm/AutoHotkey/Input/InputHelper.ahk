@@ -43,7 +43,7 @@ class InputHelper
 			Controller.PressStack.Push(p_Keybind)
 
 			if (True)
-					Sleep, 5
+					Sleep, Controller.TargetingDelay
 		}
 
 		if (p_Keybind.Modifier)
@@ -69,7 +69,7 @@ class InputHelper
 					Controller.ForceMouseUpdate := True
 
 					if (True)
-						Sleep, 5
+						Sleep, Controller.TargetingDelay
 					this.MoveMouse(Controller.MousePos)
 
 					if (Controller.UsingReticule or Controller.ForceReticuleUpdate)
@@ -113,7 +113,7 @@ class InputHelper
 		else if (p_SpecialKey = "Inventory")
 			Inventory.Toggle()
 		else if (p_SpecialKey = "Loot")
-			SetTimer, SpamLoot, 100
+			SetTimer, SpamLoot, Controller.LootDelay
 	}
 	ReleaseSpecialKey(p_SpecialKey)
 	{

@@ -16,7 +16,11 @@ class Debug
 	{
 		this.m_StartupTick := A_TickCount
 
+		this.m_TooltipPos	:= new Vector2()
+		this.m_TooltipSize	:= new Vector2()
+
 		this.m_LogEntries := Array()
+		this.m_UpdateLog := True
 
 		this.m_OnTooltip := Array()
 	}
@@ -47,10 +51,29 @@ class Debug
 		}
 	}
 
+	TooltipPos[]
+	{
+		get {
+			return this.__singleton.m_TooltipPos
+		}
+	}
+	TooltipSize[]
+	{
+		get {
+			return this.__singleton.m_TooltipSize
+		}
+	}
+
 	LogEntries[]
 	{
 		get {
 			return this.__singleton.m_LogEntries
+		}
+	}
+	UpdateLog[]
+	{
+		get {
+			return this.__singleton.m_UpdateLog
 		}
 	}
 
@@ -71,12 +94,28 @@ class Debug
 		For i, _delegate in this.OnTooltip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
-		_debugText := _debugText . "Debug Log:`n"
-
-		For i, _entry in this.LogEntries
-			_debugText := _debugText . _entry . "`n"
-
 		ToolTip, % _debugText, 0, 90, 7
+
+		if (this.TooltipSize.Width = 0 and this.TooltipSize.Height = 0)
+		{
+			local _x, _y, _w, _h
+			WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
+
+			this.TooltipPos		:= new Vector2(_x, _y)
+			this.TooltipSize 	:= new Vector2(_w, _h)
+		}
+
+		if (this.UpdateLog)
+		{
+			local _debugLog := _debugLog . "Debug Log:`n"
+
+			For i, _entry in this.LogEntries
+				_debugLog := _debugLog . _entry . "`n"
+
+			ToolTip, % _debugLog, 0, % this.TooltipPos.Y + this.TooltipSize.Height + 10, 8
+
+			this.UpdateLog := False
+		}
 	}
 
 	AddToLog(p_Entry)
@@ -85,6 +124,8 @@ class Debug
 			this.LogEntries.RemoveAt(1)
 
 		this.LogEntries.Push("[" . this.CurrentRuntime . "]: " . p_Entry)
+
+		this.UpdateLog := True
 	}
 
 	AddToOnTooltip(p_Delegate)

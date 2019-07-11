@@ -57,6 +57,13 @@ class IniReader
 			return ERROR
 		}
 
+		local _toTitle
+		StringLower, _toTitle, _temp, T
+		if (_toTitle  = "True")
+			_temp := True
+		else if (_toTitle = "False")
+			_temp := False
+
         return _temp
     }
     ReadConfigKey(p_Section, p_Key)
