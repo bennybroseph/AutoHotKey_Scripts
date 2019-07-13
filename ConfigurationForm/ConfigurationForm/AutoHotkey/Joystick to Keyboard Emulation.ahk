@@ -5,6 +5,11 @@
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
+SetBatchLines, -1
+SetMouseDelay, -1
+SetKeyDelay, -1
+SetWinDelay, -1
+
 ; Compile the library files
 #Include Library\XInput.ahk
 #Include Library\Gdip.ahk
@@ -25,15 +30,29 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Input\InputHelper.ahk
 #Include Input\Controller.ahk
 
-XInput_Init() ; Initialize XInput
-Gdip_Startup()
-
 global PI := 3.141592653589793 ; Define PI for easier use
 
-global ConfigurationPath = "config.ini"
-global ProfilePath = "profile.ini"
+XInput_Init() ; Initialize XInput
 
-SetTimer, Startup, 750 ; The 'Init' function of the code essentially. It's at the very bottom.
+Debug.Init()
+IniReader.Init()
+Graphics.Init()
+
+Calibrate()
+Inventory.Init()
+Controller.Init()
+
+SetTimer, Main, 0
+
+Main:
+	Graphics.SetActiveWinStats()
+
+	Controller.RefreshState()
+	Controller.ProcessInput()
+
+	if(DebugMode)
+		Debug.DrawTooltip()
+return
 
 ; Toggles Debug Mode
 $F3::
@@ -53,8 +72,7 @@ return
 
 ; Reloades the config values when F5 is pressed
 $F5::
-	Calibrate.Init()
-	;ReadConfig()
+	Reload
 return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed. The '$' ensures the hotkey can't be triggered with a 'Send' command
@@ -72,11 +90,6 @@ return
 
 ; Closes the program. The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F12::
-	SelectObject(Graphics.m_HDC, Graphics.m_OBM)
-	DeleteObject(Graphics.m_HBM)
-	DeleteDC(Graphics.m_HDC)
-	Gdip_DeleteGraphics(Graphics.m_Graphic)
-	Gdip_Shutdown(Graphics.m_Token)
 	ExitApp
 return
 
@@ -86,19 +99,7 @@ VibeOff:
 		if XInput_GetState(A_Index-1)
 			XInput_SetState(A_Index-1, 0, 0) ;MAX 65535
 	}
-	SetTimer, VibeOff, Off
 return
-
-TriggerState:
-	Graphics.SetActiveWinStats()
-
-	Controller.RefreshState()
-	Controller.ProcessInput()
-
-	if(DebugMode)
-		Debug.DrawTooltip()
-return
-; /TriggerState
 
 SpamLoot:
 	MouseGetPos, _prevX, _prevY
@@ -106,17 +107,4 @@ SpamLoot:
 	Send {LButton Down}
 	Send {LButton Up}
 	MouseMove, % _prevX, % _prevY
-return
-
-Startup:
-	Debug.Init()
-	IniReader.Init()
-	Graphics.Init()
-
-	Calibrate()
-	Inventory.Init()
-	Controller.Init()
-
-	SetTimer, TriggerState, 1
-	SetTimer, Startup, off
 return

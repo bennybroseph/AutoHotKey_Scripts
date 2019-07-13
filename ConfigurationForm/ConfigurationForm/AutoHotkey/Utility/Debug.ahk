@@ -123,7 +123,7 @@ class Debug
 
 	AddToLog(p_Entry)
 	{
-		if (this.LogEntries.Length() >= 60)
+		if (this.LogEntries.Length() >= 50)
 			this.LogEntries.RemoveAt(1)
 
 		this.LogEntries.Push("[" . this.CurrentRuntime . "]: " . p_Entry)

@@ -1,5 +1,59 @@
 ; Assists with everything related to the screen and drawing things to it
 
+class Image
+{
+	static __imageCount := 0
+
+	__New(p_Filepath)
+	{
+		local _index := ++Image.__imageCount
+		this.m_Index := _index
+
+		MsgBox, % this.m_Index
+
+		Gui, %_index%: -Caption +E0x80000 +LastFound +Owner +AlwaysOnTop +ToolWindow
+		Gui, %_index%: Show, NoActivate
+		WinSet, ExStyle, +0x20
+
+		this.m_HWND := WinExist()
+
+		this.m_Image := Gdip_CreateBitmapFromFile(p_Filepath)
+		this.m_Size := new Vector2(Gdip_GetImageWidth(this.m_Image), Gdip_GetImageHeight(this.m_Image))
+
+		this.m_HBM := CreateDIBSection(this.m_Size.Width, this.m_Size.Height)
+		this.m_HDC := CreateCompatibleDC()
+		this.m_OBM := SelectObject(this.m_HDC, this.m_HBM)
+		this.m_Graphic := Gdip_GraphicsFromHDC(this.m_HDC)
+
+		Gdip_SetCompositingMode(this.m_Graphic, 1)
+
+		Gdip_DrawImage(this.m_Graphic, this.m_Image, 0, 0, this.m_Size.Width, this.m_Size.Height)
+		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width, this.m_Size.Height)
+
+		Gdip_DisposeImage(this.m_Image)
+	}
+
+	Index[]
+	{
+		get {
+			return this.m_Index
+		}
+	}
+	Size[]
+	{
+		get {
+			return this.m_Size
+		}
+	}
+	__Delete()
+	{
+		SelectObject(this.m_HDC, this.m_OBM)
+		DeleteObject(this.m_HBM)
+		DeleteDC(this.m_HDC)
+		Gdip_DeleteGraphics(this.m_HWND)
+	}
+}
+
 class WinStats
 {
 	__New(p_Title := "", p_Size := 0, p_Pos := 0, p_Center := 0)
@@ -89,33 +143,16 @@ class Graphics
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_XOffset")
 						, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_YOffset"))
 
-		Gui, +LastFound -Caption +E0x80000 +Owner +AlwaysOnTop +ToolWindow
-		WinSet, ExStyle, +0x20
-		this.m_GUI := WinExist()
+		if (!this.m_Token := Gdip_Startup())
+		{
+			MsgBox, 48, % "Gdiplus error!, Gdiplus failed to start. Please ensure you have Gdiplus on your system."
+			return
+		}
 
-		this.m_Token := Gdip_Startup()
+		this.m_Reticule := new Image("Images/Target.png")
+		this.m_Test := new Image("Images/Test.png")
 
-		this.m_HBM := CreateDIBSection(300, 300)
-		this.m_HDC := CreateCompatibleDC()
-		this.m_OBM := SelectObject(this.m_HDC, this.m_HBM)
-		this.m_Graphic := Gdip_GraphicsFromHDC(this.m_HDC)
-		Gui, Show, NoActivate
-
-		UpdateLayeredWindow(this.m_GUI, this.m_HDC, 0, 0, 300, 300)
-
-		Gdip_SetCompositingMode(this.m_Graphic, 1)
-		this.m_Brush := Gdip_BrushCreateSolid(0x0000000)
-		Gdip_FillRectangle(this.m_Graphic, this.m_Brush, 0, 0, 300, 300)
-
-		this.m_Reticule := Gdip_CreateBitmapFromFile("Images/Target.png")
-		this.m_ReticuleSize
-			:= new Vector2(Gdip_GetImageWidth(this.m_Reticule), Gdip_GetImageHeight(this.m_Reticule))
-
-		Gdip_DrawImage(this.m_Graphic, this.m_Reticule, 0, 0, this.m_ReticuleSize.Width, this.m_ReticuleSize.Height)
-		UpdateLayeredWindow(this.m_GUI, this.m_HDC)
-
-		Gdip_DeleteBrush(this.m_Brush)
-		Gdip_DisposeImage(this.m_Reticule)
+		;Gui, 2:Show, x20 y20 NoActivate
 	}
 
 	ApplicationTitle[]
@@ -141,10 +178,10 @@ class Graphics
 		}
 	}
 
-	ReticuleSize
+	Reticule
 	{
 		get {
-			return this.__singleton.m_ReticuleSize
+			return this.__singleton.m_Reticule
 		}
 	}
 
@@ -172,15 +209,15 @@ class Graphics
 		}
 	}
 
-	DrawReticule(p_ReticulePosition, p_CenterImage := True)
+	DrawReticule(p_Pos, p_CenterImage := True)
 	{
-		local _imageX := p_ReticulePosition.X
-		local _imageY := p_ReticulePosition.Y
+		local _imageX := p_Pos.X
+		local _imageY := p_Pos.Y
 
 		if (p_CenterImage)
 		{
-			_imageX := _imageX - (this.ReticuleSize.Width / 2)
-			_imageY := _imageY - (this.ReticuleSize.Height / 2)
+			_imageX := _imageX - (this.Reticule.Size.Width / 2)
+			_imageY := _imageY - (this.Reticule.Size.Height / 2)
 		}
 
 		Gui, 1:Show, x%_imageX% y%_imageY% NoActivate
@@ -223,5 +260,10 @@ class Graphics
 					. "Center: (" . Round(this.ActiveWinStats.Center.X, 2) . ", " . Round(this.ActiveWinStats.Center.Y, 2) . ")"
 
 		return _debugText
+	}
+
+	__Delete()
+	{
+		Gdip_Shutdown(this.m_Token)
 	}
 }

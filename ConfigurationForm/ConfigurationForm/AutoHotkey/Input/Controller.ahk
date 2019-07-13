@@ -499,7 +499,7 @@ class Controller
 				{
 					if (this.PressStack.Peek.Type != KeybindType.Targeted)
 					{
-						Debug.AddToLog("Pressing " . this.MoveOnlyKey.Action)
+						Debug.AddToLog("Pressing " . this.MoveOnlyKey.String)
 						InputHelper.PressKeybind(this.MoveOnlyKey)
 					}
 
@@ -525,7 +525,7 @@ class Controller
 			{
 				if (this.PressCount.Movement = 0)
 				{
-					Debug.AddToLog("Releasing " . this.MoveOnlyKey.Action)
+					Debug.AddToLog("Releasing " . this.MoveOnlyKey.String)
 					InputHelper.ReleaseKeybind(this.MoveOnlyKey)
 				}
 
@@ -681,7 +681,7 @@ class Controller
 			if XInput_GetState(A_Index-1)
 				XInput_SetState(A_Index-1, this.VibeStrength, this.VibeStrength) ; MAX 65535
 		}
-		SetTimer, VibeOff, % this.VibeDuration
+		SetTimer, VibeOff, % -this.VibeDuration
 	}
 
     ToggleCursorMode()
@@ -703,7 +703,7 @@ class Controller
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("Freedom"))
 
 			ToolTip, % "Cursor Mode: Enabled `n"
-					. _controlInfo.Act . " the " _controlInfo.Control.Name . " button on the controller to disable", 0, 0, 1
+					. _controlInfo.Act . " the " _controlInfo.Control.Name . " on the controller to disable", 0, 0, 1
 		}
 
 		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
@@ -736,7 +736,7 @@ class Controller
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("FreeTarget"))
 
 			Tooltip, % "Free Target Mode: Enabled `n"
-					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable", 0, 40, 2
+					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " on the controller to disable", 0, 40, 2
 		}
 
 		this.ForceReticuleUpdate 	:= True
