@@ -196,9 +196,6 @@ class Stick extends Control
 			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_XZero")
 						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_YZero"))
 
-		this.m_Radius
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_XRadius")
-						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_YRadius"))
 		this.m_Deadzone := IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Deadzone")
 
 		this.m_Sensitivity
@@ -252,12 +249,6 @@ class Stick extends Control
 		}
 	}
 
-	Radius[]
-	{
-		get {
-			return this.m_Radius
-		}
-	}
 	Deadzone[]
 	{
 		get {
@@ -301,6 +292,6 @@ class Stick extends Control
         else															; 1st Quadrant
             this.m_StickAngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI))
 
-        this.m_StickAngleRad := (this.m_Direction = "Left" ? -1 : 1) * this.m_StickAngleDeg * (PI / 180)
+        this.m_StickAngleRad := this.m_StickAngleDeg * (PI / 180)
 	}
 }

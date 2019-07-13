@@ -76,6 +76,19 @@ class Controller
 			_control.ParseTargeting()
 
 		Debug.AddToOnTooltip(new Delegate(Controller, "OnTooltip"))
+
+		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
+		if (_cursorModeAtStart)
+			this.EnableCursorMode()
+
+		local _freeTargetModeAtStart 	:= IniReader.ReadProfileKey(ProfileSection.Preferences, "FreeTarget_Mode_At_Start")
+		if (_freeTargetModeAtStart)
+			this.EnableFreeTargetMode()
+
+		local _swapSticksAtStart		:= IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Swap_Sticks_At_Start")
+		if (_swapSticksAtStart)
+			this.SwapSticks()
+
         this.__init := True
     }
 
@@ -93,10 +106,10 @@ class Controller
 
         this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadProfileKey(ProfileSection.Keybindings, "Force_Move"))
         this.m_Moving 			:= False
-        this.m_ForceMouseUpdate := False
+        this.m_ForceMouseUpdate := True
 
         this.m_UsingReticule 		:= False
-        this.m_ForceReticuleUpdate 	:= False
+        this.m_ForceReticuleUpdate 	:= True
 
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_XOffset")
@@ -117,6 +130,13 @@ class Controller
 
 		this.m_VibeStrength := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Strength")
 		this.m_VibeDuration := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Duration")
+
+		this.m_MovementRadius
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_XRadius")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_YRadius"))
+		this.m_TargetRadius
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_XRadius")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_YRadius"))
 
 		this.m_Controls := Array()
 
@@ -306,6 +326,19 @@ class Controller
 		}
 	}
 
+	MovementRadius[]
+	{
+		get {
+			return this.__singleton.m_MovementRadius
+		}
+	}
+	TargetRadius[]
+	{
+		get {
+			return this.__singleton.m_TargetRadius
+		}
+	}
+
     Controls[]
     {
         get {
@@ -477,10 +510,10 @@ class Controller
 					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
 								, Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
 
-				this.MousePos.X := _centerOffset.X + (_stick.Radius.X * _stick.Radius.Y)
-								/ Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-				this.MousePos.Y := _centerOffset.Y + (_stick.Radius.X * _stick.Radius.Y * Tan(_stick.StickAngleRad))
-								/ Sqrt((_stick.Radius.Y ** 2) + (_stick.Radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
+				this.MousePos.X := _centerOffset.X + (this.MovementRadius.X * this.MovementRadius.Y)
+								/ Sqrt((this.MovementRadius.Y ** 2) + (this.MovementRadius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
+				this.MousePos.Y := _centerOffset.Y + (this.MovementRadius.X * this.MovementRadius.Y * Tan(-_stick.StickAngleRad))
+								/ Sqrt((this.MovementRadius.Y ** 2) + (this.MovementRadius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
 
 				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
 				{
@@ -523,8 +556,8 @@ class Controller
 					_radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 
 				local _mouseDelta
-					:= new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
-								,_radius * Sin(_stick.StickAngleRad) * _stick.Sensitivity.Y)
+					:= new Vector2(_radius * Cos(-_stick.StickAngleRad) * _stick.Sensitivity.X
+								,_radius * Sin(-_stick.StickAngleRad) * _stick.Sensitivity.Y)
 
 				this.MousePos.X := this.MousePos.X + _mouseDelta.X
 				this.MousePos.Y := this.MousePos.Y + _mouseDelta.Y
@@ -576,13 +609,13 @@ class Controller
 				local _radius := new Vector2()
 				if (Abs(_stickValue.X) >= Abs(_stickValue.Y))
 				{
-					_radius.X := _stick.Radius.X * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-					_radius.Y := _stick.Radius.Y * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+					_radius.X := this.TargetRadius.X * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+					_radius.Y := this.TargetRadius.Y * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 				}
 				else
 				{
-					_radius.X := _stick.Radius.X * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-					_radius.Y := _stick.Radius.Y * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+					_radius.X := this.TargetRadius.X * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+					_radius.Y := this.TargetRadius.Y * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 				}
 
 				this.TargetPos.X := _centerOffset.X + (_radius.X *_radius.Y)
@@ -637,6 +670,8 @@ class Controller
 			else
                 Graphics.DrawReticule(this.TargetPos)
         }
+
+		this.ForceReticuleUpdate := False
     }
 
 	Vibrate()
@@ -674,7 +709,8 @@ class Controller
 		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
 		this.Moving := False
 
-		this.CursorMode 	:= True
+		this.ForceMouseUpdate 	:= True
+		this.CursorMode 		:= True
     }
     DisableCursorMode()
     {
@@ -712,8 +748,14 @@ class Controller
 		if (this.ShowFreeTargetModeNotification)
 			Tooltip, , , , 2
 
-		this.ForceReticuleUpdate	:= False
 		this.FreeTargetMode			:= False
+	}
+
+	SwapSticks()
+	{
+		local _temp := this.MovementStick
+		this.MovementStick := this.TargetStick
+		this.TargetStick := _temp
 	}
 
 	FindControlInfo(p_Keybind)

@@ -75,6 +75,9 @@ class Debug
 		get {
 			return this.__singleton.m_UpdateLog
 		}
+		set {
+			return this.__singleton.m_UpdateLog := value
+		}
 	}
 
 	OnTooltip[]
@@ -94,7 +97,7 @@ class Debug
 		For i, _delegate in this.OnTooltip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
-		ToolTip, % _debugText, 0, 90, 7
+		ToolTip, % _debugText, 0, 120, 7
 
 		if (this.TooltipSize.Width = 0 and this.TooltipSize.Height = 0)
 		{
@@ -112,7 +115,7 @@ class Debug
 			For i, _entry in this.LogEntries
 				_debugLog := _debugLog . _entry . "`n"
 
-			ToolTip, % _debugLog, 0, % this.TooltipPos.Y + this.TooltipSize.Height + 10, 8
+			ToolTip, % _debugLog, 0, % this.TooltipPos.Y + this.TooltipSize.Height + 5, 8
 
 			this.UpdateLog := False
 		}

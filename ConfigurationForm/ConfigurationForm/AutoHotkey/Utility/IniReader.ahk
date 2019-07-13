@@ -75,6 +75,15 @@ class IniReader
         return this.ReadKey(this.ProfilePath, p_Section, p_Key)
     }
 
+	WriteKey(p_Value, p_IniPath, p_Section, p_Key)
+	{
+		IniWrite, % p_Value, % p_IniPath, % p_Section, % p_Key
+	}
+	WriteConfigKey(p_Value, p_Section, p_Key)
+	{
+		this.WriteKey(p_Value, this.ConfigPath, p_Section, p_Key)
+	}
+
     ParseKeybind(p_KeybindString)
     {
         local _newKeybind := new Keybind()
@@ -123,9 +132,6 @@ class IniReader
             _newControlbind.OnPress.Action := _tempKeybind.Action
             _newControlbind.OnPress.Modifier := _tempKeybind.Modifier
         }
-        ;AddToDebugLog(
-        ;    "p_Key " . _controlbindString . " parsed as [1]-" . _newControlbind[1] " [2]-"
-        ;    . _newControlbind[2] " [3]-" . _newControlbind[3] " [4]-" . _newControlbind[4])
 
         return _newControlbind
     }

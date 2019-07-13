@@ -67,6 +67,13 @@ class Graphics
 	{
 		Graphics.__singleton := new Graphics()
 
+		if WinExist(this.ApplicationTitle)
+			WinActivate ; Activate Application Window if it exists
+
+		this.SetActiveWinStats()
+		if (this.ActiveWinStats.Size.Height > 1080)
+			ToolTipFont("s10")
+
 		Debug.AddToOnTooltip(new Delegate(Graphics, "OnTooltip"))
 		Graphics.__init := False
 	}
@@ -183,13 +190,37 @@ class Graphics
 		Gui, 1:Hide
 	}
 
+	DrawToolTip(p_Text, p_X, p_Y, p_Index, p_Alignment := "Left")
+	{
+		global
+
+		ToolTip, % p_Text, % p_X, % p_Y, % p_Index
+
+		if (p_Alignment = "Left")
+			return
+
+		local _x, _y, _w, _h
+		WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
+
+		MsgBox, % _temp
+
+		p_X := p_X - (_w / (p_Alignment = "Center" ? 2 : 1))
+		p_Y := p_Y - (_h / 2)
+
+		ToolTip, % p_Text, % p_X, % p_Y, % p_Index
+	}
+	HideToolTip(p_Index)
+	{
+		Tooltip, , , , % p_Index
+	}
+
 	OnTooltip()
 	{
 		local _debugText
 			:= "'" . this.ActiveWinStats.Title . "' "
 					. "Size: (" . Round(this.ActiveWinStats.Size.Width, 2) . ", " . Round(this.ActiveWinStats.Size.Height, 2) . ") "
 					. "Pos: (" . this.ActiveWinStats.Pos.X . ", " . this.ActiveWinStats.Pos.Y . ") "
-					. "Center: (" . this.ActiveWinStats.Center.X . ", " . this.ActiveWinStats.Center.Y . ")"
+					. "Center: (" . Round(this.ActiveWinStats.Center.X, 2) . ", " . Round(this.ActiveWinStats.Center.Y, 2) . ")"
 
 		return _debugText
 	}

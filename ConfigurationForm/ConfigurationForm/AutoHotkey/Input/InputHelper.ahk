@@ -21,7 +21,8 @@ class InputHelper
 		if (p_Keybind.Type != KeybindType.UnTargeted)
 		{
 			this.ReleaseKeybind(Controller.MoveOnlyKey)
-			Controller.ForceMouseUpdate := True
+			Controller.ForceMouseUpdate 	:= True
+			Controller.ForceReticuleUpdate 	:= True
 
 			if (p_Keybind.Type = KeybindType.Targeted)
 			{
@@ -42,8 +43,8 @@ class InputHelper
 
 			Controller.PressStack.Push(p_Keybind)
 
-			if (True)
-					Sleep, Controller.TargetingDelay
+			if (Controller.TargetingDelay > 0)
+					Sleep, % Controller.TargetingDelay
 		}
 
 		if (p_Keybind.Modifier)
@@ -66,10 +67,11 @@ class InputHelper
 
 				if (Controller.PressCount.Targeted = 0)
 				{
-					Controller.ForceMouseUpdate := True
+					Controller.ForceMouseUpdate 	:= True
+					Controller.ForceReticuleUpdate 	:= True
 
-					if (True)
-						Sleep, Controller.TargetingDelay
+					if (Controller.TargetingDelay > 0)
+						Sleep, % Controller.TargetingDelay
 					this.MoveMouse(Controller.MousePos)
 
 					if (Controller.UsingReticule or Controller.ForceReticuleUpdate)
@@ -87,7 +89,7 @@ class InputHelper
 
 	PressKey(p_Key)
 	{
-		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "Inventory"
+		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "SwapSticks" or p_Key = "Inventory"
 		if (_isSpecial)
 			this.PressSpecialKey(p_Key)
 		else
@@ -95,7 +97,7 @@ class InputHelper
 	}
 	ReleaseKey(p_Key)
 	{
-		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "Inventory"
+		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget"or p_Key = "SwapSticks" or p_Key = "Inventory"
 		if (_isSpecial)
 			this.ReleaseSpecialKey(p_Key)
 		else
@@ -112,8 +114,10 @@ class InputHelper
 			Controller.ToggleFreeTargetMode()
 		else if (p_SpecialKey = "Inventory")
 			Inventory.Toggle()
+		else if (p_SpecialKey = "SwapSticks")
+			Controller.SwapSticks()
 		else if (p_SpecialKey = "Loot")
-			SetTimer, SpamLoot, Controller.LootDelay
+			SetTimer, SpamLoot, % Controller.LootDelay
 	}
 	ReleaseSpecialKey(p_SpecialKey)
 	{
