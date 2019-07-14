@@ -202,8 +202,11 @@ class Inventory
 		{
 			local _controlInfo := Controller.FindControlInfo(IniReader.ParseKeybind("Inventory"))
 
-			Tooltip, % "Inventory Mode: Enabled `n"
-					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable", 0, 0, 1
+			Graphics.DrawToolTip("Inventory Mode: Enabled `n"
+								. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable"
+								, Graphics.ActiveWinStats.Center.X
+								, 0
+								, 1, HorizontalAlignment.Center)
 		}
 
 		Controller.ForceMouseUpdate := True
@@ -213,7 +216,7 @@ class Inventory
     {
 		global
 		if (this.ShowInventoryModeNotification)
-			Tooltip, , , , 1
+			Graphics.HideToolTip(1)
 
 		Controller.ForceMouseUpdate := True
 		this.Enabled := False

@@ -8,10 +8,10 @@ class ConfigSection
 }
 class ProfileSection
 {
-	static Keybindings 		:= "Keybindings"
-	static Preferences 		:= "Preferences"
-	static AnalogStick 		:= "Analog Stick"
-	static TooltipOverlay	:= "Tooltip Overlay"
+	static Keybindings 	:= "Keybindings"
+	static Preferences 	:= "Preferences"
+	static AnalogStick 	:= "Analog Stick"
+	static ImageOverlay	:= "Image Overlay"
 }
 
 class IniReader

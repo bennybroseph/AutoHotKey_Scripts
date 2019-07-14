@@ -1,34 +1,60 @@
 ; Assists with everything related to the screen and drawing things to it
 
+class HorizontalAlignment
+{
+	static Left 	:= 0
+	static Center 	:= 1
+	static Right	:= 2
+}
+class VerticalAlignment
+{
+	static Top		:= 0
+	static Center	:= 1
+	static Bottom	:= 2
+}
+
 class Image
 {
 	static __imageCount := 0
 
-	__New(p_Filepath)
+	__New(p_Filepath, p_Scale := -1, p_BackgroundColor := 0x00000000)
 	{
 		local _index := ++Image.__imageCount
 		this.m_Index := _index
 
-		MsgBox, % this.m_Index
-
 		Gui, %_index%: -Caption +E0x80000 +LastFound +Owner +AlwaysOnTop +ToolWindow
-		Gui, %_index%: Show, NoActivate
+		Gui, %_index%: Show, NA
 		WinSet, ExStyle, +0x20
 
 		this.m_HWND := WinExist()
 
+		if (p_Scale = -1)
+			p_Scale := new Vector2(1, 1)
+
 		this.m_Image := Gdip_CreateBitmapFromFile(p_Filepath)
-		this.m_Size := new Vector2(Gdip_GetImageWidth(this.m_Image), Gdip_GetImageHeight(this.m_Image))
+		this.m_Size
+			:= new Vector2(Gdip_GetImageWidth(this.m_Image) * p_Scale.Width
+						, Gdip_GetImageHeight(this.m_Image) * p_Scale.Height)
 
 		this.m_HBM := CreateDIBSection(this.m_Size.Width, this.m_Size.Height)
 		this.m_HDC := CreateCompatibleDC()
 		this.m_OBM := SelectObject(this.m_HDC, this.m_HBM)
 		this.m_Graphic := Gdip_GraphicsFromHDC(this.m_HDC)
 
-		Gdip_SetCompositingMode(this.m_Graphic, 1)
+		Gdip_SetInterpolationMode(this.m_Graphic, 7)
+
+		if (p_BackgroundColor != 0x00000000)
+		{
+			Gdip_SetCompositingMode(this.m_Graphic, 0)
+
+			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor)
+			Gdip_FillRectangle(this.m_Graphic, this.m_Brush, 0, 0, this.m_Size.Width, this.m_Size.Height)
+
+			Gdip_DeleteBrush(this.m_Brush)
+		}
 
 		Gdip_DrawImage(this.m_Graphic, this.m_Image, 0, 0, this.m_Size.Width, this.m_Size.Height)
-		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width, this.m_Size.Height)
+		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width , this.m_Size.Height)
 
 		Gdip_DisposeImage(this.m_Image)
 	}
@@ -149,10 +175,7 @@ class Graphics
 			return
 		}
 
-		this.m_Reticule := new Image("Images/Target.png")
-		this.m_Test := new Image("Images/Test.png")
-
-		;Gui, 2:Show, x20 y20 NoActivate
+		this.m_Reticule := new Image("Images\Target.png")
 	}
 
 	ApplicationTitle[]
@@ -185,6 +208,46 @@ class Graphics
 		}
 	}
 
+	DrawImageOverlay()
+	{
+		global
+
+		local _imageOverlay := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Enable_Image_Overlay")
+		if (!_imageOverlay)
+			return
+
+		local _baseResolution
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Width")
+						, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Height"))
+
+		local _imageScale
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale_Width")
+						, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale_Height"))
+		Loop
+		{
+			local _newImageKey := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Keybind")
+			if (_newImageKey = Error)
+				break
+
+			local _newImageKeybind := IniReader.ParseKeybind(_newImageKey)
+			local _newImagePos
+				:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_XPos")
+							, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_YPos"))
+
+			_newImagePos.X := _newImagePos.X * (this.ActiveWinStats.Size.Width / _baseResolution.Width)
+			_newImagePos.Y := _newImagePos.Y * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
+
+			local _newImageBackground = IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Background")
+
+			local _controlInfo := Controller.FindControlInfo(_newImageKeybind)
+
+			local _newImagePath := "Images\Xbox\" . _controlInfo.Act . "\" . _controlInfo.Control.Key . ".png"
+			local _newImage := new Image(_newImagePath, _imageScale, _newImageBackground)
+
+			this.DrawImage(_newImage, _newImagePos)
+		}
+	}
+
 	GetActiveWinStats()
 	{
 		local _title, _width, _height, _x, _y
@@ -209,46 +272,72 @@ class Graphics
 		}
 	}
 
-	DrawReticule(p_Pos, p_CenterImage := True)
+	DrawImage(p_Image, p_Pos, p_CenterImage := True)
 	{
 		local _imageX := p_Pos.X
 		local _imageY := p_Pos.Y
 
 		if (p_CenterImage)
 		{
-			_imageX := _imageX - (this.Reticule.Size.Width / 2)
-			_imageY := _imageY - (this.Reticule.Size.Height / 2)
+			_imageX := _imageX - (p_Image.Size.Width / 2)
+			_imageY := _imageY - (p_Image.Size.Height / 2)
 		}
+		local _index := p_Image.Index
 
-		Gui, 1:Show, x%_imageX% y%_imageY% NoActivate
+		Gui, %_index%:Show, x%_imageX% y%_imageY% NoActivate
+	}
+	HideImage(p_Image)
+	{
+		local _index := p_Image.Index
+		Gui, %_index%:Hide
+	}
+
+	DrawReticule(p_Pos, p_CenterImage := True)
+	{
+		this.DrawImage(this.Reticule, p_Pos, p_CenterImage)
 	}
 	HideReticule()
 	{
-		Gui, 1:Hide
+		this.HideImage(this.Reticule)
 	}
 
-	DrawToolTip(p_Text, p_X, p_Y, p_Index, p_Alignment := "Left")
+	DrawToolTip(p_Text
+			, p_X
+			, p_Y
+			, p_Index
+			, p_HorizontalAlignment := 0
+			, p_VerticalAlignment := 0)
 	{
 		global
 
 		ToolTip, % p_Text, % p_X, % p_Y, % p_Index
 
-		if (p_Alignment = "Left")
+		if (p_HorizontalAlignment = 0 and p_VerticalAlignment = 0)
 			return
 
 		local _x, _y, _w, _h
 		WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
 
-		MsgBox, % _temp
+		local _horizontalAdjustment := 0
+		if (p_HorizontalAlignment != HorizontalAlignment.Left)
+			_horizontalAdjustment
+				:= p_HorizontalAlignment = HorizontalAlignment.Center
+					? _w / 2 : _w
 
-		p_X := p_X - (_w / (p_Alignment = "Center" ? 2 : 1))
-		p_Y := p_Y - (_h / 2)
+		local _verticalAdjustment := 0
+		if (p_VerticalAlignment != VerticalAlignment.Top)
+			_verticalAdjustment
+				:= p_VerticalAlignment = VerticalAlignment.Center
+					? _h / 2 : _h
+
+		p_X := p_X - _horizontalAdjustment
+		p_Y := p_Y - _verticalAdjustment
 
 		ToolTip, % p_Text, % p_X, % p_Y, % p_Index
 	}
 	HideToolTip(p_Index)
 	{
-		Tooltip, , , , % p_Index
+		ToolTip, , , , % p_Index
 	}
 
 	OnTooltip()

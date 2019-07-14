@@ -32,6 +32,28 @@ class StickIndex
 	static Right 	:= 2
 }
 
+class ControlInfo
+{
+	__New(p_Control, p_Act)
+	{
+		this.m_Control := p_Control
+		this.m_Act := p_Act
+	}
+
+	Control[]
+	{
+		get {
+			return this.m_Control
+		}
+	}
+	Act[]
+	{
+		get {
+			return this.m_Act
+		}
+	}
+}
+
 class PressCounter
 {
     __New()
@@ -495,16 +517,8 @@ class Controller
         {
 			if (_stick.State)
 			{
-				if (!this.Moving or this.ForceMouseUpdate)
-				{
-					if (this.PressStack.Peek.Type != KeybindType.Targeted)
-					{
-						Debug.AddToLog("Pressing " . this.MoveOnlyKey.String)
-						InputHelper.PressKeybind(this.MoveOnlyKey)
-					}
-
-					this.Moving := True
-				}
+				if (!this.Moving and !this.PressStack.Peek)
+					this.StartMoving()
 
 				local _centerOffset
 					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
@@ -521,15 +535,10 @@ class Controller
 					this.MousePos.Y := _centerOffset.Y - (this.MousePos.Y - _centerOffset.Y)
 				}
 			}
-			else if (this.Moving)
+			else
 			{
-				if (this.PressCount.Movement = 0)
-				{
-					Debug.AddToLog("Releasing " . this.MoveOnlyKey.String)
-					InputHelper.ReleaseKeybind(this.MoveOnlyKey)
-				}
-
-				this.Moving := False
+				if (this.Moving and !this.PressStack.Peek)
+					this.StopMoving()
 
 				this.MousePos := new Vector2(Graphics.ActiveWinStats.Center.X, Graphics.ActiveWinStats.Center.Y)
 			}
@@ -702,12 +711,14 @@ class Controller
 		{
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("Freedom"))
 
-			ToolTip, % "Cursor Mode: Enabled `n"
-					. _controlInfo.Act . " the " _controlInfo.Control.Name . " on the controller to disable", 0, 0, 1
+			Graphics.DrawToolTip("Cursor Mode: Enabled `n"
+								. _controlInfo.Act . " the " _controlInfo.Control.Name . " on the controller to disable"
+								, Graphics.ActiveWinStats.Center.X
+								, 0
+								, 1, HorizontalAlignment.Center)
 		}
 
-		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
-		this.Moving := False
+		this.StopMoving()
 
 		this.ForceMouseUpdate 	:= True
 		this.CursorMode 		:= True
@@ -716,9 +727,10 @@ class Controller
     {
 		global
 		if (this.ShowCursorModeNotification)
-			Tooltip, , , , 1
+			Graphics.HideToolTip(1)
 
-		this.CursorMode := False
+		this.ForceMouseUpdate	:= True
+		this.CursorMode 		:= False
     }
 
 	ToggleFreeTargetMode()
@@ -735,8 +747,11 @@ class Controller
 		{
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("FreeTarget"))
 
-			Tooltip, % "Free Target Mode: Enabled `n"
-					. _controlInfo.Act . " the " . _controlInfo.Control.Name . " on the controller to disable", 0, 40, 2
+			Graphics.DrawToolTip("Free Target Mode: Enabled `n"
+								. _controlInfo.Act . " the " . _controlInfo.Control.Name . " on the controller to disable"
+								, Graphics.ActiveWinStats.Center.X
+								, 40
+								, 2, HorizontalAlignment.Center)
 		}
 
 		this.ForceReticuleUpdate 	:= True
@@ -746,8 +761,9 @@ class Controller
 	{
 		global
 		if (this.ShowFreeTargetModeNotification)
-			Tooltip, , , , 2
+			Graphics.HideToolTip(2)
 
+		this.ForceReticuleUpdate 	:= True
 		this.FreeTargetMode			:= False
 	}
 
@@ -756,6 +772,24 @@ class Controller
 		local _temp := this.MovementStick
 		this.MovementStick := this.TargetStick
 		this.TargetStick := _temp
+
+		this.ForceMouseUpdate 		:= True
+		this.ForceReticuleUpdate	:= True
+	}
+
+	StartMoving()
+	{
+		Debug.AddToLog("Pressing " . this.MoveOnlyKey.String)
+		InputHelper.PressKeybind(this.MoveOnlyKey)
+
+		this.Moving := True
+	}
+	StopMoving()
+	{
+		Debug.AddToLog("Releasing " . this.MoveOnlyKey.String)
+		InputHelper.ReleaseKeybind(Controller.MoveOnlyKey)
+
+		this.Moving := False
 	}
 
 	FindControlInfo(p_Keybind)
@@ -763,31 +797,45 @@ class Controller
 		global
 
 		local _isSpecial
-			:= p_Keybind.Action = "Freedom" or p_Keybind.Action = "Loot"
-			or p_Keybind.Action = "FreeTarget" or p_Keybind.Action = "Inventory"
-			or p_Keybind.Modifier = "Freedom" or p_Keybind.Modifier = "Loot"
-			or p_Keybind.Modifier = "FreeTarget" or p_Keybind.Modifier = "Inventory"
+			:= !p_Keybind.Modifier
+			and (p_Keybind.Action = "Freedom" or p_Keybind.Action = "Loot"
+			or p_Keybind.Action = "FreeTarget" or p_Keybind.Action = "Inventory")
 
 		local i, _control
 		if (_isSpecial)
 		{
 			For i, _control in this.Controls
 			{
-				if (_control.Controlbind.OnPress.Action = p_Keybind.Action
-				or (p_Keybind.Modifier and _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier))
-					return new this.ControlInfo(_control, "Press")
-				if (_control.Controlbind.OnHold.Action = p_Keybind.Action
-				or (p_Keybind.Modifier and _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier))
-					return new this.ControlInfo(_control, "Hold")
+				if (_control.Controlbind.OnPress.Action = p_Keybind.Action and !_control.Controlbind.OnPress.Modifier)
+					return new ControlInfo(_control, "Press")
+				if (_control.Controlbind.OnHold.Action = p_Keybind.Action and !_control.Controlbind.OnHold.Modifier)
+					return new ControlInfo(_control, "Hold")
 			}
 		}
 
 		For i, _control in this.Controls
 		{
-			if (_control.Controlbind.OnPress.Action = p_Keybind.Action and _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier)
-				return new this.ControlInfo(_control, "Press")
-			if (_control.Controlbind.OnHold.Action = p_Keybind.Action and _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier)
-				return new this.ControlInfo(_control, "Hold")
+			local _isSpecialAction
+				:= _control.Controlbind.OnPress.Action = "Freedom" or _control.Controlbind.OnPress.Action = "Loot"
+				or _control.Controlbind.OnPress.Action = "FreeTarget" or _control.Controlbind.OnPress.Action = "Inventory"
+			local _isSpecialModifier
+				:= _control.Controlbind.OnPress.Modifier = "Freedom" or _control.Controlbind.OnPress.Modifier = "Loot"
+				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
+
+			if ((_isSpecialAction or _control.Controlbind.OnPress.Action = p_Keybind.Action)
+			and (_isSpecialModifier or _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier))
+				return new ControlInfo(_control, "Press")
+
+			_isSpecialAction
+				:= _control.Controlbind.OnPress.Action = "Freedom" or _control.Controlbind.OnPress.Action = "Loot"
+				or _control.Controlbind.OnPress.Action = "FreeTarget" or _control.Controlbind.OnPress.Action = "Inventory"
+			_isSpecialModifier
+				:= _control.Controlbind.OnPress.Modifier = "Freedom" or _control.Controlbind.OnPress.Modifier = "Loot"
+				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
+
+			if ((_isSpecialAction or _control.Controlbind.OnHold.Action = p_Keybind.Action)
+			and (_isSpecialModifier or _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier))
+				return new ControlInfo(_control, "Hold")
 		}
 	}
 
@@ -828,25 +876,5 @@ class Controller
 		return _debugText
 	}
 
-	class ControlInfo
-	{
-		__New(p_Control, p_Act)
-		{
-			this.m_Control := p_Control
-			this.m_Act := p_Act
-		}
 
-		Control[]
-		{
-			get {
-				return this.m_Control
-			}
-		}
-		Act[]
-		{
-			get {
-				return this.m_Act
-			}
-		}
-	}
 }

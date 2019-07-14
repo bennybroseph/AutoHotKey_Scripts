@@ -36,11 +36,17 @@ XInput_Init() ; Initialize XInput
 
 Debug.Init()
 IniReader.Init()
+
+global IsPaused := False
+global ShowPausedNotification := IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Paused_Notification")
+
 Graphics.Init()
 
 Calibrate()
 Inventory.Init()
 Controller.Init()
+
+Graphics.DrawImageOverlay()
 
 SetTimer, Main, 0
 
@@ -50,24 +56,13 @@ Main:
 	Controller.RefreshState()
 	Controller.ProcessInput()
 
-	if(DebugMode)
-		Debug.DrawTooltip()
+	if(Debug.Enabled)
+		Debug.DrawToolTip()
 return
 
 ; Toggles Debug Mode
 $F3::
-	DebugMode := !DebugMode
-	if(DebugMode)
-	{
-		Tooltip, Debug mode enabled `nPress F3 to disable, 0, 80, 5
-		Debug.UpdateLog := True
-	}
-	else
-	{
-		Tooltip, , , , 5
-		Tooltip, , , , 7
-		Tooltip, , , , 8
-	}
+	Debug.Toggle()
 return
 
 ; Reloades the config values when F5 is pressed
@@ -75,14 +70,15 @@ $F5::
 	Reload
 return
 
-; Pauses the script and displays a message indicating so whenever F10 is pressed. The '$' ensures the hotkey can't be triggered with a 'Send' command
+; Pauses the script and displays a message indicating so whenever F10 is pressed.
+;The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F10::
 	; Set the tooltip if it should be shown
 	if(!IsPaused and ShowPausedNotification)
-		Tooltip, Paused `nPress F10 to resume, 0, 0, 4
+		Graphics.DrawToolTip("Paused `nPress F10 to resume", 0, 0, 4)
 	; Remove the tooltip if it is currently shown
 	else if(ShowPausedNotification)
-		Tooltip, , , , 4
+		Graphics.HideToolTip(4)
 
 	IsPaused := !IsPaused	; Toggle the pause boolean
 	Pause, , 1

@@ -14,6 +14,8 @@ class Debug
 
 	__New()
 	{
+		this.m_Enabled := False
+
 		this.m_StartupTick := A_TickCount
 
 		this.m_TooltipPos	:= new Vector2()
@@ -48,6 +50,13 @@ class Debug
 			local _miliseconds := _ticksRemaining
 
 			return _hours . ":" . _minutes  . ":" . _seconds . ":" . _miliseconds
+		}
+	}
+
+	Enabled[]
+	{
+		get {
+			return this.__singleton.m_Enabled
 		}
 	}
 
@@ -87,7 +96,7 @@ class Debug
 		}
 	}
 
-	DrawTooltip()
+	DrawToolTip()
 	{
 		global
 
@@ -97,7 +106,7 @@ class Debug
 		For i, _delegate in this.OnTooltip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
-		ToolTip, % _debugText, 0, 120, 7
+		Graphics.DrawToolTip(_debugText, 0, 80, 7)
 
 		if (this.TooltipSize.Width = 0 and this.TooltipSize.Height = 0)
 		{
@@ -115,7 +124,7 @@ class Debug
 			For i, _entry in this.LogEntries
 				_debugLog := _debugLog . _entry . "`n"
 
-			ToolTip, % _debugLog, 0, % this.TooltipPos.Y + this.TooltipSize.Height + 5, 8
+			Graphics.DrawToolTip(_debugLog, 0, this.TooltipPos.Y + this.TooltipSize.Height + 5, 8)
 
 			this.UpdateLog := False
 		}
@@ -134,5 +143,28 @@ class Debug
 	AddToOnTooltip(p_Delegate)
 	{
 		this.OnTooltip.Push(p_Delegate)
+	}
+
+	Toggle()
+	{
+		if(!this.Enabled)
+			this.Enable()
+		else
+			this.Disable()
+	}
+	Enable()
+	{
+		Graphics.DrawToolTip("Debug mode enabled `nPress F3 to disable", 0, 40, 5)
+		this.UpdateLog := True
+
+		this.Enabled := True
+	}
+	Disable()
+	{
+		Graphics.HideToolTip(5)
+		Graphics.HideToolTip(7)
+		Graphics.HideToolTip(8)
+
+		this.Enabled := False
 	}
 }

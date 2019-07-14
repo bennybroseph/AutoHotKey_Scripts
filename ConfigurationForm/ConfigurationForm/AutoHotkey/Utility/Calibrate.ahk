@@ -38,7 +38,7 @@ Calibrate()
 		}
 	}Until _leftStickValue.Y = 32767 and _rightStickValue.Y = 32767
 
-	Graphics.DrawTooltip("Now, spin the sticks in a max range circle multiple times. Press any button when complete."
+	Graphics.DrawToolTip("Now, spin the sticks in a max range circle multiple times. Press any button when complete."
 			, Graphics.ActiveWinStats.Center.X
 			, Graphics.ActiveWinStats.Center.Y
 			, 1
