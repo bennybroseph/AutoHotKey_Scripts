@@ -77,7 +77,8 @@ class InputHelper
 
 	PressKey(p_Key)
 	{
-		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "SwapSticks" or p_Key = "Inventory"
+		local _isSpecial
+			:= p_Key = "CursorMode" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "SwapSticks" or p_Key = "Inventory"
 		if (_isSpecial)
 			this.PressSpecialKey(p_Key)
 		else
@@ -85,7 +86,8 @@ class InputHelper
 	}
 	ReleaseKey(p_Key)
 	{
-		local _isSpecial := p_Key = "Freedom" or p_Key = "Loot" or p_Key = "FreeTarget"or p_Key = "SwapSticks" or p_Key = "Inventory"
+		local _isSpecial
+			:= p_Key = "CursorMode" or p_Key = "Loot" or p_Key = "FreeTarget"or p_Key = "SwapSticks" or p_Key = "Inventory"
 		if (_isSpecial)
 			this.ReleaseSpecialKey(p_Key)
 		else
@@ -96,7 +98,7 @@ class InputHelper
 	{
 		global
 
-		if (p_SpecialKey = "Freedom")
+		if (p_SpecialKey = "CursorMode")
 			Controller.ToggleCursorMode()
 		else if (p_SpecialKey = "FreeTarget")
 			Controller.ToggleFreeTargetMode()

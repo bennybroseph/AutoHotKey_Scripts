@@ -17,7 +17,7 @@ class Image
 {
 	static __imageCount := 0
 
-	__New(p_Filepath, p_Scale := -1, p_BackgroundColor := 0x00000000)
+	__New(p_Filepath, p_Scale := 1, p_BackgroundColor := 0x00000000)
 	{
 		local _index := ++Image.__imageCount
 		this.m_Index := _index
@@ -28,13 +28,10 @@ class Image
 
 		this.m_HWND := WinExist()
 
-		if (p_Scale = -1)
-			p_Scale := new Vector2(1, 1)
-
 		this.m_Image := Gdip_CreateBitmapFromFile(p_Filepath)
 		this.m_Size
-			:= new Vector2(Gdip_GetImageWidth(this.m_Image) * p_Scale.Width
-						, Gdip_GetImageHeight(this.m_Image) * p_Scale.Height)
+			:= new Vector2(Gdip_GetImageWidth(this.m_Image) * p_Scale
+						, Gdip_GetImageHeight(this.m_Image) * p_Scale)
 
 		this.m_HBM := CreateDIBSection(this.m_Size.Width, this.m_Size.Height)
 		this.m_HDC := CreateCompatibleDC()
@@ -165,9 +162,13 @@ class Graphics
 		this.m_ApplicationTitle := IniReader.ReadProfileKey(ProfileSection.Preferences, "Application_Name")
 
 		this.m_ActiveWinStats := new WinStats()
+
+		this.m_BaseResolution
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Base_Resolution_Height")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Base_Resolution_Width"))
 		this.m_CenterOffset
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_XOffset")
-						, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_YOffset"))
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_Offset_X")
+						, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_Offset_Y"))
 
 		if (!this.m_Token := Gdip_Startup())
 		{
@@ -194,6 +195,13 @@ class Graphics
 			return this.__singleton.m_ActiveWinStats := value
 		}
 	}
+
+	BaseResolution[]
+	{
+		get {
+			return this.__singleton.m_BaseResolution
+		}
+	}
 	CenterOffset[]
 	{
 		get {
@@ -205,46 +213,6 @@ class Graphics
 	{
 		get {
 			return this.__singleton.m_Reticule
-		}
-	}
-
-	DrawImageOverlay()
-	{
-		global
-
-		local _imageOverlay := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Enable_Image_Overlay")
-		if (!_imageOverlay)
-			return
-
-		local _baseResolution
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Width")
-						, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Height"))
-
-		local _imageScale
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale_Width")
-						, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale_Height"))
-		Loop
-		{
-			local _newImageKey := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Keybind")
-			if (_newImageKey = Error)
-				break
-
-			local _newImageKeybind := IniReader.ParseKeybind(_newImageKey)
-			local _newImagePos
-				:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_XPos")
-							, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_YPos"))
-
-			_newImagePos.X := _newImagePos.X * (this.ActiveWinStats.Size.Width / _baseResolution.Width)
-			_newImagePos.Y := _newImagePos.Y * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
-
-			local _newImageBackground = IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Background")
-
-			local _controlInfo := Controller.FindControlInfo(_newImageKeybind)
-
-			local _newImagePath := "Images\Xbox\" . _controlInfo.Act . "\" . _controlInfo.Control.Key . ".png"
-			local _newImage := new Image(_newImagePath, _imageScale, _newImageBackground)
-
-			this.DrawImage(_newImage, _newImagePos)
 		}
 	}
 
@@ -267,8 +235,10 @@ class Graphics
 
 		if (WinActive(this.ApplicationTitle))
 		{
-			this.ActiveWinStats.Center.X := this.ActiveWinStats.Center.X + this.CenterOffset.X
-			this.ActiveWinStats.Center.Y := this.ActiveWinStats.Center.Y + this.CenterOffset.Y
+			this.ActiveWinStats.Center.X
+				:= this.ActiveWinStats.Center.X + this.CenterOffset.X * (this.ActiveWinStats.Size.Width / this.BaseResolution.Width)
+			this.ActiveWinStats.Center.Y
+				:= this.ActiveWinStats.Center.Y + this.CenterOffset.Y * (this.ActiveWinStats.Size.Height / this.BaseResolution.Height)
 		}
 	}
 
@@ -338,6 +308,48 @@ class Graphics
 	HideToolTip(p_Index)
 	{
 		ToolTip, , , , % p_Index
+	}
+
+	DrawImageOverlay()
+	{
+		global
+
+		local _imageOverlay := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Enable_Image_Overlay")
+		if (!_imageOverlay)
+			return
+
+		local _baseResolution
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Width")
+						, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Height"))
+
+		local _imageScale := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale")
+		_imageScale := _imageScale * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
+		Loop
+		{
+			local _newImageKey := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Keybind")
+			if (_newImageKey = Error)
+				break
+
+			local _newImageKeybind := IniReader.ParseKeybind(_newImageKey)
+			local _newImagePos
+				:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_XPos")
+							, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_YPos"))
+
+			_newImagePos.X := _newImagePos.X * (this.ActiveWinStats.Size.Width / _baseResolution.Width)
+			_newImagePos.Y := _newImagePos.Y * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
+
+			_newImagePos.X := _newImagePos.X + this.ActiveWinStats.Pos.X
+			_newImagePos.Y := _newImagePos.Y + this.ActiveWinStats.Pos.Y
+
+			local _newImageBackground = IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Background")
+
+			local _controlInfo := Controller.FindControlInfo(_newImageKeybind)
+
+			local _newImagePath := "Images\Xbox\" . _controlInfo.Act . "\128\" . _controlInfo.Control.Key . ".png"
+			local _newImage := new Image(_newImagePath, _imageScale, _newImageBackground)
+
+			this.DrawImage(_newImage, _newImagePos)
+		}
 	}
 
 	OnTooltip()

@@ -11,6 +11,7 @@ class ProfileSection
 	static Keybindings 	:= "Keybindings"
 	static Preferences 	:= "Preferences"
 	static AnalogStick 	:= "Analog Stick"
+	static Inventory 	:= "Inventory"
 	static ImageOverlay	:= "Image Overlay"
 }
 

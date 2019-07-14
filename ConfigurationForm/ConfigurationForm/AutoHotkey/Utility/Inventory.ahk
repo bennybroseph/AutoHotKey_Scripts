@@ -25,13 +25,16 @@ class Inventory
 		this.m_Pos := new Vector2(1, 6)
 		this.m_Grid := InventoryGrids.CreateGrid()
 
-		this.m_HoldToMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Inventory_Hold_To_Move")
-		this.m_HoldDelay := IniReader.ReadProfileKey(ProfileSection.Preferences, "Inventory_Hold_Delay")
+		this.m_HoldToMove := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_To_Move")
+		this.m_HoldDelay := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_Delay")
 
 		this.m_ShowInventoryModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Inventory_Mode_Notification")
 
 		this.m_BaseResolution := new Vector2(1920, 1080)
+		this.m_Scaling
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Width")
+						, IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Height"))
 	}
 
 	Enabled[]
@@ -87,6 +90,12 @@ class Inventory
 			return this.__singleton.m_BaseResolution
 		}
 	}
+	Scaling[]
+	{
+		get {
+			return this.__singleton.m_Scaling
+		}
+	}
 
 	GetGridPos(p_X := 0, p_Y := 0)
 	{
@@ -98,8 +107,8 @@ class Inventory
 			p_Y := this.Pos.Y
 
 		local _gridPos := new Vector2(this.__singleton.m_Grid[p_X, p_Y].X, this.__singleton.m_Grid[p_X, p_Y].Y)
-		_gridPos.X := _gridPos.X * (Graphics.ActiveWinStats.Size.Width / this.BaseResolution.Width)
-		_gridPos.Y := _gridPos.Y * (Graphics.ActiveWinStats.Size.Height / this.BaseResolution.Height)
+		_gridPos.X := (_gridPos.X * (Graphics.ActiveWinStats.Size.Width / this.BaseResolution.Width)) * this.Scaling.X
+		_gridPos.Y := (_gridPos.Y * (Graphics.ActiveWinStats.Size.Height / this.BaseResolution.Height)) * this.Scaling.Y
 
 		return _gridPos
 	}

@@ -134,11 +134,11 @@ class Controller
         this.m_ForceReticuleUpdate 	:= True
 
         this.m_MouseOffset
-            := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_XOffset")
-                        , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_Center_YOffset"))
+            := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_X")
+                        , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_Y"))
         this.m_TargetOffset
-            := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_Center_XOffset")
-                        , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_Center_YOffset"))
+            := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Center_Offset_X")
+                        , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Center_Offset_Y"))
 
         this.m_TargetedKeybinds	:= IniReader.ParseKeybindArray("Targeted_Actions")
         this.m_MovementKeybinds	:= IniReader.ParseKeybindArray("Movement_Actions")
@@ -154,11 +154,11 @@ class Controller
 		this.m_VibeDuration := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Duration")
 
 		this.m_MovementRadius
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_XRadius")
-						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Left_Analog_YRadius"))
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Radius_Width")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Radius_Height"))
 		this.m_TargetRadius
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_XRadius")
-						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Right_Analog_YRadius"))
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Radius_Width")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Radius_Height"))
 
 		this.m_Controls := Array()
 
@@ -177,9 +177,9 @@ class Controller
 			:= new DPadButton("D-pad Right", "Right", ControlIndex.DPadRight, "D-Pad_Right", XINPUT_GAMEPAD_DPAD_RIGHT)
 
 		this.m_Controls[ControlIndex.LShoulder]
-            := new Button("Left Bumper", "LB", ControlIndex.LShoulder, "Left_Shoulder", XINPUT_GAMEPAD_LEFT_SHOULDER)
+            := new Button("Left Bumper", "LB", ControlIndex.LShoulder, "Left_Bumper", XINPUT_GAMEPAD_LEFT_SHOULDER)
         this.m_Controls[ControlIndex.RShoulder]
-            := new Button("Right Bumper", "RB", ControlIndex.RShoulder, "Right_Shoulder", XINPUT_GAMEPAD_RIGHT_SHOULDER)
+            := new Button("Right Bumper", "RB", ControlIndex.RShoulder, "Right_Bumper", XINPUT_GAMEPAD_RIGHT_SHOULDER)
 
 		this.m_Controls[ControlIndex.LTrigger] := new Trigger("Left Trigger", "LT", ControlIndex.LTrigger, "Left_Trigger", "Left")
         this.m_Controls[ControlIndex.RTrigger] := new Trigger("Right Trigger", "RT", ControlIndex.RTrigger, "Right_Trigger", "Right")
@@ -190,15 +190,15 @@ class Controller
 			:= new Button("Back Button", "Back", ControlIndex.Back, "Back_Button", XINPUT_GAMEPAD_BACK)
 
         this.m_Controls[ControlIndex.LThumb]
-            := new Button("Left Stick Button", "LS", ControlIndex.LThumb, "Left_Analog_Button", XINPUT_GAMEPAD_LEFT_THUMB)
+            := new Button("Left Stick Button", "LS", ControlIndex.LThumb, "Left_Stick_Button", XINPUT_GAMEPAD_LEFT_THUMB)
         this.m_Controls[ControlIndex.RThumb]
-            := new Button("Right Stick Button", "RS", ControlIndex.RThumb, "Right_Analog_Button", XINPUT_GAMEPAD_RIGHT_THUMB)
+            := new Button("Right Stick Button", "RS", ControlIndex.RThumb, "Right_Stick_Button", XINPUT_GAMEPAD_RIGHT_THUMB)
 
 		this.m_Controls[ControlIndex.Guide]
 			:= new Button("Guide Button", "Guide", ControlIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
 
 		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "Force_Move", "Left")
-		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "Right_Analog_Button", "Right")
+		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "Right_Stick_Button", "Right")
 
         this.m_MovementStick    := this.m_LeftStick
         this.m_TargetStick      := this.m_RightStick
@@ -521,13 +521,21 @@ class Controller
 					this.StartMoving()
 
 				local _centerOffset
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
-								, Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
+					:= new Vector2(Graphics.ActiveWinStats.Center.X
+								+ this.MouseOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								, Graphics.ActiveWinStats.Center.Y
+								+ this.MouseOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
-				this.MousePos.X := _centerOffset.X + (this.MovementRadius.X * this.MovementRadius.Y)
-								/ Sqrt((this.MovementRadius.Y ** 2) + (this.MovementRadius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
-				this.MousePos.Y := _centerOffset.Y + (this.MovementRadius.X * this.MovementRadius.Y * Tan(-_stick.StickAngleRad))
-								/ Sqrt((this.MovementRadius.Y ** 2) + (this.MovementRadius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
+				local _radius
+					:= new Vector2(this.MovementRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								, this.MovementRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+
+				this.MousePos.X
+					:= _centerOffset.X + (_radius.Width * _radius.Height)
+					/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
+				this.MousePos.Y
+					:= _centerOffset.Y + (_radius.Width * _radius.Height * Tan(-_stick.StickAngleRad))
+					/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
 
 				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
 				{
@@ -596,8 +604,10 @@ class Controller
 			if (_stick.State)
 			{
 				local _centerOffset
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X + this.TargetOffset.X
-								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y + this.TargetOffset.Y)
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X
+								+ this.TargetOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y
+								+ this.TargetOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
 				local _stickValue := _stick.StickValue
 				if (Abs(_stickValue.X) > _stick.MaxValue.X)
@@ -615,22 +625,29 @@ class Controller
 						_stickValue.Y := -_stick.MaxValue.Y
 				}
 
-				local _radius := new Vector2()
+				local _radius
+					:= new Vector2(this.TargetRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								, this.TargetRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+
 				if (Abs(_stickValue.X) >= Abs(_stickValue.Y))
 				{
-					_radius.X := this.TargetRadius.X * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-					_radius.Y := this.TargetRadius.Y * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+					_radius.Width
+						:= _radius.Width * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+					_radius.Height
+						:= _radius.Height * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 				}
 				else
 				{
-					_radius.X := this.TargetRadius.X * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-					_radius.Y := this.TargetRadius.Y * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
+					_radius.Width
+						:= _radius.Width * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
+					_radius.Height
+						:= _radius.Height * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
 				}
 
-				this.TargetPos.X := _centerOffset.X + (_radius.X *_radius.Y)
-								/ Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-				this.TargetPos.Y := _centerOffset.Y + (_radius.X * _radius.Y * Tan(-_stick.StickAngleRad))
-								/ Sqrt((_radius.Y ** 2) + (_radius.X ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
+				this.TargetPos.X := _centerOffset.X + (_radius.Width *_radius.Height)
+								/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(_stick.StickAngleRad) ** 2))
+				this.TargetPos.Y := _centerOffset.Y + (_radius.Width * _radius.Height * Tan(-_stick.StickAngleRad))
+								/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
 
 				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
 				{
@@ -709,7 +726,7 @@ class Controller
 
 		if (this.ShowCursorModeNotification)
 		{
-			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("Freedom"))
+			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("CursorMode"))
 
 			Graphics.DrawToolTip("Cursor Mode: Enabled `n"
 								. _controlInfo.Act . " the " _controlInfo.Control.Name . " on the controller to disable"
@@ -798,8 +815,9 @@ class Controller
 
 		local _isSpecial
 			:= !p_Keybind.Modifier
-			and (p_Keybind.Action = "Freedom" or p_Keybind.Action = "Loot"
-			or p_Keybind.Action = "FreeTarget" or p_Keybind.Action = "Inventory")
+			and (p_Keybind.Action = "CursorMode" or p_Keybind.Action = "Loot"
+			or p_Keybind.Action = "FreeTarget" or p_Keybind.Action = "Inventory"
+			or p_Keybind.Action = "SwapSticks")
 
 		local i, _control
 		if (_isSpecial)
@@ -816,22 +834,26 @@ class Controller
 		For i, _control in this.Controls
 		{
 			local _isSpecialAction
-				:= _control.Controlbind.OnPress.Action = "Freedom" or _control.Controlbind.OnPress.Action = "Loot"
+				:= _control.Controlbind.OnPress.Action = "CursorMode" or _control.Controlbind.OnPress.Action = "Loot"
 				or _control.Controlbind.OnPress.Action = "FreeTarget" or _control.Controlbind.OnPress.Action = "Inventory"
+				or _control.Controlbind.OnPress.Action = "SwapSticks"
 			local _isSpecialModifier
-				:= _control.Controlbind.OnPress.Modifier = "Freedom" or _control.Controlbind.OnPress.Modifier = "Loot"
+				:= _control.Controlbind.OnPress.Modifier = "CursorMode" or _control.Controlbind.OnPress.Modifier = "Loot"
 				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
+				or _control.Controlbind.OnPress.Modifier = "SwapSticks"
 
 			if ((_isSpecialAction or _control.Controlbind.OnPress.Action = p_Keybind.Action)
 			and (_isSpecialModifier or _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier))
 				return new ControlInfo(_control, "Press")
 
 			_isSpecialAction
-				:= _control.Controlbind.OnPress.Action = "Freedom" or _control.Controlbind.OnPress.Action = "Loot"
+				:= _control.Controlbind.OnPress.Action = "CursorMode" or _control.Controlbind.OnPress.Action = "Loot"
 				or _control.Controlbind.OnPress.Action = "FreeTarget" or _control.Controlbind.OnPress.Action = "Inventory"
+				or _control.Controlbind.OnPress.Action = "SwapSticks"
 			_isSpecialModifier
-				:= _control.Controlbind.OnPress.Modifier = "Freedom" or _control.Controlbind.OnPress.Modifier = "Loot"
+				:= _control.Controlbind.OnPress.Modifier = "CursorMode" or _control.Controlbind.OnPress.Modifier = "Loot"
 				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
+				or _control.Controlbind.OnPress.Modifier = "SwapSticks"
 
 			if ((_isSpecialAction or _control.Controlbind.OnHold.Action = p_Keybind.Action)
 			and (_isSpecialModifier or _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier))
