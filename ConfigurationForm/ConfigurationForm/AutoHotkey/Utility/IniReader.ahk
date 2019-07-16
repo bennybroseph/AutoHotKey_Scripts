@@ -8,11 +8,14 @@ class ConfigSection
 }
 class ProfileSection
 {
-	static Keybindings 	:= "Keybindings"
 	static Preferences 	:= "Preferences"
 	static AnalogStick 	:= "Analog Stick"
 	static Inventory 	:= "Inventory"
 	static ImageOverlay	:= "Image Overlay"
+}
+class KeybindingSection
+{
+	static Keybindings := "Keybindings"
 }
 
 class IniReader
@@ -29,9 +32,10 @@ class IniReader
 
     __New()
     {
-        this.m_ConfigPath := "config.ini"
+        this.m_ConfigPath := A_WorkingDir . "\" . "config.ini"
 
-        this.m_ProfilePath := A_WorkingDir . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Location")
+        this.m_ProfilePath := A_WorkingDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Path")
+		this.m_KeybindingPath := A_WorkingDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Keybinding_Path")
     }
 
 	ConfigPath[]
@@ -46,6 +50,12 @@ class IniReader
             return this.__singleton.m_ProfilePath
         }
     }
+	KeybindingPath[]
+	{
+		get {
+			return this.__singleton.m_KeybindingPath
+		}
+	}
 
     ReadKey(p_IniPath, p_Section, p_Key)
     {
@@ -75,6 +85,10 @@ class IniReader
     {
         return this.ReadKey(this.ProfilePath, p_Section, p_Key)
     }
+	ReadKeybindingKey(p_Section, p_Key)
+	{
+		return this.ReadKey(this.KeybindingPath, p_Section, p_Key)
+	}
 
 	WriteKey(p_Value, p_IniPath, p_Section, p_Key)
 	{
@@ -104,7 +118,7 @@ class IniReader
     }
     ParseControlbind(p_Key)
     {
-        local _controlbindString := this.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+        local _controlbindString := this.ReadKeybindingKey(KeybindingSection.Keybindings, p_Key)
 
         ; Returns an error when the requested key is not in the current profile
         if (_controlbindString = "ERROR")
@@ -138,7 +152,7 @@ class IniReader
     }
     ParseKeybindArray(p_Key)
     {
-		local _keybindArrayString := this.ReadProfileKey(ProfileSection.Keybindings, p_Key)
+		local _keybindArrayString := this.ReadKeybindingKey(KeybindingSection.Keybindings, p_Key)
 
 		if (_keybindArrayString = "ERROR")
 		{

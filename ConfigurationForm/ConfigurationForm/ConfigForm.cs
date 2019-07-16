@@ -9,6 +9,7 @@
     using System.Windows.Forms;
     using System.IO;
     using System.Text.RegularExpressions;
+    using System.Runtime.InteropServices;
 
     using BrightIdeasSoftware;
 
@@ -16,43 +17,102 @@
 
     public partial class ConfigForm : Form
     {
-        private const string CONFIG_PATH = "AutoHotkey\\config.ini";
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
+        private const int WM_SETREDRAW = 11;
 
-        private string m_DefaultsPath = Directory.GetCurrentDirectory() + "\\Profiles\\Defaults\\";
-        private string m_DefaultProfilePath;
-        private string m_ProfilesDirectory = Directory.GetCurrentDirectory() + "\\Profiles\\";
+        private class IniTypeInfo
+        {
+            public string name;
 
-        private string m_ChosenIniPath;
+            public string configKey;
+
+            public string directoryPath;
+            public string defaultPath;
+
+            public ComboBox comboBox;
+
+            public Button newButton;
+            public Button setButton;
+            public Button defaultButton;
+
+            public string selectedIniPath;
+
+            public IniTypeInfo(string newName)
+            {
+                name = newName;
+
+                configKey = name + "_Path";
+
+                directoryPath = sm_SettingsDirectory + name + "s\\";
+                defaultPath = sm_DefaultsDirectory + name.ToLower() + ".ini";
+            }
+        }
+
+        private const string SCRIPT_DIRECTORY = "AutoHotkey\\";
+        private const string CONFIG_PATH = SCRIPT_DIRECTORY + "config.ini";
+        private const string SCRIPT_PATH = SCRIPT_DIRECTORY + "Joystick to Keyboard Emulation.exe";
+
+        private static readonly string sm_DefaultsDirectory =
+            Directory.GetCurrentDirectory() + "\\Settings\\Defaults\\";
+
+        private static readonly string sm_SettingsDirectory = Directory.GetCurrentDirectory() + "\\Settings\\";
+
+        private static readonly string sm_ScriptLocation = Directory.GetCurrentDirectory() + "\\AutoHotkey\\";
+
+        private readonly List<IniTypeInfo> m_IniTypeInfo;
 
         private TabControl m_TabControl;
-        private Point m_TabControlPoint = new Point(5, 30);
-        private Size m_TabControlOffset = new Size(23, 115);
+        private readonly Point m_TabControlPoint;
+        private readonly Size m_TabControlOffset;
 
-        private IniData m_IniData;
+        private string m_SelectedIniPath;
+
+        private IniData m_SelectedIniData;
 
         public ConfigForm()
         {
             InitializeComponent();
 
-            CenterToScreen();
+            m_IniTypeInfo = new List<IniTypeInfo>
+            {
+                new IniTypeInfo("Profile")
+                {
+                    comboBox = profilesComboBox,
 
-            PopulateComboBox();
+                    newButton = newProfileIniButton,
+                    setButton = setProfileButton,
+                    defaultButton = profileDefaultButton,
+                },
+                new IniTypeInfo("Keybinding")
+                {
+                    comboBox = keybindingsComboBox,
 
-            openFileDialog.InitialDirectory = m_ProfilesDirectory;
-            openFileDialog.Filter = "INI Files|*.ini";
+                    newButton = newKeybindingIniButton,
+                    setButton = setKeybindingButton,
+                    defaultButton = keybindingDefaultButton,
+                },
+            };
 
-            m_DefaultProfilePath = m_DefaultsPath + "profile.ini";
+            foreach (var iniTypeInfo in m_IniTypeInfo)
+                PopulateComboBox(iniTypeInfo);
+
+            openFileDialog.InitialDirectory = sm_SettingsDirectory;
+            openFileDialog.Filter = @"INI Files|*.ini";
+
+            m_TabControlPoint = new Point(5, tableLayoutPanel2.Size.Height);
+            m_TabControlOffset = new Size(5, tableLayoutPanel2.Size.Height + tableLayoutPanel1.Size.Height);
         }
 
-        private void PopulateComboBox()
+        private void PopulateComboBox(IniTypeInfo iniTypeInfo)
         {
-            if (!Directory.Exists(m_ProfilesDirectory))
+            if (!Directory.Exists(iniTypeInfo.directoryPath))
             {
                 var message =
                     "The folder \"Profiles\" was not found in " + Directory.GetCurrentDirectory();
                 MessageBox.Show(
                     message,
-                    "Error",
+                    @"Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
@@ -60,17 +120,15 @@
                 throw new Exception(message);
             }
 
-            var filePaths = Directory.GetFiles(m_ProfilesDirectory);
-
-
+            var filePaths = GetAllFiles(iniTypeInfo.directoryPath).ToArray();
             if (!filePaths.Any())
             {
                 var message =
-                    "The folder:\n\n\"" + m_ProfilesDirectory + "\"\n\nhas no valid configuration files " +
+                    "The folder:\n\n\"" + iniTypeInfo.directoryPath + "\"\n\nhas no valid configuration files " +
                     "(files ending in \".ini\")";
                 MessageBox.Show(
                     message,
-                    "Error",
+                    @"Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
@@ -78,14 +136,13 @@
                 throw new Exception(message);
             }
 
-            var iniFiles =
-                Directory.GetFiles(m_ProfilesDirectory).Where(file => file.EndsWith(".ini")).ToArray();
+            var iniFiles = filePaths.Where(file => file.EndsWith(".ini")).ToArray();
             if (!iniFiles.Any())
             {
                 MessageBox.Show(
                     "There are no configuration files (files ending in \".ini\") in\n\n\"" +
-                    m_ProfilesDirectory + "\"",
-                    "Error",
+                        sm_SettingsDirectory + "\"",
+                    @"Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
@@ -96,25 +153,27 @@
             var fileDisplayNames =
                 iniFiles.Select(
                         file => file.Substring(
-                            file.IndexOf(
-                                m_ProfilesDirectory, StringComparison.Ordinal) + m_ProfilesDirectory.Length)).
+                            file.IndexOf(iniTypeInfo.directoryPath, StringComparison.Ordinal)
+                            + iniTypeInfo.directoryPath.Length)).
                     Cast<object>().ToArray();
 
-            profileComboBox.Items.Clear();
-            profileComboBox.Items.AddRange(fileDisplayNames);
+            iniTypeInfo.comboBox.ResetText();
+            iniTypeInfo.comboBox.Items.Clear();
+            iniTypeInfo.comboBox.Items.AddRange(fileDisplayNames);
         }
 
-        private void AddComponents()
+        private void RefreshComponents()
         {
-            if (m_TabControl != null)
-                Controls.Remove(m_TabControl);
-
-            if (m_ChosenIniPath == null)
+            if (m_SelectedIniPath == null)
                 return;
 
-            SuspendLayout();
+            var newToolTip = new ToolTip { UseFading = false };
+            newToolTip.Show("Updating...", this, 0, 0);
 
-            m_IniData = IniParserHelper.ParseIni(m_ChosenIniPath);
+            SendMessage(Handle, WM_SETREDRAW, false, 0);
+
+            if (m_TabControl != null)
+                Controls.Remove(m_TabControl);
 
             m_TabControl =
                 new TabControl
@@ -122,51 +181,65 @@
                     Location = m_TabControlPoint,
                     Size =
                         new Size(
-                            Size.Width - m_TabControlOffset.Width,
-                            Size.Height - m_TabControlOffset.Height),
+                            ClientSize.Width - m_TabControlOffset.Width,
+                            ClientSize.Height - m_TabControlOffset.Height),
                 };
             Controls.Add(m_TabControl);
 
-            foreach (var sectionData in m_IniData.Sections)
+            foreach (var sectionData in m_SelectedIniData.Sections)
                 m_TabControl.TabPages.Add(new MyTabPage(sectionData));
 
-            ResumeLayout(true);
-            Refresh();
+            m_TabControl.SelectedIndex = 0;
+
+            SendMessage(Handle, WM_SETREDRAW, true, 0);
+
+            newToolTip.Hide(this);
         }
 
-        private void SetInConfig()
+        private void SetInConfig(IniTypeInfo iniTypeInfo)
         {
-            if (m_ChosenIniPath == null)
+            if (iniTypeInfo.selectedIniPath == null)
+            {
+                MessageBox.Show("No file selected", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
+            }
 
             var foundKey = false;
 
             var data = IniParserHelper.ParseIni(CONFIG_PATH);
             foreach (var sectionData in data.Sections)
             {
+                if (foundKey)
+                    break;
+
                 foreach (var sectionDataKey in sectionData.Keys)
                 {
-                    if (sectionDataKey.KeyName == "Profile_Location")
-                    {
-                        var fileUri = new Uri(m_ChosenIniPath);
-                        var referenceUri = new Uri(Directory.GetCurrentDirectory() + "\\AutoHotkey\\");
+                    if (sectionDataKey.KeyName != iniTypeInfo.configKey)
+                        continue;
 
-                        var relative =
-                            "\\" + referenceUri.MakeRelativeUri(fileUri).ToString().Replace('/', '\\');
-                        sectionDataKey.Value = relative;
+                    var relative = GetRelativePath(iniTypeInfo.selectedIniPath, sm_ScriptLocation);
+                    sectionDataKey.Value = relative;
+                    foundKey = true;
 
-                        foundKey = true;
-                    }
+                    break;
                 }
             }
-            
+
             if (!foundKey)
+            {
+                MessageBox.Show(
+                    "Couldn't find \"" + iniTypeInfo.configKey + "\" within " + CONFIG_PATH,
+                    @"Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
                 return;
+            }
 
             IniParserHelper.SaveIni(CONFIG_PATH, data);
 
             var newToolTip = new ToolTip();
-            newToolTip.Show("Profile Set", this, 10, Size.Height - 55, 3000);
+            newToolTip.Show(iniTypeInfo.name + " Set", this, 5, 0, 3000);
         }
 
         protected override void OnResize(EventArgs e)
@@ -176,8 +249,8 @@
             if (m_TabControl == null)
                 return;
 
-            m_TabControl.Width = Size.Width - m_TabControlOffset.Width;
-            m_TabControl.Height = Size.Height - m_TabControlOffset.Height;
+            m_TabControl.Width = ClientSize.Width - m_TabControlOffset.Width;
+            m_TabControl.Height = ClientSize.Height - m_TabControlOffset.Height;
 
             PerformLayout();
             Refresh();
@@ -187,15 +260,15 @@
         {
             base.OnClosing(e);
 
-            if (m_ChosenIniPath == null)
+            if (m_SelectedIniPath == null)
                 return;
 
-            IniParserHelper.PrintIniData(m_IniData);
+            IniParserHelper.PrintIniData(m_SelectedIniData);
 
             var result =
                 MessageBox.Show(
                     "Would you like to save first?",
-                    "Quit",
+                    @"Quit",
                     MessageBoxButtons.YesNoCancel,
                     MessageBoxIcon.Question);
 
@@ -203,141 +276,19 @@
                 e.Cancel = true;
 
             if (result == DialogResult.Yes)
-                IniParserHelper.SaveIni(m_ChosenIniPath, m_IniData);
+                IniParserHelper.SaveIni(m_SelectedIniPath, m_SelectedIniData);
         }
 
-        private void saveButton_Click(object sender, EventArgs e)
+        private void OpenIni(string newIniPath)
         {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            if (m_ChosenIniPath == null)
-            {
-                MessageBox.Show("No file selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            IniParserHelper.SaveIni(m_ChosenIniPath, m_IniData);
-
-            var newToolTip = new ToolTip();
-            newToolTip.Show("INI Saved", this, 10, Size.Height - 55, 3000);
-        }
-        private void cancelButton_Click(object sender, EventArgs e)
-        {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            if (m_ChosenIniPath == null)
-                Application.Exit();
-
-            var result =
-                MessageBox.Show(
-                    "Are you sure you want to exit? Unsaved changes will be lost!",
-                    "Cancel",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
-                Application.Exit();
-        }
-        private void openIniButton_Click(object sender, EventArgs e)
-        {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            var result = openFileDialog.ShowDialog();
-            PopulateComboBox(); // In case the user moves/deletes files 
-
-            if (result == DialogResult.OK)
-            {
-                m_ChosenIniPath = openFileDialog.FileName;
-
-                AddComponents();
-            }
-        }
-        private void newIniButton_Click(object sender, EventArgs e)
-        {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            var inputDialogueForm = new InputDialogueForm("What will you name the new file?");
-            inputDialogueForm.ShowDialog(this);
-
-            if (inputDialogueForm.dialogResult != DialogResult.OK || inputDialogueForm.text == null)
-                return;
-
-            var newFilePath = m_ProfilesDirectory + inputDialogueForm.text + ".ini";
-            if (File.Exists(newFilePath))
-            {
-                MessageBox.Show(
-                    "A file with that name already exists!",
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
-            }
-
-            File.Copy(m_DefaultProfilePath, m_ProfilesDirectory + inputDialogueForm.text + ".ini");
-            PopulateComboBox();
-        }
-        private void defaultButton_Click(object sender, EventArgs e)
-        {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            var result =
-                MessageBox.Show(
-                    "This will overwrite ALL values in this file with the default ones.\n" +
-                    "Are you SURE?",
-                    "Warning",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-            if (result != DialogResult.Yes)
-                return;
-
-            File.Copy(m_DefaultProfilePath, m_ChosenIniPath, true);
-            AddComponents();
-        }
-        private void setProfileButton_Click(object sender, EventArgs e)
-        {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            if (m_ChosenIniPath == null)
-            {
-                MessageBox.Show("No file selected", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            SetInConfig();
-        }
-        private void launchButton_Click(object sender, EventArgs e)
-        {
-            var mouseEventArgs = e as MouseEventArgs;
-            if (mouseEventArgs == null || mouseEventArgs.Button != MouseButtons.Left)
-                return;
-
-            var ahkPath =
-                Directory.GetCurrentDirectory() + "\\AutoHotkey\\Joystick to Keyboard Emulation.exe";
-            Process.Start(ahkPath);
-        }
-
-        private void profileComboBox_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            m_ChosenIniPath = m_ProfilesDirectory + profileComboBox.SelectedItem;
-            if (m_ChosenIniPath != null && !File.Exists(m_ChosenIniPath))
+            m_SelectedIniPath = newIniPath;
+            if (m_SelectedIniPath != null && !File.Exists(m_SelectedIniPath))
             {
                 var message =
-                    "The selected file \n\n\"" + m_ChosenIniPath + "\"\n\n does not exist or is invalid";
+                    "The selected file \n\n\"" + m_SelectedIniPath + "\"\n\n does not exist or is invalid";
                 MessageBox.Show(
                     message,
-                    "Error",
+                    @"Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
 
@@ -345,13 +296,196 @@
                 throw new Exception(message);
             }
 
-            AddComponents();
+            m_SelectedIniData = IniParserHelper.ParseIni(m_SelectedIniPath);
+            RefreshComponents();
+
+            Text = GetRelativePath(m_SelectedIniPath, Directory.GetCurrentDirectory());
+        }
+
+        private void OpenIni(IniTypeInfo iniTypeInfo)
+        {
+            OpenIni(iniTypeInfo.selectedIniPath);
+            iniTypeInfo.comboBox.Text = GetRelativePath(iniTypeInfo.selectedIniPath, iniTypeInfo.directoryPath);
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            if (m_SelectedIniPath == null)
+            {
+                MessageBox.Show("No file selected", @"Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            IniParserHelper.SaveIni(m_SelectedIniPath, m_SelectedIniData);
+
+            var newToolTip = new ToolTip();
+            newToolTip.Show("INI Saved", this, 10, Size.Height - 55, 3000);
+        }
+        private void cancelButton_Click(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            if (m_SelectedIniPath == null)
+                Application.Exit();
+
+            var result =
+                MessageBox.Show(
+                    "Are you sure you want to exit? Unsaved changes will be lost!",
+                    @"Cancel",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+                Application.Exit();
+        }
+        private void openIniButton_Click(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            var result = openFileDialog.ShowDialog();
+
+            // In case the user moves/deletes files
+            foreach (var iniTypeInfo in m_IniTypeInfo)
+                PopulateComboBox(iniTypeInfo);
+
+            if (result == DialogResult.OK)
+                OpenIni(openFileDialog.FileName);
+        }
+
+        private void CreateNewIni(IniTypeInfo iniTypeInfo)
+        {
+            var inputDialogueForm = new InputDialogueForm("What will you name the new file?");
+            inputDialogueForm.ShowDialog(this);
+
+            if (inputDialogueForm.dialogResult != DialogResult.OK || inputDialogueForm.text == null)
+                return;
+
+            var newFilePath = iniTypeInfo.directoryPath + inputDialogueForm.text + ".ini";
+            if (File.Exists(newFilePath))
+            {
+                MessageBox.Show(
+                    @"A file with that name already exists!",
+                    @"Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            File.Copy(iniTypeInfo.defaultPath, newFilePath);
+            iniTypeInfo.selectedIniPath = newFilePath;
+
+            PopulateComboBox(iniTypeInfo);
+            OpenIni(iniTypeInfo);
+        }
+        private void NewIniButtonClick(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            var iniTypeInfo = m_IniTypeInfo.First(x => x.newButton == sender);
+            CreateNewIni(iniTypeInfo);
+        }
+        private void DefaultButtonClick(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            var result =
+                MessageBox.Show(
+                    "This will overwrite ALL values in this file with the default ones.\n" +
+                    "Are you SURE?",
+                    @"Warning",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            var iniTypeInfo = m_IniTypeInfo.First(x => x.defaultButton == sender);
+            File.Copy(iniTypeInfo.defaultPath, iniTypeInfo.selectedIniPath, true);
+
+            OpenIni(iniTypeInfo);
+        }
+        private void SetButtonClick(object sender, EventArgs e)
+        {
+            if (!(e is MouseEventArgs mouseEventArgs) || mouseEventArgs.Button != MouseButtons.Left)
+                return;
+
+            var iniTypeInfo = m_IniTypeInfo.First(x => x.setButton == sender);
+            SetInConfig(iniTypeInfo);
+        }
+        private void launchButton_Click(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            Process.Start(SCRIPT_PATH);
+        }
+
+        private static IEnumerable<string> GetAllFiles(string path)
+        {
+            var files = new List<string>();
+            try
+            {
+                files.AddRange(Directory.GetFiles(path));
+
+                foreach (var dir in Directory.GetDirectories(path))
+                    files.AddRange(GetAllFiles(dir));
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
+            }
+
+            return files;
+        }
+
+        string GetRelativePath(string filePath, string relativeLocation)
+        {
+            var pathUri = new Uri(filePath);
+            // Folders must end in a slash
+            if (!relativeLocation.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                relativeLocation += Path.DirectorySeparatorChar;
+            }
+            var folderUri = new Uri(relativeLocation);
+            return
+                Uri.UnescapeDataString(
+                    folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+        }
+
+        private void SelectedValueChanged(object sender, EventArgs e)
+        {
+            if (!(sender is ComboBox))
+                return;
+
+            var iniTypeInfo = m_IniTypeInfo.First(x => x.comboBox == sender);
+            iniTypeInfo.selectedIniPath = iniTypeInfo.directoryPath + iniTypeInfo.comboBox.SelectedItem;
+
+            OpenIni(iniTypeInfo.selectedIniPath);
+        }
+
+        private void OpenConfigButton_Click(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            OpenIni(Directory.GetCurrentDirectory() + "\\" + CONFIG_PATH);
+        }
+
+        private bool IsLeftClick(EventArgs e)
+        {
+            return e is MouseEventArgs mouseEventArgs && mouseEventArgs.Button == MouseButtons.Left;
         }
     }
 
     public class MyTabPage : TabPage
     {
-        private SectionData m_SectionData;
+        private readonly SectionData m_SectionData;
 
         public MyTabPage(SectionData sectionData)
         {
@@ -390,7 +524,7 @@
         const string REGEX_URL =
         @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)";
 
-        private SectionData m_SectionData;
+        private readonly SectionData m_SectionData;
 
         public MyTableLayoutPanel(SectionData sectionData)
         {
@@ -514,6 +648,11 @@
                 listView.Height = 28 + listView.Items.Count * 17;
         }
 
+        /// <summary>
+        /// Called whenever a cell is edited. Assists in keeping the values of the same type they were read in as
+        /// </summary>
+        /// <param name="sender">The control which owns the edited cell</param>
+        /// <param name="cellEditEventArgs">The event object</param>
         private void HandleCellEditStarting(object sender, CellEditEventArgs cellEditEventArgs)
         {
             var stringValue = cellEditEventArgs.Value as string;

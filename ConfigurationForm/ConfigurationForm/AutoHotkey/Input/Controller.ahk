@@ -126,7 +126,7 @@ class Controller
 		this.m_ShowFreeTargetModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_FreeTarget_Mode_Notification")
 
-        this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadProfileKey(ProfileSection.Keybindings, "Force_Move"))
+        this.m_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadKeybindingKey(KeybindingSection.Keybindings, "Force_Move"))
         this.m_Moving 			:= False
         this.m_ForceMouseUpdate := True
 

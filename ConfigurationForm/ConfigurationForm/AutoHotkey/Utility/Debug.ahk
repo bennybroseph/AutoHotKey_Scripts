@@ -154,7 +154,7 @@ class Debug
 	}
 	Enable()
 	{
-		Graphics.DrawToolTip("Debug mode enabled `nPress F3 to disable", 0, 40, 5)
+		Graphics.DrawToolTip("Debug mode enabled `nPress F3 to disable", 0, 50, 5)
 		this.UpdateLog := True
 
 		this.Enabled := True

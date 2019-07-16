@@ -75,6 +75,7 @@
             this.textInputBox.Name = "textInputBox";
             this.textInputBox.Size = new System.Drawing.Size(264, 20);
             this.textInputBox.TabIndex = 5;
+            this.textInputBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextInputBox_KeyDown);
             // 
             // tableLayoutPanel1
             // 

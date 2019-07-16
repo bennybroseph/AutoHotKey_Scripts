@@ -16,13 +16,17 @@
             dialogueLabel.Text = dialogueText;
         }
 
+        private void SetText()
+        {
+            dialogResult = DialogResult.OK;
+            text = textInputBox.Text.Replace(' ', '_');
+        }
         private void OkButton_MouseClick(object sender, MouseEventArgs mouseEventArgs)
         {
             if (mouseEventArgs.Button != MouseButtons.Left)
                 return;
 
-            dialogResult = DialogResult.OK;
-            text = textInputBox.Text;
+            SetText();
             Close();
         }
 
@@ -31,6 +35,15 @@
             if (mouseEventArgs.Button != MouseButtons.Left)
                 return;
 
+            Close();
+        }
+
+        private void TextInputBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyData != Keys.Enter)
+                return;
+
+            SetText();
             Close();
         }
     }
