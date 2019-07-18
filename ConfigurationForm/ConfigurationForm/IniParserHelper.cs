@@ -1,4 +1,6 @@
-﻿namespace ConfigurationForm
+﻿using System.Text;
+
+namespace ConfigurationForm
 {
     using System.Diagnostics;
 
@@ -10,7 +12,7 @@
         public static IniData ParseIni(string iniPath)
         {
             var parser = new FileIniDataParser { Parser = { Configuration = { CommentString = ";" } } };
-            var data = parser.ReadFile(iniPath);
+            var data = parser.ReadFile(iniPath, Encoding.Default);
 
             return data;
         }
@@ -18,7 +20,7 @@
         public static void SaveIni(string iniPath, IniData iniData)
         {
             var parser = new FileIniDataParser{ Parser = { Configuration = { CommentString = ";" } } };
-            parser.WriteFile(iniPath, iniData);
+            parser.WriteFile(iniPath, iniData, Encoding.Default);
         }
 
         public static void PrintIniData(IniData iniData)

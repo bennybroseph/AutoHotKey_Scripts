@@ -157,7 +157,6 @@
                             + iniTypeInfo.directoryPath.Length)).
                     Cast<object>().ToArray();
 
-            iniTypeInfo.comboBox.ResetText();
             iniTypeInfo.comboBox.Items.Clear();
             iniTypeInfo.comboBox.Items.AddRange(fileDisplayNames);
         }
@@ -194,6 +193,7 @@
             SendMessage(Handle, WM_SETREDRAW, true, 0);
 
             newToolTip.Hide(this);
+            Refresh();
         }
 
         private void SetInConfig(IniTypeInfo iniTypeInfo)

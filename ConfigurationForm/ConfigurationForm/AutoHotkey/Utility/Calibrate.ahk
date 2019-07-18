@@ -112,14 +112,14 @@ Calibrate()
 			. "If for any reason you think these values are incorrect, you can either edit them yourself (not recommended) "
 			. "or set 'Calibrate = true' in " . IniReader.ConfigPath . " to 'true' to run this again."
 
-	IniReader.WriteConfigKey(_maxValueL, ConfigSection.Calibration, "Left_Analog_Max")
-	IniReader.WriteConfigKey(_maxValueR, ConfigSection.Calibration, "Right_Analog_Max")
+	IniReader.WriteConfigKey(_maxValueL, ConfigSection.Calibration, "Left_Analog_Max_Value")
+	IniReader.WriteConfigKey(_maxValueR, ConfigSection.Calibration, "Right_Analog_Max_Value")
 
-	IniReader.WriteConfigKey(_minValueL.X, ConfigSection.Calibration, "Left_Analog_XZero")
-	IniReader.WriteConfigKey(_minValueL.Y, ConfigSection.Calibration, "Left_Analog_YZero")
+	IniReader.WriteConfigKey(_minValueL.X, ConfigSection.Calibration, "Left_Analog_Zero_Offset_X")
+	IniReader.WriteConfigKey(_minValueL.Y, ConfigSection.Calibration, "Left_Analog_Zero_Offset_Y")
 
-	IniReader.WriteConfigKey(_minValueR.X, ConfigSection.Calibration, "Right_Analog_XZero")
-	IniReader.WriteConfigKey(_minValueR.Y, ConfigSection.Calibration, "Right_Analog_YZero")
+	IniReader.WriteConfigKey(_minValueR.X, ConfigSection.Calibration, "Right_Analog_Zero_Offset_X")
+	IniReader.WriteConfigKey(_minValueR.Y, ConfigSection.Calibration, "Right_Analog_Zero_Offset_Y")
 
 	IniReader.WriteConfigKey("false", ConfigSection.Calibration, "Calibrate")
 }

@@ -187,17 +187,18 @@ class Stick extends Control
 		this.m_StickAngleRad := new Vector2()
 
 		this.m_MaxValue
-			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max")
-						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max"))
-		this.m_MinValue
-			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_XZero")
-						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_YZero"))
+			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max_Value")
+						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max_Value"))
+
+		this.m_ZeroOffset
+			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Zero_Offset_X")
+						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Zero_Offset_Y"))
 
 		this.m_Deadzone := IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Deadzone")
 
 		this.m_Sensitivity
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_XSensitivity")
-						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_YSensitivity"))
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_Sensitivity_X")
+						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_Sensitivity_Y"))
 	}
 
 	StickValue[]
@@ -239,10 +240,10 @@ class Stick extends Control
 			return this.m_MaxValue
 		}
 	}
-	MinValue[]
+	ZeroOffset[]
 	{
 		get {
-			return this.m_MinValue
+			return this.m_ZeroOffset
 		}
 	}
 
@@ -266,8 +267,8 @@ class Stick extends Control
 
 		this.m_PrevStickValue := new Vector2(this.m_StickValue.X, this.m_StickValue.Y)
 
-		this.m_StickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) - this.m_MinValue.X
-		this.m_StickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) - this.m_MinValue.Y
+		this.m_StickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) - this.m_ZeroOffset.X
+		this.m_StickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) - this.m_ZeroOffset.Y
 
 		this.m_StickDelta.X := (this.m_StickValue.X - this.m_PrevStickValue.X) * this.m_Sensitivity.X
 		this.m_StickDelta.Y := (this.m_StickValue.Y - this.m_PrevStickValue.Y) * this.m_Sensitivity.Y

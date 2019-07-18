@@ -151,7 +151,7 @@ class Graphics
 		if (this.ActiveWinStats.Size.Height > 1080)
 			ToolTipFont("s10")
 
-		Debug.AddToOnTooltip(new Delegate(Graphics, "OnTooltip"))
+		Debug.AddToOnToolTip(new Delegate(Graphics, "OnToolTip"))
 		Graphics.__init := False
 	}
 
@@ -324,6 +324,9 @@ class Graphics
 
 		local _imageScale := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale")
 		_imageScale := _imageScale * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
+
+		local _imageSet := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Set")
+		local _imageSetSize := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Set_Size")
 		Loop
 		{
 			local _newImageKey := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Keybind")
@@ -332,8 +335,8 @@ class Graphics
 
 			local _newImageKeybind := IniReader.ParseKeybind(_newImageKey)
 			local _newImagePos
-				:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_XPos")
-							, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_YPos"))
+				:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Pos_X")
+							, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Pos_Y"))
 
 			_newImagePos.X := _newImagePos.X * (this.ActiveWinStats.Size.Width / _baseResolution.Width)
 			_newImagePos.Y := _newImagePos.Y * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
@@ -345,14 +348,17 @@ class Graphics
 
 			local _controlInfo := Controller.FindControlInfo(_newImageKeybind)
 
-			local _newImagePath := "Images\Xbox\" . _controlInfo.Act . "\128\" . _controlInfo.Control.Key . ".png"
+			local _newImagePath
+				:= "Images\" . _imageSet . "\" . _controlInfo.Act . "\" . _imageSetSize . "\" . _controlInfo.Control.Key . ".png"
 			local _newImage := new Image(_newImagePath, _imageScale, _newImageBackground)
+
+			Debug.AddToLog(_controlInfo.Control.Key)
 
 			this.DrawImage(_newImage, _newImagePos)
 		}
 	}
 
-	OnTooltip()
+	OnToolTip()
 	{
 		local _debugText
 			:= "'" . this.ActiveWinStats.Title . "' "

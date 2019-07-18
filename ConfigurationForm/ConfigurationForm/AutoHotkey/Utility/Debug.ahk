@@ -18,13 +18,13 @@ class Debug
 
 		this.m_StartupTick := A_TickCount
 
-		this.m_TooltipPos	:= new Vector2()
-		this.m_TooltipSize	:= new Vector2()
+		this.m_ToolTipPos	:= new Vector2()
+		this.m_ToolTipSize	:= new Vector2()
 
 		this.m_LogEntries := Array()
 		this.m_UpdateLog := True
 
-		this.m_OnTooltip := Array()
+		this.m_OnToolTip := Array()
 	}
 
 	CurrentTickDelta[]
@@ -60,16 +60,16 @@ class Debug
 		}
 	}
 
-	TooltipPos[]
+	ToolTipPos[]
 	{
 		get {
-			return this.__singleton.m_TooltipPos
+			return this.__singleton.m_ToolTipPos
 		}
 	}
-	TooltipSize[]
+	ToolTipSize[]
 	{
 		get {
-			return this.__singleton.m_TooltipSize
+			return this.__singleton.m_ToolTipSize
 		}
 	}
 
@@ -89,10 +89,10 @@ class Debug
 		}
 	}
 
-	OnTooltip[]
+	OnToolTip[]
 	{
 		get {
-			return this.__singleton.m_OnTooltip
+			return this.__singleton.m_OnToolTip
 		}
 	}
 
@@ -103,19 +103,16 @@ class Debug
 		local _debugText :=
 
 		local i, _delegate
-		For i, _delegate in this.OnTooltip
+		For i, _delegate in this.OnToolTip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
 		Graphics.DrawToolTip(_debugText, 0, 80, 7)
 
-		if (this.TooltipSize.Width = 0 and this.TooltipSize.Height = 0)
-		{
-			local _x, _y, _w, _h
-			WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
+		local _x, _y, _w, _h
+		WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
 
-			this.TooltipPos		:= new Vector2(_x, _y)
-			this.TooltipSize 	:= new Vector2(_w, _h)
-		}
+		this.ToolTipPos		:= new Vector2(_x, _y)
+		this.ToolTipSize 	:= new Vector2(_w, _h)
 
 		if (this.UpdateLog)
 		{
@@ -124,7 +121,7 @@ class Debug
 			For i, _entry in this.LogEntries
 				_debugLog := _debugLog . _entry . "`n"
 
-			Graphics.DrawToolTip(_debugLog, 0, this.TooltipPos.Y + this.TooltipSize.Height + 5, 8)
+			Graphics.DrawToolTip(_debugLog, 0, this.ToolTipPos.Y + this.ToolTipSize.Height + 5, 8)
 
 			this.UpdateLog := False
 		}
@@ -140,9 +137,9 @@ class Debug
 		this.UpdateLog := True
 	}
 
-	AddToOnTooltip(p_Delegate)
+	AddToOnToolTip(p_Delegate)
 	{
-		this.OnTooltip.Push(p_Delegate)
+		this.OnToolTip.Push(p_Delegate)
 	}
 
 	Toggle()

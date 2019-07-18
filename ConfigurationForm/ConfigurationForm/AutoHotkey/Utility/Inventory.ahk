@@ -11,7 +11,7 @@ class Inventory
 
 		this.__singleton := new Inventory()
 
-		Debug.AddToOnTooltip(new Delegate(Inventory, "OnTooltip"))
+		Debug.AddToOnToolTip(new Delegate(Inventory, "OnToolTip"))
 
 		this.__init := True
 	}
@@ -231,7 +231,7 @@ class Inventory
 		this.Enabled := False
     }
 
-	OnTooltip()
+	OnToolTip()
 	{
 		global
 

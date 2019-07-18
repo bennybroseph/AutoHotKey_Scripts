@@ -23,8 +23,6 @@ class InputHelper
 			Controller.ForceMouseUpdate 	:= True
 			Controller.ForceReticuleUpdate 	:= True
 
-			Controller.StopMoving()
-
 			if (p_Keybind.Type = KeybindType.Targeted)
 			{
 				local _newMousePos := Controller.TargetPos
@@ -37,6 +35,7 @@ class InputHelper
 			}
 			else if (p_Keybind.Type = KeybindType.Movement)
 			{
+				Controller.StopMoving()
 				this.MoveMouse(Controller.MousePos)
 
 				Controller.PressCount.Movement++

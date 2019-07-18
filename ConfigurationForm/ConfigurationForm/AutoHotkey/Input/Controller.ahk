@@ -97,7 +97,7 @@ class Controller
 		For i, _control in this.Controls
 			_control.ParseTargeting()
 
-		Debug.AddToOnTooltip(new Delegate(Controller, "OnTooltip"))
+		Debug.AddToOnToolTip(new Delegate(Controller, "OnToolTip"))
 
 		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
 		if (_cursorModeAtStart)
@@ -205,6 +205,16 @@ class Controller
 
         this.m_MousePos		:= InputHelper.GetMousePos()
         this.m_TargetPos	:= new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
+
+		this.m_BatteryStatus := -1
+		this.m_BatteryImages
+			:= Array(new Image("Images\Battery_Low.png", 0.25)
+					, new Image("Images\Battery_Medium.png", 0.25)
+					, new Image("Images\Battery_High.png", 0.25))
+
+		local i, _batteryImage
+		For i, _batteryImage in this.m_BatteryImages
+			Graphics.HideImage(_batteryImage)
     }
 
     CursorMode[]
@@ -407,6 +417,19 @@ class Controller
         }
     }
 
+	BatteryStatus[]
+	{
+		get {
+			return this.__singleton.m_BatteryStatus
+		}
+	}
+	BatteryImages[]
+	{
+		get {
+			return this.__singleton.m_BatteryImages
+		}
+	}
+
     RefreshState()
     {
         global
@@ -423,6 +446,23 @@ class Controller
 
 			this.LeftStick.RefreshState(_state)
 			this.RightStick.RefreshState(_state)
+
+			local _batteryStatus := XInput_GetBatteryInformation(A_Index - 1, 0)
+			if (_batteryStatus.BatteryType != BATTERY_TYPE_WIRED
+			and _batteryStatus.BatteryLevel != this.BatteryStatus.BatteryLevel)
+			{
+				this.BatteryStatus := _batteryStatus
+
+				local i, _batteryImage
+				For i, _batteryImage in this.BatteryImages
+				{
+					if (this.BatteryStatus.BatteryLevel = i)
+						Graphics.DrawImage(_batteryImage
+										, new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y), False)
+					else
+						Graphics.HideImage(_batteryImage)
+				}
+			}
         }
     }
 
@@ -548,7 +588,9 @@ class Controller
 				if (this.Moving and !this.PressStack.Peek)
 					this.StopMoving()
 
-				this.MousePos := new Vector2(Graphics.ActiveWinStats.Center.X, Graphics.ActiveWinStats.Center.Y)
+				this.MousePos
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
+								, Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
 			}
 
 			if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
@@ -842,26 +884,30 @@ class Controller
 				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
 				or _control.Controlbind.OnPress.Modifier = "SwapSticks"
 
-			if ((_isSpecialAction or _control.Controlbind.OnPress.Action = p_Keybind.Action)
-			and (_isSpecialModifier or _control.Controlbind.OnPress.Modifier = p_Keybind.Modifier))
+			local _onPress := _control.Controlbind.OnPress
+			if ((_isSpecialAction and _onPress.Modifier and _onPress.Modifier = p_Keybind.Modifier)
+			or (_isSpecialModifier and _onPress.Action and _control.Controlbind.OnPress.Action = p_Keybind.Action)
+			or (_onPress.Action = p_Keybind.Action and _onPress.Modifier = p_Keybind.Modifier))
 				return new ControlInfo(_control, "Press")
 
 			_isSpecialAction
-				:= _control.Controlbind.OnPress.Action = "CursorMode" or _control.Controlbind.OnPress.Action = "Loot"
-				or _control.Controlbind.OnPress.Action = "FreeTarget" or _control.Controlbind.OnPress.Action = "Inventory"
-				or _control.Controlbind.OnPress.Action = "SwapSticks"
+				:= _control.Controlbind.OnHold.Action = "CursorMode" or _control.Controlbind.OnHold.Action = "Loot"
+				or _control.Controlbind.OnHold.Action = "FreeTarget" or _control.Controlbind.OnHold.Action = "Inventory"
+				or _control.Controlbind.OnHold.Action = "SwapSticks"
 			_isSpecialModifier
-				:= _control.Controlbind.OnPress.Modifier = "CursorMode" or _control.Controlbind.OnPress.Modifier = "Loot"
-				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
-				or _control.Controlbind.OnPress.Modifier = "SwapSticks"
+				:= _control.Controlbind.OnHold.Modifier = "CursorMode" or _control.Controlbind.OnHold.Modifier = "Loot"
+				or _control.Controlbind.OnHold.Modifier = "FreeTarget" or _control.Controlbind.OnHold.Modifier = "Inventory"
+				or _control.Controlbind.OnHold.Modifier = "SwapSticks"
 
-			if ((_isSpecialAction or _control.Controlbind.OnHold.Action = p_Keybind.Action)
-			and (_isSpecialModifier or _control.Controlbind.OnHold.Modifier = p_Keybind.Modifier))
+			local _onHold := _control.Controlbind.OnHold
+			if ((_isSpecialAction and _onHold.Modifier and _onHold.Modifier = p_Keybind.Modifier)
+			or (_isSpecialModifier and _onHold.Action and _control.Controlbind.OnPress.Action = p_Keybind.Action)
+			or (_onHold.Action = p_Keybind.Action and _onHold.Modifier = p_Keybind.Modifier))
 				return new ControlInfo(_control, "Hold")
 		}
 	}
 
-	OnTooltip()
+	OnToolTip()
 	{
 		local _debugText :=
 
