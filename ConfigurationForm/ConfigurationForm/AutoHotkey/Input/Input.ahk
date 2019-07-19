@@ -190,15 +190,8 @@ class Stick extends Control
 		this.m_StickAngleDeg := new Vector2()
 		this.m_StickAngleRad := new Vector2()
 
-		this.m_MaxValue
-			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max_Value")
-						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max_Value"))
-
-		this.m_ZeroOffset
-			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Zero_Offset_X")
-						,IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Zero_Offset_Y"))
-
-		this.m_Deadzone := IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Deadzone")
+		this.m_MaxValue	:= IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max_Value")
+		this.m_Deadzone := IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Deadzone")
 
 		this.m_Sensitivity
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_Sensitivity_X")
@@ -256,12 +249,6 @@ class Stick extends Control
 			return this.m_MaxValue
 		}
 	}
-	ZeroOffset[]
-	{
-		get {
-			return this.m_ZeroOffset
-		}
-	}
 
 	Deadzone[]
 	{
@@ -292,7 +279,7 @@ class Stick extends Control
 		local _scale := 0
 		if (this.m_RawStickValue.Magnitude > this.m_Deadzone)
 		{
-			local _legalRange := this.m_MaxValue.X - this.m_Deadzone
+			local _legalRange := this.m_MaxValue - this.m_Deadzone
 			local _normalizedMag := Min(1, (this.m_RawStickValue.Magnitude - this.m_Deadzone) / _legalRange)
 			_scale := _normalizedMag / this.m_RawStickValue.Magnitude
 		}

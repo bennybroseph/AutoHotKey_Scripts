@@ -22,6 +22,7 @@ SetWinDelay, -1
 #Include Utility\IniReader.ahk
 #Include Utility\Graphic.ahk
 #Include Utility\Graphics.ahk
+#Include Utility\ImageOverlay.ahk
 #Include Utility\Calibrate.ahk
 #Include Utility\Inventory.ahk
 
@@ -46,23 +47,22 @@ Graphics.Init()
 Calibrate()
 Inventory.Init()
 Controller.Init()
+ImageOverlay.Init()
 
 Debug.InitControllerOverlay()
-Graphics.DrawImageOverlay()
+ImageOverlay.DrawImageOverlay()
 
 SetTimer, Main, 0
 
 Main:
 	Graphics.SetActiveWinStats()
+	ImageOverlay.DrawBatteryStatus()
 
 	Controller.RefreshState()
 	Controller.ProcessInput()
 
 	if(Debug.Enabled)
-	{
 		Debug.DrawToolTip()
-		Debug.DrawControllerOverlay()
-	}
 return
 
 ; Toggles Debug Mode
@@ -76,7 +76,7 @@ $F5::
 return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed.
-;The '$' ensures the hotkey can't be triggered with a 'Send' command
+; The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F10::
 	; Set the tooltip if it should be shown
 	if(!IsPaused and ShowPausedNotification)

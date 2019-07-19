@@ -78,6 +78,8 @@ class Graphics
 	static __singleton :=
 	static __init := False
 
+	static m_ImageOverlay :=
+
 	Init()
 	{
 		Graphics.__singleton := new Graphics()
@@ -184,7 +186,7 @@ class Graphics
 	{
 		local _imageX := p_Pos.X
 		local _imageY := p_Pos.Y
-
+		
 		if (p_CenterImage)
 		{
 			_imageX := _imageX - (p_Image.Size.Width / 2)

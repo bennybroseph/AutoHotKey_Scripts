@@ -133,6 +133,8 @@ class Controller
         this.m_UsingReticule 		:= False
         this.m_ForceReticuleUpdate 	:= True
 
+		this.m_HaltMovementOnTarget := niReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
+		
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_X")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_Y"))
@@ -207,10 +209,7 @@ class Controller
         this.m_TargetPos	:= new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
 
 		this.m_BatteryStatus := -1
-		this.m_BatteryImages
-			:= Array(new Image("Images\Battery_Low.png", 0.25)
-					, new Image("Images\Battery_Medium.png", 0.25)
-					, new Image("Images\Battery_High.png", 0.25))
+		this.m_PrevBatteryStatus := this.m_BatteryStatus
     }
 
     CursorMode[]
@@ -282,6 +281,13 @@ class Controller
 			return this.__singleton.m_ForceReticuleUpdate := value
 		}
     }
+
+	HaltMovementOnTarget[]
+	{
+		get {
+			return this.__singleton.m_HaltMovementOnTarget
+		}
+	}
 
     MouseOffset[]
     {
@@ -367,7 +373,7 @@ class Controller
 		}
 	}
 
-    Controls[p_Index = 0]
+    Controls[p_Index := 0]
     {
         get {
 			if (p_Index = 0)
@@ -421,11 +427,17 @@ class Controller
 		get {
 			return this.__singleton.m_BatteryStatus
 		}
+		set {
+			return this.__singleton.m_BatteryStatus := value
+		}
 	}
-	BatteryImages[]
+	PrevBatteryStatus[]
 	{
 		get {
-			return this.__singleton.m_BatteryImages
+			return this.__singleton.m_PrevBatteryStatus
+		}
+		set {
+			return this.__singleton.m_PrevBatteryStatus := value
 		}
 	}
 
@@ -446,22 +458,8 @@ class Controller
 			this.LeftStick.RefreshState(_state)
 			this.RightStick.RefreshState(_state)
 
-			local _batteryStatus := XInput_GetBatteryInformation(A_Index - 1, 0)
-			if (_batteryStatus.BatteryType != BATTERY_TYPE_WIRED
-			and _batteryStatus.BatteryLevel != this.BatteryStatus.BatteryLevel)
-			{
-				this.BatteryStatus := _batteryStatus
-
-				local i, _batteryImage
-				For i, _batteryImage in this.BatteryImages
-				{
-					if (this.BatteryStatus.BatteryLevel = i)
-						Graphics.DrawImage(_batteryImage
-										, new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y), False)
-					else
-						Graphics.HideImage(_batteryImage)
-				}
-			}
+			this.PrevBatteryStatus := this.m_BatteryStatus
+			this.BatteryStatus := XInput_GetBatteryInformation(A_Index - 1, 0)
         }
     }
 
@@ -805,16 +803,16 @@ class Controller
 		this.Moving := False
 	}
 
+	IsSpecial(p_Key)
+	{
+		return p_Key = "CursorMode" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "Inventory" or p_Key = "SwapSticks"
+	}
 	FindControlInfo(p_Keybind)
 	{
 		global
 
-		local _isSpecial
-			:= !p_Keybind.Modifier
-			and (p_Keybind.Action = "CursorMode" or p_Keybind.Action = "Loot"
-			or p_Keybind.Action = "FreeTarget" or p_Keybind.Action = "Inventory"
-			or p_Keybind.Action = "SwapSticks")
-
+		local _isSpecial := !p_Keybind.Modifier	and this.IsSpecial(p_Keybind.Action)
+			
 		local i, _control
 		if (_isSpecial)
 		{
@@ -829,36 +827,36 @@ class Controller
 
 		For i, _control in this.Controls
 		{
-			local _isSpecialAction
-				:= _control.Controlbind.OnPress.Action = "CursorMode" or _control.Controlbind.OnPress.Action = "Loot"
-				or _control.Controlbind.OnPress.Action = "FreeTarget" or _control.Controlbind.OnPress.Action = "Inventory"
-				or _control.Controlbind.OnPress.Action = "SwapSticks"
-			local _isSpecialModifier
-				:= _control.Controlbind.OnPress.Modifier = "CursorMode" or _control.Controlbind.OnPress.Modifier = "Loot"
-				or _control.Controlbind.OnPress.Modifier = "FreeTarget" or _control.Controlbind.OnPress.Modifier = "Inventory"
-				or _control.Controlbind.OnPress.Modifier = "SwapSticks"
-
 			local _onPress := _control.Controlbind.OnPress
+
+			local _isSpecialAction 		:= this.IsSpecial(_onPress.Action)
+			local _isSpecialModifier	:= this.IsSpecial(_onPress.Modifier)
+				
 			if ((_isSpecialAction and _onPress.Modifier and _onPress.Modifier = p_Keybind.Modifier)
-			or (_isSpecialModifier and _onPress.Action and _control.Controlbind.OnPress.Action = p_Keybind.Action)
+			or (_isSpecialModifier and _onPress.Action and _onPress.Action = p_Keybind.Action)
 			or (_onPress.Action = p_Keybind.Action and _onPress.Modifier = p_Keybind.Modifier))
 				return new ControlInfo(_control, "Press")
 
-			_isSpecialAction
-				:= _control.Controlbind.OnHold.Action = "CursorMode" or _control.Controlbind.OnHold.Action = "Loot"
-				or _control.Controlbind.OnHold.Action = "FreeTarget" or _control.Controlbind.OnHold.Action = "Inventory"
-				or _control.Controlbind.OnHold.Action = "SwapSticks"
-			_isSpecialModifier
-				:= _control.Controlbind.OnHold.Modifier = "CursorMode" or _control.Controlbind.OnHold.Modifier = "Loot"
-				or _control.Controlbind.OnHold.Modifier = "FreeTarget" or _control.Controlbind.OnHold.Modifier = "Inventory"
-				or _control.Controlbind.OnHold.Modifier = "SwapSticks"
-
 			local _onHold := _control.Controlbind.OnHold
+
+			_isSpecialAction 	:= this.IsSpecial(_control.Controlbind.OnHold.Action)
+			_isSpecialModifier	:= this.IsSpecial(_control.Controlbind.OnHold.Modifier)
+			
 			if ((_isSpecialAction and _onHold.Modifier and _onHold.Modifier = p_Keybind.Modifier)
-			or (_isSpecialModifier and _onHold.Action and _control.Controlbind.OnPress.Action = p_Keybind.Action)
+			or (_isSpecialModifier and _onHold.Action and _onHold.Action = p_Keybind.Action)
 			or (_onHold.Action = p_Keybind.Action and _onHold.Modifier = p_Keybind.Modifier))
 				return new ControlInfo(_control, "Hold")
 		}
+
+		if (!p_Keybind.Modifier)
+		{
+			local _keybindClone := p_Keybind.Clone()
+			_keybindClone.Modifier := _keybindClone.Action
+			
+			return this.FindControlInfo(_keybindClone)
+		}
+
+		Debug.AddToLog("Could not find " . p_Keybind.String . " in list of configured controls")
 	}
 
 	OnToolTip()

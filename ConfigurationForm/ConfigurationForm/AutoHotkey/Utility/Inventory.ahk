@@ -31,6 +31,9 @@ class Inventory
 		this.m_ShowInventoryModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Inventory_Mode_Notification")
 
+		this.m_RemeberPosition
+			:= IniReader.ReadProfileKey(ProfileSection.Inventory, "Remember_Position")
+
 		this.m_BaseResolution := new Vector2(1920, 1080)
 		this.m_Scaling
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Width")
@@ -44,7 +47,7 @@ class Inventory
 		}
 	}
 
-	Grid[p_IndexX = 0, p_IndexY = 0]
+	Grid[p_IndexX := 0, p_IndexY := 0]
 	{
 		get {
 			if (p_IndexX = 0 and p_IndexY)
@@ -91,6 +94,12 @@ class Inventory
 	{
 		get {
 			return this.__singleton.m_ShowInventoryModeNotification
+		}
+	}
+	RememberPosition[]
+	{
+		get {
+			return this.__singleton.m_RemeberPosition
 		}
 	}
 
@@ -239,6 +248,8 @@ class Inventory
 			Graphics.HideToolTip(1)
 
 		Controller.ResetDPadTick()
+		if (!this.RememberPosition)
+			this.Pos := new Vector2(1, 6)
 
 		Controller.ForceMouseUpdate := True
 		this.Enabled := False

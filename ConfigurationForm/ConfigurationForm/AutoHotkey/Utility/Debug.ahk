@@ -16,8 +16,8 @@ class StickOverlay
 
 		this.m_MaxRangeEllipse := new Ellipse(this.m_OverlaySize, 0x96ff0000, false, 1)
 		this.m_OuterDeadzoneEllipse
-			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.MaxValue.X
-									, this.m_OverlaySize.Height * this.m_Stick.MaxValue.Y)
+			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.MaxValue
+									, this.m_OverlaySize.Height * this.m_Stick.MaxValue)
 						, 0x96ff00ff, false, 1)
 		this.m_InnerDeadzoneEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.Deadzone
@@ -219,11 +219,6 @@ class Debug
 			this.UpdateLog := False
 		}
 	}
-	DrawControllerOverlay()
-	{
-		this.m_LeftStickOverlay.DrawOverlay()
-		this.m_RightStickOverlay.DrawOverlay()
-	}
 
 	AddToLog(p_Entry)
 	{
@@ -252,12 +247,15 @@ class Debug
 		Graphics.DrawToolTip("Debug mode enabled `nPress F3 to disable", 0, 50, 5)
 		this.UpdateLog := True
 
+		this.m_LeftStickOverlay.DrawOverlay()
+		this.m_RightStickOverlay.DrawOverlay()
+
 		this.Enabled := True
 	}
 	Disable()
 	{
 		this.m_LeftStickOverlay.HideOverlay()
-		this.m_LeftStickOverlay.HideOverlay()
+		this.m_RightStickOverlay.HideOverlay()
 
 		Graphics.HideToolTip(5)
 		Graphics.HideToolTip(7)

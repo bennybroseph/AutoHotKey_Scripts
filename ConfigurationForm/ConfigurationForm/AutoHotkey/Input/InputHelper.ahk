@@ -34,7 +34,9 @@ class InputHelper
 						_newMousePos := Controller.MousePos
 				}
 
-				Controller.StopMoving()
+				if (Controller.HaltMovementOnTarget)
+					Controller.StopMoving()
+
 				this.MoveMouse(_newMousePos)
 
 				Controller.PressCount.Targeted++
