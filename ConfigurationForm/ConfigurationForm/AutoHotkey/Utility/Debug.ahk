@@ -189,7 +189,7 @@ class Debug
 		this.m_RightStickOverlay := new StickOverlay("Right")
 	}
 
-	DrawToolTip()
+	DrawInfo()
 	{
 		global
 
@@ -199,7 +199,7 @@ class Debug
 		For i, _delegate in this.OnToolTip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
-		Graphics.DrawToolTip(_debugText, 0, 80, 7)
+		Graphics.DrawToolTip(_debugText, 0, 90, 7)
 
 		local _x, _y, _w, _h
 		WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
@@ -218,6 +218,9 @@ class Debug
 
 			this.UpdateLog := False
 		}
+
+		this.m_LeftStickOverlay.DrawOverlay()
+		this.m_RightStickOverlay.DrawOverlay()
 	}
 
 	AddToLog(p_Entry)
@@ -237,7 +240,7 @@ class Debug
 
 	Toggle()
 	{
-		if(!this.Enabled)
+		if (!this.Enabled)
 			this.Enable()
 		else
 			this.Disable()
@@ -245,11 +248,8 @@ class Debug
 	Enable()
 	{
 		Graphics.DrawToolTip("Debug mode enabled `nPress F3 to disable", 0, 50, 5)
+
 		this.UpdateLog := True
-
-		this.m_LeftStickOverlay.DrawOverlay()
-		this.m_RightStickOverlay.DrawOverlay()
-
 		this.Enabled := True
 	}
 	Disable()

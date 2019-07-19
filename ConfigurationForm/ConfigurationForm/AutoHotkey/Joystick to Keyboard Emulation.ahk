@@ -63,8 +63,8 @@ Main:
 	Controller.RefreshState()
 	Controller.ProcessInput()
 
-	if(Debug.Enabled)
-		Debug.DrawToolTip()
+	if (Debug.Enabled)
+		Debug.DrawInfo()
 return
 
 ; Toggles Debug Mode

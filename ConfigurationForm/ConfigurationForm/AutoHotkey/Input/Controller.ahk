@@ -133,7 +133,8 @@ class Controller
         this.m_UsingReticule 		:= False
         this.m_ForceReticuleUpdate 	:= True
 
-		this.m_HaltMovementOnTarget := niReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
+		this.m_RepeatForceMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Repeat_Force_Move")
+		this.m_HaltMovementOnTarget := IniReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
 		
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_X")
@@ -282,6 +283,12 @@ class Controller
 		}
     }
 
+	RepeatForceMove[]
+	{
+		get {
+			return this.__singleton.m_RepeatForceMove
+		}
+	}
 	HaltMovementOnTarget[]
 	{
 		get {
@@ -537,7 +544,7 @@ class Controller
 
 		if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
         or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
-        or this.ForceMouseUpdate or this.CursorMode)
+        or this.RepeatForceMove or this.ForceMouseUpdate or this.CursorMode)
             this.ProcessMovementStick()
         if ((this.TargetStick.StickValue.X != this.TargetStick.PrevStickValue.X
         or this.TargetStick.StickValue.Y != this.TargetStick.PrevStickValue.Y)
@@ -554,8 +561,16 @@ class Controller
         {
 			if (_stick.State)
 			{
-				if (!this.Moving and !this.PressStack.Peek)
-					this.StartMoving()
+				if ((!this.Moving or this.RepeatForceMove) and !this.PressStack.Peek)
+				{
+					if (this.RepeatForceMove)
+					{
+						this.StartMoving()
+						this.StopMoving()
+					}
+					else
+						this.StartMoving()
+				}
 
 				local _centerOffset
 					:= new Vector2(Graphics.ActiveWinStats.Center.X

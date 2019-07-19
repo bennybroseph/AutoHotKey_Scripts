@@ -80,6 +80,9 @@ class InputHelper
 				Controller.PressCount.Targeted--
 			else if (p_Keybind.Type = KeybindType.Movement)
 				Controller.PressCount.Movement--
+
+			if (Controller.TargetingDelay > 0)
+					Sleep, % Controller.TargetingDelay
 		}
 	}
 
