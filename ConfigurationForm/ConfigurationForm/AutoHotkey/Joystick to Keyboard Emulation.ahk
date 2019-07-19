@@ -20,6 +20,7 @@ SetWinDelay, -1
 #Include Utility\DataStructures.ahk
 #Include Utility\Debug.ahk
 #Include Utility\IniReader.ahk
+#Include Utility\Graphic.ahk
 #Include Utility\Graphics.ahk
 #Include Utility\Calibrate.ahk
 #Include Utility\Inventory.ahk
@@ -46,6 +47,7 @@ Calibrate()
 Inventory.Init()
 Controller.Init()
 
+Debug.InitControllerOverlay()
 Graphics.DrawImageOverlay()
 
 SetTimer, Main, 0
@@ -57,7 +59,10 @@ Main:
 	Controller.ProcessInput()
 
 	if(Debug.Enabled)
+	{
 		Debug.DrawToolTip()
+		Debug.DrawControllerOverlay()
+	}
 return
 
 ; Toggles Debug Mode
@@ -86,6 +91,7 @@ return
 
 ; Closes the program. The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F12::
+	XInput_Term()
 	ExitApp
 return
 

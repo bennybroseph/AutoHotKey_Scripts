@@ -1,5 +1,7 @@
 ; Assists with everything related to the screen and drawing things to it
 
+global GRAPHIC_COUNT := 0
+
 class HorizontalAlignment
 {
 	static Left 	:= 0
@@ -11,70 +13,6 @@ class VerticalAlignment
 	static Top		:= 0
 	static Center	:= 1
 	static Bottom	:= 2
-}
-
-class Image
-{
-	static __imageCount := 0
-
-	__New(p_Filepath, p_Scale := 1, p_BackgroundColor := 0x00000000)
-	{
-		local _index := ++Image.__imageCount
-		this.m_Index := _index
-
-		Gui, %_index%: -Caption +E0x80000 +LastFound +Owner +AlwaysOnTop +ToolWindow
-		Gui, %_index%: Show, NA
-		WinSet, ExStyle, +0x20
-
-		this.m_HWND := WinExist()
-
-		this.m_Image := Gdip_CreateBitmapFromFile(p_Filepath)
-		this.m_Size
-			:= new Vector2(Gdip_GetImageWidth(this.m_Image) * p_Scale
-						, Gdip_GetImageHeight(this.m_Image) * p_Scale)
-
-		this.m_HBM := CreateDIBSection(this.m_Size.Width, this.m_Size.Height)
-		this.m_HDC := CreateCompatibleDC()
-		this.m_OBM := SelectObject(this.m_HDC, this.m_HBM)
-		this.m_Graphic := Gdip_GraphicsFromHDC(this.m_HDC)
-
-		Gdip_SetInterpolationMode(this.m_Graphic, 7)
-
-		if (p_BackgroundColor != 0x00000000)
-		{
-			Gdip_SetCompositingMode(this.m_Graphic, 0)
-
-			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor)
-			Gdip_FillRectangle(this.m_Graphic, this.m_Brush, 0, 0, this.m_Size.Width, this.m_Size.Height)
-
-			Gdip_DeleteBrush(this.m_Brush)
-		}
-
-		Gdip_DrawImage(this.m_Graphic, this.m_Image, 0, 0, this.m_Size.Width, this.m_Size.Height)
-		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width , this.m_Size.Height)
-
-		Gdip_DisposeImage(this.m_Image)
-	}
-
-	Index[]
-	{
-		get {
-			return this.m_Index
-		}
-	}
-	Size[]
-	{
-		get {
-			return this.m_Size
-		}
-	}
-	__Delete()
-	{
-		SelectObject(this.m_HDC, this.m_OBM)
-		DeleteObject(this.m_HBM)
-		DeleteDC(this.m_HDC)
-		Gdip_DeleteGraphics(this.m_HWND)
-	}
 }
 
 class WinStats
@@ -351,8 +289,6 @@ class Graphics
 			local _newImagePath
 				:= "Images\" . _imageSet . "\" . _controlInfo.Act . "\" . _imageSetSize . "\" . _controlInfo.Control.Key . ".png"
 			local _newImage := new Image(_newImagePath, _imageScale, _newImageBackground)
-
-			Debug.AddToLog(_controlInfo.Control.Key)
 
 			this.DrawImage(_newImage, _newImagePos)
 		}

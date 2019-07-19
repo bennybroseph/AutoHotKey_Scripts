@@ -172,14 +172,18 @@ class Trigger extends Control
 }
 class Stick extends Control
 {
+	static s_MaxValue := 32768
+
 	__New(p_Name, p_Nickname, p_Index, p_Key, p_Direction)
 	{
 		base.__New(p_Name, p_Nickname, p_Index, p_Key)
 
 		this.m_Direction := p_Direction
 
-		this.m_StickValue 		:= new Vector2()
-		this.m_PrevStickValue 	:= new Vector2()
+		this.m_RawStickValue 		:= new Vector2()
+		this.m_ClampedStickValue 	:= new Vector2()
+		this.m_StickValue 			:= new Vector2()
+		this.m_PrevStickValue 		:= new Vector2()
 
 		this.m_StickDelta := new Vector2()
 
@@ -201,6 +205,18 @@ class Stick extends Control
 						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_Sensitivity_Y"))
 	}
 
+	RawStickValue[]
+	{
+		get {
+			return this.m_RawStickValue
+		}
+	}
+	ClampedStickValue[]
+	{
+		get {
+			return this.m_ClampedStickValue
+		}
+	}
 	StickValue[]
 	{
 		get {
@@ -261,19 +277,36 @@ class Stick extends Control
 		}
 	}
 
+	; http://blog.hypersect.com/interpreting-analog-sticks/
 	RefreshState(p_State)
 	{
+		global
+
 		base.RefreshState(p_State)
 
 		this.m_PrevStickValue := new Vector2(this.m_StickValue.X, this.m_StickValue.Y)
 
-		this.m_StickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) - this.m_ZeroOffset.X
-		this.m_StickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) - this.m_ZeroOffset.Y
+		this.m_RawStickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) / this.s_MaxValue
+		this.m_RawStickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) / this.s_MaxValue
+
+		local _scale := 0
+		if (this.m_RawStickValue.Magnitude > this.m_Deadzone)
+		{
+			local _legalRange := this.m_MaxValue.X - this.m_Deadzone
+			local _normalizedMag := Min(1, (this.m_RawStickValue.Magnitude - this.m_Deadzone) / _legalRange)
+			_scale := _normalizedMag / this.m_RawStickValue.Magnitude
+		}
+
+		this.m_ClampedStickValue.X := this.m_RawStickValue.X * _scale
+		this.m_ClampedStickValue.Y := this.m_RawStickValue.Y * _scale
+
+		this.m_StickValue.X := this.m_ClampedStickValue.X
+		this.m_StickValue.Y := this.m_ClampedStickValue.Y
 
 		this.m_StickDelta.X := (this.m_StickValue.X - this.m_PrevStickValue.X) * this.m_Sensitivity.X
 		this.m_StickDelta.Y := (this.m_StickValue.Y - this.m_PrevStickValue.Y) * this.m_Sensitivity.Y
 
-		this.m_State := Abs(this.m_StickValue.X) > this.m_Deadzone or Abs(this.m_StickValue.Y) > this.m_Deadzone
+		this.m_State := this.m_StickValue.Magnitude > 0
 
 		if (this.m_StickValue.X < 0 and this.m_StickValue.Y < 0)		; 3rd Quadrant
             this.m_StickAngleDeg := Abs(ATan(this.m_StickValue.Y / this.m_StickValue.X) * (180 / PI)) + 180

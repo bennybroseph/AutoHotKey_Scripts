@@ -22,8 +22,8 @@ class Inventory
 
 		this.m_Enabled := False
 
-		this.m_Pos := new Vector2(1, 6)
 		this.m_Grid := InventoryGrids.CreateGrid()
+		this.m_Pos := new Vector2(1, 6)
 
 		this.m_HoldToMove := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_To_Move")
 		this.m_HoldDelay := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_Delay")
@@ -41,6 +41,16 @@ class Inventory
 	{
 		get {
 			return this.__singleton.m_Enabled
+		}
+	}
+
+	Grid[p_IndexX = 0, p_IndexY = 0]
+	{
+		get {
+			if (p_IndexX = 0 and p_IndexY)
+				return this.__singleton.m_Grid
+			else
+				return this.__singleton.m_Grid[p_IndexX, p_IndexY]
 		}
 	}
 
@@ -106,7 +116,7 @@ class Inventory
 		if (p_Y = 0)
 			p_Y := this.Pos.Y
 
-		local _gridPos := new Vector2(this.__singleton.m_Grid[p_X, p_Y].X, this.__singleton.m_Grid[p_X, p_Y].Y)
+		local _gridPos := new Vector2(this.Grid[p_X, p_Y].X, this.Grid[p_X, p_Y].Y)
 		_gridPos.X := (_gridPos.X * (Graphics.ActiveWinStats.Size.Width / this.BaseResolution.Width)) * this.Scaling.X
 		_gridPos.Y := (_gridPos.Y * (Graphics.ActiveWinStats.Size.Height / this.BaseResolution.Height)) * this.Scaling.Y
 
@@ -224,8 +234,11 @@ class Inventory
     Disable()
     {
 		global
+
 		if (this.ShowInventoryModeNotification)
 			Graphics.HideToolTip(1)
+
+		Controller.ResetDPadTick()
 
 		Controller.ForceMouseUpdate := True
 		this.Enabled := False

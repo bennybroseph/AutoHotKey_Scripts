@@ -211,10 +211,6 @@ class Controller
 			:= Array(new Image("Images\Battery_Low.png", 0.25)
 					, new Image("Images\Battery_Medium.png", 0.25)
 					, new Image("Images\Battery_High.png", 0.25))
-
-		local i, _batteryImage
-		For i, _batteryImage in this.m_BatteryImages
-			Graphics.HideImage(_batteryImage)
     }
 
     CursorMode[]
@@ -371,10 +367,13 @@ class Controller
 		}
 	}
 
-    Controls[]
+    Controls[p_Index = 0]
     {
         get {
-            return this.__singleton.m_Controls
+			if (p_Index = 0)
+            	return this.__singleton.m_Controls
+			else
+				return this.__singleton.m_Controls[p_Index]
         }
     }
 
@@ -570,18 +569,8 @@ class Controller
 					:= new Vector2(this.MovementRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
 								, this.MovementRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
-				this.MousePos.X
-					:= _centerOffset.X + (_radius.Width * _radius.Height)
-					/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
-				this.MousePos.Y
-					:= _centerOffset.Y + (_radius.Width * _radius.Height * Tan(-_stick.StickAngleRad))
-					/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
-
-				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
-				{
-					this.MousePos.X := _centerOffset.X - (this.MousePos.X - _centerOffset.X)
-					this.MousePos.Y := _centerOffset.Y - (this.MousePos.Y - _centerOffset.Y)
-				}
+				this.MousePos.X	:= _centerOffset.X + _stick.StickValue.Normalize.X * _radius.Width
+				this.MousePos.Y := _centerOffset.Y - _stick.StickValue.Normalize.Y * _radius.Height
 			}
 			else
 			{
@@ -607,25 +596,21 @@ class Controller
         {
 			if (_stick.State)
 			{
-				local _radius :=
-
-				if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
-					_radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-				else
-					_radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
-
 				local _mouseDelta
-					:= new Vector2(_radius * Cos(-_stick.StickAngleRad) * _stick.Sensitivity.X
-								,_radius * Sin(-_stick.StickAngleRad) * _stick.Sensitivity.Y)
+					:= new Vector2(20 * _stick.StickValue.X * _stick.Sensitivity.X
+								, 20 * -_stick.StickValue.Y * _stick.Sensitivity.Y)
 
 				this.MousePos.X := this.MousePos.X + _mouseDelta.X
 				this.MousePos.Y := this.MousePos.Y + _mouseDelta.Y
 			}
 
-			if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
-				InputHelper.MoveMouse(this.MousePos)
-			else
-				Graphics.DrawReticule(this.MousePos)
+			if (_stick.State or this.ForceMouseUpdate)
+			{
+				if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
+					InputHelper.MoveMouse(this.MousePos)
+				else
+					Graphics.DrawReticule(this.MousePos)
+			}
         }
 
 		this.ForceMouseUpdate := False
@@ -651,51 +636,12 @@ class Controller
 								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y
 								+ this.TargetOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
-				local _stickValue := _stick.StickValue
-				if (Abs(_stickValue.X) > _stick.MaxValue.X)
-				{
-					if (_stickValue.X > 0)
-						_stickValue.X := _stick.MaxValue.X
-					else
-						_stickValue.X := -_stick.MaxValue.X
-				}
-				if (Abs(_stickValue.Y) > _stick.MaxValue.Y)
-				{
-					if (_stickValue.Y > 0)
-						_stickValue.Y := _stick.MaxValue.Y
-					else
-						_stickValue.Y := -_stick.MaxValue.Y
-				}
-
 				local _radius
 					:= new Vector2(this.TargetRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
 								, this.TargetRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
-				if (Abs(_stickValue.X) >= Abs(_stickValue.Y))
-				{
-					_radius.Width
-						:= _radius.Width * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-					_radius.Height
-						:= _radius.Height * ((Abs(_stickValue.X) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
-				}
-				else
-				{
-					_radius.Width
-						:= _radius.Width * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-					_radius.Height
-						:= _radius.Height * ((Abs(_stickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
-				}
-
-				this.TargetPos.X := _centerOffset.X + (_radius.Width *_radius.Height)
-								/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(_stick.StickAngleRad) ** 2))
-				this.TargetPos.Y := _centerOffset.Y + (_radius.Width * _radius.Height * Tan(-_stick.StickAngleRad))
-								/ Sqrt((_radius.Height ** 2) + (_radius.Width ** 2) * (Tan(-_stick.StickAngleRad) ** 2))
-
-				if (_stick.StickAngleDeg > 90 and _stick.StickAngleDeg <= 270)
-				{
-					this.TargetPos.X := _centerOffset.X - (this.TargetPos.X - _centerOffset.X)
-					this.TargetPos.Y := _centerOffset.Y - (this.TargetPos.Y - _centerOffset.Y)
-				}
+				this.TargetPos.X := _centerOffset.X + _stick.StickValue.X * _radius.Width
+				this.TargetPos.Y := _centerOffset.Y - _stick.StickValue.Y * _radius.Height
 			}
 			else
 			{
@@ -715,16 +661,9 @@ class Controller
         {
 			if (_stick.State)
 			{
-				local _radius :=
-				if (Abs(_stick.StickValue.X) >= Abs(_stick.StickValue.Y))
-					_radius := 20 * ((Abs(_stick.StickValue.X) - _stick.Deadzone) / (_stick.MaxValue.X - _stick.Deadzone))
-				else
-					_radius := 20 * ((Abs(_stick.StickValue.Y) - _stick.Deadzone) / (_stick.MaxValue.Y - _stick.Deadzone))
-
-
 				local _targetDelta
-					:= new Vector2(_radius * Cos(_stick.StickAngleRad) * _stick.Sensitivity.X
-								, _radius * Sin(_stick.StickAngleRad) * _stick.Sensitivity.Y)
+					:= new Vector2(20 * _stick.StickValue.X * _stick.Sensitivity.X
+								, 20 * _stick.StickValue.Y * _stick.Sensitivity.Y)
 
 				if (this.UsingReticule)
 				{
@@ -733,10 +672,13 @@ class Controller
 				}
 			}
 
-			if (this.PressStack.Peek.Type = KeybindType.Targeted)
-                InputHelper.MoveMouse(this.TargetPos)
-			else
-                Graphics.DrawReticule(this.TargetPos)
+			if (_stick.State or this.ForceReticuleUpdate)
+			{
+				if (this.PressStack.Peek.Type = KeybindType.Targeted)
+					InputHelper.MoveMouse(this.TargetPos)
+				else
+					Graphics.DrawReticule(this.TargetPos)
+			}
         }
 
 		this.ForceReticuleUpdate := False
@@ -750,6 +692,18 @@ class Controller
 				XInput_SetState(A_Index-1, this.VibeStrength, this.VibeStrength) ; MAX 65535
 		}
 		SetTimer, VibeOff, % -this.VibeDuration
+	}
+
+	ResetDPadTick()
+	{
+		global
+
+		Loop, 4
+		{
+			local _control := this.Controls[A_Index + ControlIndex.DPadUp - 1]
+			_control.PressTick := -1
+			_control.HoldTick := -1
+		}
 	}
 
     ToggleCursorMode()
@@ -846,7 +800,7 @@ class Controller
 	StopMoving()
 	{
 		Debug.AddToLog("Releasing " . this.MoveOnlyKey.String)
-		InputHelper.ReleaseKeybind(Controller.MoveOnlyKey)
+		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
 
 		this.Moving := False
 	}
@@ -913,15 +867,18 @@ class Controller
 
         _debugText := _debugText . "MousePos: (" . Round(this.MousePos.X, 2) . ", " . Round(this.MousePos.Y, 2) . ") `n"
         _debugText := _debugText . "Moving: " . this.Moving . " ForceMouseUpdate: " . this.ForceMouseUpdate . "`n"
-        _debugText := _debugText . this.LeftStick.Nickname . " - State: " . this.LeftStick.State " ("
-					. Round(this.LeftStick.StickValue.X, 2) . ", " . Round(this.LeftStick.StickValue.Y, 2) ") "
-                    . "Angle: " . Round(this.LeftStick.StickAngleDeg, 2) . "`n`n"
+		_debugText := _debugText . "RawStickValue: " . this.MovementStick.RawStickValue.String "`n"
+		_debugText := _debugText . "ClampedStickValue: " . this.MovementStick.ClampedStickValue.String "`n"
+        _debugText := _debugText . this.MovementStick.Nickname . " - State: " . this.MovementStick.State " ("
+					. Round(this.MovementStick.StickValue.X, 2) . ", " . Round(this.MovementStick.StickValue.Y, 2) ") "
+                    . "Angle: " . Round(this.MovementStick.StickAngleDeg, 2) . "`n`n"
 
         _debugText := _debugText . "TargetPos: (" . Round(this.TargetPos.X, 2) . ", " . Round(this.TargetPos.Y, 2) . ") `n"
         _debugText := _debugText . "UsingReticule: " . this.UsingReticule . " ForceReticuleUpdate: " . this.ForceReticuleUpdate . "`n"
-		_debugText := _debugText . this.RightStick.Nickname . " - State: " . this.RightStick.State " ("
-					. Round(this.RightStick.StickValue.X, 2) . ", " . Round(this.RightStick.StickValue.Y, 2) ") "
-                    . "Angle: " . Round(this.RightStick.StickAngleDeg, 2) . "`n"
+		_debugText := _debugText . "RawStickValue: " . this.TargetStick.RawStickValue.String "`n"
+		_debugText := _debugText . this.TargetStick.Nickname . " - State: " . this.TargetStick.State " ("
+					. Round(this.TargetStick.StickValue.X, 2) . ", " . Round(this.TargetStick.StickValue.Y, 2) ") "
+                    . "Angle: " . Round(this.TargetStick.StickAngleDeg, 2) . "`n"
 
         _debugText := _debugText . "PressStack - Length: " . this.PressStack.Length . " Peek: " . this.PressStack.Peek.Type . "`n"
 					. "PressCount - "

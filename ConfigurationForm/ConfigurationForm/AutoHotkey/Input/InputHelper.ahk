@@ -27,8 +27,14 @@ class InputHelper
 			{
 				local _newMousePos := Controller.TargetPos
 				if (!Controller.TargetStick.State and !Controller.FreeTargetMode)
-					_newMousePos := Controller.MousePos
+				{
+					if (Inventory.Enabled)
+						_newMousePos := Inventory.GetGridPos()
+					else
+						_newMousePos := Controller.MousePos
+				}
 
+				Controller.StopMoving()
 				this.MoveMouse(_newMousePos)
 
 				Controller.PressCount.Targeted++
@@ -50,6 +56,8 @@ class InputHelper
 		if (p_Keybind.Modifier)
 			this.PressKey(p_Keybind.Modifier)
 		this.PressKey(p_Keybind.Action)
+
+		Debug.AddToLog(p_Keybind.String . " pressed")
 	}
 	ReleaseKeybind(p_Keybind)
 	{
@@ -59,14 +67,13 @@ class InputHelper
 		if (p_Keybind.Modifier)
 			this.ReleaseKey(p_Keybind.Modifier)
 
+		Debug.AddToLog(p_Keybind.String . " released")
 		if (p_Keybind.Type != KeybindType.UnTargeted)
 		{
 			Controller.ForceMouseUpdate 	:= True
 			Controller.ForceReticuleUpdate 	:= True
 
-			Debug.AddToLog(p_Keybind.Action . " released")
 			Controller.PressStack.Remove(p_Keybind)
-
 			if (p_Keybind.Type = KeybindType.Targeted)
 				Controller.PressCount.Targeted--
 			else if (p_Keybind.Type = KeybindType.Movement)

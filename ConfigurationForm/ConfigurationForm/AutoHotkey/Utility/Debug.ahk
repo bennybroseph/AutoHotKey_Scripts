@@ -1,15 +1,102 @@
 ; Contains the debug class
 
+class StickOverlay
+{
+	__New(p_Direction)
+	{
+		global
+
+		this.m_Direction := p_Direction
+
+		this.m_Stick := this.m_Direction = "Left" ? Controller.LeftStick : Controller.RightStick
+
+		this.m_OverlaySize
+			:= new Vector2(Round(Graphics.ActiveWinStats.Size.Height / 2, 0)
+						, Round(Graphics.ActiveWinStats.Size.Height / 2, 0))
+
+		this.m_MaxRangeEllipse := new Ellipse(this.m_OverlaySize, 0x96ff0000, false, 1)
+		this.m_OuterDeadzoneEllipse
+			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.MaxValue.X
+									, this.m_OverlaySize.Height * this.m_Stick.MaxValue.Y)
+						, 0x96ff00ff, false, 1)
+		this.m_InnerDeadzoneEllipse
+			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.Deadzone
+									, this.m_OverlaySize.Height * this.m_Stick.Deadzone)
+						, 0x96ff00ff, false, 1)
+
+		this.m_AxisX
+			:= new Line(new Vector2(0, this.m_OverlaySize.Height / 2)
+					, new Vector2(this.m_OverlaySize.Width, this.m_OverlaySize.Height / 2)
+					, this.m_OverlaySize
+					, 0x96ff0000, 1)
+		this.m_AxisY
+			:= new Line(new Vector2(this.m_OverlaySize.Width / 2, 0)
+					, new Vector2(this.m_OverlaySize.Width / 2, this.m_OverlaySize.Height)
+					, this.m_OverlaySize
+					, 0x96ff0000, 1)
+
+		this.m_RawInputEllipse
+			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
+						, 0x966400ff)
+		this.m_ClampedInputEllipse
+			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
+						, 0x9600ff00)
+	}
+
+	DrawOverlay()
+	{
+		global
+
+		local _center := new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y)
+		_center.X += (Graphics.ActiveWinStats.Size.Width / 4) * 3
+		_center.Y += (Graphics.ActiveWinStats.Size.Height / 4) * (this.m_Direction = "Left" ? 1 : 3)
+
+		Graphics.DrawImage(this.m_MaxRangeEllipse, _center)
+		Graphics.DrawImage(this.m_OuterDeadzoneEllipse, _center)
+		Graphics.DrawImage(this.m_InnerDeadzoneEllipse, _center)
+
+		Graphics.DrawImage(this.m_AxisX, _center)
+		Graphics.DrawImage(this.m_AxisY, _center)
+
+		Graphics.DrawImage(this.m_RawInputEllipse
+			, new Vector2(_center.X + this.m_Stick.RawStickValue.X
+							* (this.m_OverlaySize.Width / 2)
+						, _center.Y - this.m_Stick.RawStickValue.Y
+							* (this.m_OverlaySize.Height / 2)))
+		Graphics.DrawImage(this.m_ClampedInputEllipse
+			, new Vector2(_center.X + this.m_Stick.ClampedStickValue.X
+							* (this.m_OverlaySize.Width / 2)
+						, _center.Y - this.m_Stick.ClampedStickValue.Y
+							* (this.m_OverlaySize.Height / 2)))
+	}
+
+	HideOverlay()
+	{
+		Graphics.HideImage(this.m_MaxRangeEllipse)
+		Graphics.HideImage(this.m_OuterDeadzoneEllipse)
+		Graphics.HideImage(this.m_InnerDeadzoneEllipse)
+
+		Graphics.HideImage(this.m_AxisX)
+		Graphics.HideImage(this.m_AxisY)
+
+		Graphics.HideImage(this.m_RawInputEllipse)
+		Graphics.HideImage(this.m_ClampedInputEllipse)
+	}
+}
+
 class Debug
 {
 	static __singleton :=
 	static __init := False
 
+	static m_LeftStickOverlay :=
+	static m_RightStickOverlay :=
+
 	Init()
 	{
-		Debug.__singleton := new Debug()
+		this.__singleton := new Debug()
 
-		Debug.__init := True
+		this.__init := True
 	}
 
 	__New()
@@ -96,6 +183,12 @@ class Debug
 		}
 	}
 
+	InitControllerOverlay()
+	{
+		this.m_LeftStickOverlay := new StickOverlay("Left")
+		this.m_RightStickOverlay := new StickOverlay("Right")
+	}
+
 	DrawToolTip()
 	{
 		global
@@ -125,6 +218,11 @@ class Debug
 
 			this.UpdateLog := False
 		}
+	}
+	DrawControllerOverlay()
+	{
+		this.m_LeftStickOverlay.DrawOverlay()
+		this.m_RightStickOverlay.DrawOverlay()
 	}
 
 	AddToLog(p_Entry)
@@ -158,6 +256,9 @@ class Debug
 	}
 	Disable()
 	{
+		this.m_LeftStickOverlay.HideOverlay()
+		this.m_LeftStickOverlay.HideOverlay()
+
 		Graphics.HideToolTip(5)
 		Graphics.HideToolTip(7)
 		Graphics.HideToolTip(8)

@@ -45,6 +45,27 @@ class Vector2
 			return this.m_Y := value
 		}
 	}
+
+	Magnitude[]
+	{
+		get {
+			return Sqrt(this.m_X * this.m_X + this.m_Y * this.m_Y)
+		}
+	}
+
+	Normalize[]
+	{
+		get {
+			return new Vector2(this.m_X / this.Magnitude, this.m_Y / this.Magnitude)
+		}
+	}
+
+	String[]
+	{
+		get{
+			return "(" . this.m_X . ", " . this.m_Y . ")"
+		}
+	}
 }
 
 class LooseStack

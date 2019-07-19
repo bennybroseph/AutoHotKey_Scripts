@@ -4,7 +4,7 @@ Calibrate()
 {
 	global
 
-	local _maxValueL := 32767, _maxValueR := 32767, Button
+	local _buttonState := False
 
 	local _calibrate := IniReader.ReadConfigKey(ConfigSection.Calibration, "Calibrate")
 	if (!_calibrate)
@@ -44,35 +44,41 @@ Calibrate()
 			, 1
 			, "Center")
 
+	local _maxValueL := 1, _maxValueR := 1
 	Loop
 	{
 		Loop, 4
 		{
 			if _state := XInput_GetState(A_Index-1)
 			{
-				Button := _state.Buttons
+				_buttonState := _state.Buttons
 
-				_leftStickValue.X := _state.ThumbLX
-				_leftStickValue.Y := _state.ThumbLY
+				_leftStickValue.X := _state.ThumbLX / Stick.s_MaxValue
+				_leftStickValue.Y := _state.ThumbLY / Stick.s_MaxValue
 
-				_rightStickValue.X := _state.ThumbRX
-				_rightStickValue.Y := _state.ThumbRY
+				_rightStickValue.X := _state.ThumbRX / Stick.s_MaxValue
+				_rightStickValue.Y := _state.ThumbRY / Stick.s_MaxValue
 			}
 		}
-		if(Abs(_leftStickValue.X) < _maxValueL && Abs(_leftStickValue.X) >= Abs(_leftStickValue.Y))
-			_maxValueL := Abs(_leftStickValue.X)
-		if(Abs(_leftStickValue.Y) < _maxValueL && Abs(_leftStickValue.Y) > Abs(_leftStickValue.X))
-			_maxValueL := Abs(_leftStickValue.Y)
-		if(Abs(_rightStickValue.X) < _maxValueR && Abs(_rightStickValue.X) >= Abs(_rightStickValue.Y))
-			_maxValueR := Abs(_rightStickValue.X)
-		if(Abs(_rightStickValue.Y) < _maxValueR && Abs(_rightStickValue.Y) > Abs(_rightStickValue.X))
-			_maxValueR := Abs(_rightStickValue.Y)
-	}Until Button
+		if (_maxValueL > _leftStickValue.Magnitude)
+			_maxValueL := _leftStickValue.Magnitude
+		if (_maxValueR > _rightStickValue.Magnitude)
+			_maxValueR := _rightStickValue.Magnitude
+
+		; if(Abs(_leftStickValue.X) < _maxValueL && Abs(_leftStickValue.X) >= Abs(_leftStickValue.Y))
+		; 	_maxValueL := Abs(_leftStickValue.X)
+		; if(Abs(_leftStickValue.Y) < _maxValueL && Abs(_leftStickValue.Y) > Abs(_leftStickValue.X))
+		; 	_maxValueL := Abs(_leftStickValue.Y)
+		; if(Abs(_rightStickValue.X) < _maxValueR && Abs(_rightStickValue.X) >= Abs(_rightStickValue.Y))
+		; 	_maxValueR := Abs(_rightStickValue.X)
+		; if(Abs(_rightStickValue.Y) < _maxValueR && Abs(_rightStickValue.Y) > Abs(_rightStickValue.X))
+		; 	_maxValueR := Abs(_rightStickValue.Y)
+	}Until _buttonState
 
 	Graphics.HideToolTip(1)
 
-	local _maxThresholdL := _maxValueL - 750
-	_maxThresholdR := _maxValueR - 750
+	local _maxThresholdL := _maxValueL - 0.015
+	local _maxThresholdR := _maxValueR - 0.015
 
 	MsgBox, , % "Instructions"
 		, % "Now I need to determine where the sticks rest when you aren't pressing them. `n`n"
@@ -80,17 +86,17 @@ Calibrate()
 			. "2). Let go of both sticks and allow them to come to rest. `n"
 			. "3). Once they are completely still, press any button on the controller."
 
-	Button := 0
+	_buttonState := 0
 	Loop
 	{
 		Loop, 4
 		{
 			if _state := XInput_GetState(A_Index-1)
 			{
-				Button := _state.Buttons
+				_buttonState := _state.Buttons
 			}
 		}
-	}Until Button
+	}Until _buttonState
 
 	Loop, 4
 	{
@@ -112,8 +118,8 @@ Calibrate()
 			. "If for any reason you think these values are incorrect, you can either edit them yourself (not recommended) "
 			. "or set 'Calibrate = true' in " . IniReader.ConfigPath . " to 'true' to run this again."
 
-	IniReader.WriteConfigKey(_maxValueL, ConfigSection.Calibration, "Left_Analog_Max_Value")
-	IniReader.WriteConfigKey(_maxValueR, ConfigSection.Calibration, "Right_Analog_Max_Value")
+	IniReader.WriteConfigKey(_maxThresholdL, ConfigSection.Calibration, "Left_Analog_Max_Value")
+	IniReader.WriteConfigKey(_maxThresholdR, ConfigSection.Calibration, "Right_Analog_Max_Value")
 
 	IniReader.WriteConfigKey(_minValueL.X, ConfigSection.Calibration, "Left_Analog_Zero_Offset_X")
 	IniReader.WriteConfigKey(_minValueL.Y, ConfigSection.Calibration, "Left_Analog_Zero_Offset_Y")
