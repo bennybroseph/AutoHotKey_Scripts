@@ -105,6 +105,8 @@ class ImageOverlay
 
 	DrawBatteryStatus()
 	{
+		global
+
 		if (!this.m_ShowBatteryStatus)
 			return
 

@@ -20,11 +20,13 @@ SetWinDelay, -1
 #Include Utility\DataStructures.ahk
 #Include Utility\Debug.ahk
 #Include Utility\IniReader.ahk
-#Include Utility\Graphic.ahk
-#Include Utility\Graphics.ahk
-#Include Utility\ImageOverlay.ahk
 #Include Utility\Calibrate.ahk
 #Include Utility\Inventory.ahk
+
+; Compile the graphics classes
+#Include Graphics\Graphic.ahk
+#Include Graphics\Graphics.ahk
+#Include Graphics\ImageOverlay.ahk
 
 ; Compile the input classes
 #Include Input\Binding.ahk
