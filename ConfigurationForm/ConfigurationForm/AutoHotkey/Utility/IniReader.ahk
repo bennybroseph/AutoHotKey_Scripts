@@ -174,8 +174,31 @@ class IniReader
 				_newKeybindArray[A_Index] := this.ParseKeybind(_keybindArrayString)
 				break
 			}
-		} Until False
+		}
 
 		return _newKeybindArray
     }
+
+	ParseColor(p_ColorString)
+	{
+		global
+
+		p_ColorString := Trim(p_ColorString)
+		p_ColorString := StrReplace(p_ColorString, "(")
+		p_ColorString := StrReplace(p_ColorString, ")")
+
+		local _newColor := Array()
+		Loop, 4
+		{
+			local _commaPos := InStr(p_ColorString, ",")
+			if _commaPos
+				_newColor.Push(SubStr(p_ColorString, 1, _commaPos - 1))
+			else
+				_newColor.Push(p_ColorString)
+
+			p_ColorString := SubStr(p_ColorString, _commaPos + 1)
+		}
+
+		return new Color(_newColor[1], _newColor[2], _newColor[3], _newColor[4])
+	}
 }

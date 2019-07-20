@@ -52,7 +52,7 @@ class InputHelper
 			Controller.PressStack.Push(p_Keybind)
 
 			if (Controller.TargetingDelay > 0)
-					Sleep, % Controller.TargetingDelay
+					Sleep(Controller.TargetingDelay)
 		}
 
 		if (p_Keybind.Modifier)
@@ -82,7 +82,7 @@ class InputHelper
 				Controller.PressCount.Movement--
 
 			if (Controller.TargetingDelay > 0)
-					Sleep, % Controller.TargetingDelay
+					Sleep(Controller.TargetingDelay)
 		}
 	}
 

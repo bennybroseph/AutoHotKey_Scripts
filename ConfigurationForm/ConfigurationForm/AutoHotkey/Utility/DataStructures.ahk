@@ -112,3 +112,62 @@ class LooseStack
 		}
 	}
 }
+
+class Color
+{
+	static s_HexValues := Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F")
+
+	__New(p_R, p_G, p_B, p_A)
+	{
+		global
+
+		this.m_R := p_R
+		this.m_G := p_G
+		this.m_B := p_B
+		this.m_A := p_A
+
+		this.m_HexR := this.ConvertToHex(this.m_R, 2)
+		this.m_HexG := this.ConvertToHex(this.m_G, 2)
+		this.m_HexB := this.ConvertToHex(this.m_B, 2)
+		this.m_HexA := this.ConvertToHex(this.m_A, 2)
+	}
+
+	Hex[]
+	{
+		get {
+			return "0x" . this.m_HexA . this.m_HexR . this.m_HexG . this.m_HexB
+		}
+	}
+
+	String[]
+	{
+		get {
+			return "(" . this.m_R . ", " . this.m_G . ", " . this.m_B . ", " . this.m_A . ")"
+		}
+	}
+	HexString[]
+	{
+		get {
+			return "(" . this.m_HexR . ", " . this.m_HexG . ", " . this.m_HexB . ", " . this.m_HexA . ")"
+		}
+	}
+
+	ConvertToHex(p_Decimal, p_MinLength)
+	{
+		local _result := ""
+
+		local _hex := p_Decimal
+		Loop
+		{
+			local _remainder := Mod(_hex, 16) + 1
+			_hex := Floor(_hex / 16)
+
+			_result := this.s_HexValues[_remainder] . _result
+		} Until _hex = 0
+
+		While, StrLen(_result) < p_MinLength
+			_result .= "0"
+
+		return _result
+	}
+}

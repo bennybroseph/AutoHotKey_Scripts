@@ -33,7 +33,11 @@ class ImageOverlay
 			this.m_Pos.X += Graphics.ActiveWinStats.Pos.X
 			this.m_Pos.Y += Graphics.ActiveWinStats.Pos.Y
 
-			this.m_BackgroundColor := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . p_Index . "_Background")
+			local _colorString := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . p_Index . "_Background")
+			if (_colorString != Error)
+				this.m_BackgroundColor := IniReader.ParseColor(_colorString)
+			else
+				this.m_BackgroundColor := -1
 
 			local _controlInfo := Controller.FindControlInfo(this.m_Keybind)
 

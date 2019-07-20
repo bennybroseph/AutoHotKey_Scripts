@@ -87,6 +87,8 @@ class Controller
     static __singleton :=
     static __init := False
 
+	static m_StickSpeed := 1300
+
     Init()
     {
 		global
@@ -135,7 +137,7 @@ class Controller
 
 		this.m_RepeatForceMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Repeat_Force_Move")
 		this.m_HaltMovementOnTarget := IniReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
-		
+
         this.m_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_X")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_Y"))
@@ -610,8 +612,8 @@ class Controller
 			if (_stick.State)
 			{
 				local _mouseDelta
-					:= new Vector2(20 * _stick.StickValue.X * _stick.Sensitivity.X
-								, 20 * -_stick.StickValue.Y * _stick.Sensitivity.Y)
+					:= new Vector2(FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
+								, FPS.DeltaTime * this.m_StickSpeed * -_stick.StickValue.Y * _stick.Sensitivity.Y)
 
 				this.MousePos.X := this.MousePos.X + _mouseDelta.X
 				this.MousePos.Y := this.MousePos.Y + _mouseDelta.Y
@@ -675,8 +677,8 @@ class Controller
 			if (_stick.State)
 			{
 				local _targetDelta
-					:= new Vector2(20 * _stick.StickValue.X * _stick.Sensitivity.X
-								, 20 * _stick.StickValue.Y * _stick.Sensitivity.Y)
+					:= new Vector2(FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
+								, FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.Y * _stick.Sensitivity.Y)
 
 				if (this.UsingReticule)
 				{
@@ -827,7 +829,7 @@ class Controller
 		global
 
 		local _isSpecial := !p_Keybind.Modifier	and this.IsSpecial(p_Keybind.Action)
-			
+
 		local i, _control
 		if (_isSpecial)
 		{
@@ -846,7 +848,7 @@ class Controller
 
 			local _isSpecialAction 		:= this.IsSpecial(_onPress.Action)
 			local _isSpecialModifier	:= this.IsSpecial(_onPress.Modifier)
-				
+
 			if ((_isSpecialAction and _onPress.Modifier and _onPress.Modifier = p_Keybind.Modifier)
 			or (_isSpecialModifier and _onPress.Action and _onPress.Action = p_Keybind.Action)
 			or (_onPress.Action = p_Keybind.Action and _onPress.Modifier = p_Keybind.Modifier))
@@ -856,7 +858,7 @@ class Controller
 
 			_isSpecialAction 	:= this.IsSpecial(_control.Controlbind.OnHold.Action)
 			_isSpecialModifier	:= this.IsSpecial(_control.Controlbind.OnHold.Modifier)
-			
+
 			if ((_isSpecialAction and _onHold.Modifier and _onHold.Modifier = p_Keybind.Modifier)
 			or (_isSpecialModifier and _onHold.Action and _onHold.Action = p_Keybind.Action)
 			or (_onHold.Action = p_Keybind.Action and _onHold.Modifier = p_Keybind.Modifier))
@@ -867,7 +869,7 @@ class Controller
 		{
 			local _keybindClone := p_Keybind.Clone()
 			_keybindClone.Modifier := _keybindClone.Action
-			
+
 			return this.FindControlInfo(_keybindClone)
 		}
 

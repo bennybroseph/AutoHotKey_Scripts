@@ -1,12 +1,14 @@
 ; Contains all graphic items
 
+global GRAPHIC_COUNT := 0
+
 class Graphic
 {
 	__New()
 	{
 		global
 
-		local _index := ++GRAPHIC_COUNT
+		local _index := "Image" . ++GRAPHIC_COUNT
 		this.m_Index := _index
 
 		Gui, %_index%: -Caption +E0x80000 +LastFound +Owner +AlwaysOnTop +ToolWindow
@@ -23,7 +25,7 @@ class Graphic
 		this.SetDrawingMode()
 
 		this.DrawGraphic()
-		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width , this.m_Size.Height)
+		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width, this.m_Size.Height)
 
 		Gui, %_index%:Hide
 		this.UnloadGraphic()
@@ -66,7 +68,7 @@ class Graphic
 }
 class Line extends Graphic
 {
-	__New(p_StartPos, p_EndPos, p_CanvasSize, p_Color := 0xffff0000, p_Thickness := 1)
+	__New(p_StartPos, p_EndPos, p_CanvasSize, p_Color := -1, p_Thickness := 1)
 	{
 		global
 
@@ -75,7 +77,10 @@ class Line extends Graphic
 
 		this.m_Size := p_CanvasSize
 
-		this.m_Pen := Gdip_CreatePen(p_Color, p_Thickness)
+		if (p_Color = -1)
+			p_Color := new Color(255, 0, 0, 255)
+
+		this.m_Pen := Gdip_CreatePen(p_Color.Hex, p_Thickness)
 
 		base.__New()
 	}
@@ -99,17 +104,20 @@ class Line extends Graphic
 
 class Shape extends Graphic
 {
-	__New(p_Size, p_Color := 0xffff0000, p_Filled := true, p_Thickness := 1)
+	__New(p_Size, p_Color := -1, p_Filled := true, p_Thickness := 1)
 	{
 		global
 
 		this.m_Size := p_Size
 		this.m_Thickness := p_Thickness
 
+		if (p_Color = -1)
+			p_Color := new Color(255, 0, 0, 255)
+
 		if (p_Filled)
-			this.m_Brush := Gdip_BrushCreateSolid(p_Color)
+			this.m_Brush := Gdip_BrushCreateSolid(p_Color.Hex)
 		else
-			this.m_Pen := Gdip_CreatePen(p_Color, this.m_Thickness)
+			this.m_Pen := Gdip_CreatePen(p_Color.Hex, this.m_Thickness)
 
 		base.__New()
 	}
@@ -144,12 +152,12 @@ class Ellipse extends Shape
 
 class Image extends Graphic
 {
-	__New(p_ImagePath, p_Scale := 1, p_BackgroundColor := 0x00000000)
+	__New(p_ImagePath, p_Scale := 1, p_BackgroundColor := -1)
 	{
 		global
 
-		if (p_BackgroundColor != 0x00000000)
-			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor)
+		if (p_BackgroundColor != -1)
+			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor.Hex)
 
 		this.m_Image := Gdip_CreateBitmapFromFile(p_ImagePath)
 

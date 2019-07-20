@@ -10,37 +10,38 @@ class StickOverlay
 
 		this.m_Stick := this.m_Direction = "Left" ? Controller.LeftStick : Controller.RightStick
 
+		local _overlayAlpha := 150
 		this.m_OverlaySize
 			:= new Vector2(Round(Graphics.ActiveWinStats.Size.Height / 2, 0)
 						, Round(Graphics.ActiveWinStats.Size.Height / 2, 0))
 
-		this.m_MaxRangeEllipse := new Ellipse(this.m_OverlaySize, 0x96ff0000, false, 1)
+		this.m_MaxRangeEllipse := new Ellipse(this.m_OverlaySize, new Color(255, 0, 255, _overlayAlpha), false, 1)
 		this.m_OuterDeadzoneEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.MaxValue
 									, this.m_OverlaySize.Height * this.m_Stick.MaxValue)
-						, 0x96ff00ff, false, 1)
+						, new Color(255, 0, 255, _overlayAlpha), false, 1)
 		this.m_InnerDeadzoneEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * this.m_Stick.Deadzone
 									, this.m_OverlaySize.Height * this.m_Stick.Deadzone)
-						, 0x96ff00ff, false, 1)
+						, new Color(255, 0, 255, _overlayAlpha), false, 1)
 
 		this.m_AxisX
 			:= new Line(new Vector2(0, this.m_OverlaySize.Height / 2)
 					, new Vector2(this.m_OverlaySize.Width, this.m_OverlaySize.Height / 2)
 					, this.m_OverlaySize
-					, 0x96ff0000, 1)
+					, new Color(255, 0, 0, _overlayAlpha), 1)
 		this.m_AxisY
 			:= new Line(new Vector2(this.m_OverlaySize.Width / 2, 0)
 					, new Vector2(this.m_OverlaySize.Width / 2, this.m_OverlaySize.Height)
 					, this.m_OverlaySize
-					, 0x96ff0000, 1)
+					, new Color(255, 0, 0, _overlayAlpha), 1)
 
 		this.m_RawInputEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
-						, 0x966400ff)
+						, new Color(100, 0, 255, _overlayAlpha))
 		this.m_ClampedInputEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
-						, 0x9600ff00)
+						, new Color(0, 255, 0, _overlayAlpha))
 	}
 
 	DrawOverlay()
@@ -89,12 +90,34 @@ class Debug
 	static __singleton :=
 	static __init := False
 
+	static m_LogFilename :=
+	static m_DebugTextGUI := "DebugText"
+	static m_DebugLogGUI := "DebugLog"
+
 	static m_LeftStickOverlay :=
 	static m_RightStickOverlay :=
 
 	Init()
 	{
+		global
+
 		this.__singleton := new Debug()
+
+		local _currentDate 
+		FormatTime, _currentDate, , MM_dd_yy-HH_mm_ss
+		this.m_LogFilename := "Logs\Log - " . _currentDate . ".txt"
+		FileAppend, , % this.m_LogFilename
+
+		; Example: On-screen display (OSD) via transparent window:
+
+		CustomColor = 000000  ; Can be any RGB color (it will be made transparent below).
+		Gui, 1: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, 1: Color, %CustomColor%
+		Gui, 1: Font, s12  ; Set a large font size (32-point).
+
+		Gui, 2: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, 2: Color, %CustomColor%
+		Gui, 2: Font, s12  ; Set a large font size (32-point).
 
 		this.__init := True
 	}
@@ -199,7 +222,18 @@ class Debug
 		For i, _delegate in this.OnToolTip
 			_debugText := _debugText . %_delegate%() . "`n`n"
 
-		Graphics.DrawToolTip(_debugText, 0, 90, 7)
+		static _textInit := False
+		if (!_textInit)
+		{
+			Gui, 1: Add, Text, vTheText cWhite, % _debugText
+			; Make all pixels of this color transparent and make the text itself translucent (150):
+			;WinSet, TransColor, %CustomColor% 150
+			Gui, 1: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
+			_textInit := True
+		}
+
+		GuiControl, 1:Text, TheText, % _debugText
+		;Graphics.DrawToolTip(_debugText, 0, 90, 7)
 
 		local _x, _y, _w, _h
 		WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
@@ -213,8 +247,18 @@ class Debug
 
 			For i, _entry in this.LogEntries
 				_debugLog := _debugLog . _entry . "`n"
-
-			Graphics.DrawToolTip(_debugLog, 0, this.ToolTipPos.Y + this.ToolTipSize.Height + 5, 8)
+			
+			static _logInit := False
+			if (!_logInit)
+			{
+				Gui, 2: Add, Text, vMyLog cWhite, % _debugLog
+				; Make all pixels of this color transparent and make the text itself translucent (150):
+				;WinSet, TransColor, %CustomColor% 150
+				Gui, 2: Show, x0 y200 NoActivate  ; NoActivate avoids deactivating the currently active window.
+				_logInit := True
+			}
+			GuiControl, 2:Text, MyLog, % _debugLog
+			;Graphics.DrawToolTip(_debugLog, 0, this.ToolTipPos.Y + this.ToolTipSize.Height + 5, 8)
 
 			this.UpdateLog := False
 		}
@@ -225,10 +269,15 @@ class Debug
 
 	AddToLog(p_Entry)
 	{
+		global 
+
 		if (this.LogEntries.Length() >= 50)
 			this.LogEntries.RemoveAt(1)
 
-		this.LogEntries.Push("[" . this.CurrentRuntime . "]: " . p_Entry)
+		local _newEntry := "[" . this.CurrentRuntime . "]: " . p_Entry
+
+		FileAppend, % _newEntry . "`n", % this.m_LogFilename
+		this.LogEntries.Push(_newEntry)
 
 		this.UpdateLog := True
 	}

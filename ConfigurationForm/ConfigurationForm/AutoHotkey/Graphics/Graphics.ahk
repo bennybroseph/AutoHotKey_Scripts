@@ -1,7 +1,5 @@
 ; Assists with everything related to the screen and drawing things to it
 
-global GRAPHIC_COUNT := 0
-
 class HorizontalAlignment
 {
 	static Left 	:= 0
@@ -186,7 +184,7 @@ class Graphics
 	{
 		local _imageX := p_Pos.X
 		local _imageY := p_Pos.Y
-		
+
 		if (p_CenterImage)
 		{
 			_imageX := _imageX - (p_Image.Size.Width / 2)

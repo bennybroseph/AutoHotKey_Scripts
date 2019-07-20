@@ -1,24 +1,36 @@
 ﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#SingleInstance Force
 #Persistent  ; Keep this script running until the user explicitly exits it.
 ;#Warn  ; Enable warnings to assist with detecting common errors.
 
-SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
-SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+#MaxHotkeysPerInterval 99000000
+#HotkeyInterval 99000000
+;#KeyHistory 0
 
+;ListLines Off
+
+Process, Priority, , A
 SetBatchLines, -1
 SetMouseDelay, -1
-SetKeyDelay, -1
+SetDefaultMouseSpeed, 0
+SetKeyDelay, -1, -1
 SetWinDelay, -1
+SetControlDelay, -1
+
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 ; Compile the library files
 #Include Library\XInput.ahk
 #Include Library\Gdip.ahk
 #Include Library\ToolTipOptions.ahk
 #Include Library\Delegate.ahk
+#include Library\Sleep.ahk
 
 ; Compile the utility classes
 #Include Utility\DataStructures.ahk
 #Include Utility\Debug.ahk
+#Include Utility\FPS.ahk
 #Include Utility\IniReader.ahk
 #Include Utility\Calibrate.ahk
 #Include Utility\Inventory.ahk
@@ -39,6 +51,7 @@ global PI := 3.141592653589793 ; Define PI for easier use
 XInput_Init() ; Initialize XInput
 
 Debug.Init()
+FPS.Init()
 IniReader.Init()
 
 global IsPaused := False
@@ -54,18 +67,22 @@ ImageOverlay.Init()
 Debug.InitControllerOverlay()
 ImageOverlay.DrawImageOverlay()
 
-SetTimer, Main, 0
+Loop
+{
+	FPS.Update()
 
-Main:
 	Graphics.SetActiveWinStats()
 	ImageOverlay.DrawBatteryStatus()
 
 	Controller.RefreshState()
 	Controller.ProcessInput()
 
+	; if (GetKeyState("F3"))
+	; 	Debug.Toggle()
+
 	if (Debug.Enabled)
 		Debug.DrawInfo()
-return
+}
 
 ; Toggles Debug Mode
 $F3::
@@ -73,9 +90,9 @@ $F3::
 return
 
 ; Reloades the config values when F5 is pressed
-$F5::
-	Reload
-return
+;$F5::
+;	Reload
+;return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed.
 ; The '$' ensures the hotkey can't be triggered with a 'Send' command
@@ -93,6 +110,7 @@ return
 
 ; Closes the program. The '$' ensures the hotkey can't be triggered with a 'Send' command
 $F12::
+	Sleep(1, "Off")
 	XInput_Term()
 	ExitApp
 return
