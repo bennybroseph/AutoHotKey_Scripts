@@ -117,7 +117,7 @@ class Color
 {
 	static s_HexValues := Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F")
 
-	__New(p_R, p_G, p_B, p_A)
+	__New(p_R, p_G, p_B, p_A := 255)
 	{
 		global
 
@@ -133,6 +133,13 @@ class Color
 	}
 
 	Hex[]
+	{
+		get {
+			return "0x" . this.m_HexR . this.m_HexG . this.m_HexB
+		}
+	}
+
+	GDIP_Hex[]
 	{
 		get {
 			return "0x" . this.m_HexA . this.m_HexR . this.m_HexG . this.m_HexB

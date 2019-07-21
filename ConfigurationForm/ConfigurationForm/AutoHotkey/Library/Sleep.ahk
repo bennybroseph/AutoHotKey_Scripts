@@ -1,4 +1,4 @@
-sleep(period := 1, Mode := "P")
+sleep(period := 1, Mode := "S")
 {
 	static Frequency, MinSetResolution, PID 		; frequency can't change while computer is on
 

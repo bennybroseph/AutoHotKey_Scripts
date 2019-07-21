@@ -80,7 +80,7 @@ class Line extends Graphic
 		if (p_Color = -1)
 			p_Color := new Color(255, 0, 0, 255)
 
-		this.m_Pen := Gdip_CreatePen(p_Color.Hex, p_Thickness)
+		this.m_Pen := Gdip_CreatePen(p_Color.GDIP_Hex, p_Thickness)
 
 		base.__New()
 	}
@@ -115,9 +115,9 @@ class Shape extends Graphic
 			p_Color := new Color(255, 0, 0, 255)
 
 		if (p_Filled)
-			this.m_Brush := Gdip_BrushCreateSolid(p_Color.Hex)
+			this.m_Brush := Gdip_BrushCreateSolid(p_Color.GDIP_Hex)
 		else
-			this.m_Pen := Gdip_CreatePen(p_Color.Hex, this.m_Thickness)
+			this.m_Pen := Gdip_CreatePen(p_Color.GDIP_Hex, this.m_Thickness)
 
 		base.__New()
 	}
@@ -157,7 +157,7 @@ class Image extends Graphic
 		global
 
 		if (p_BackgroundColor != -1)
-			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor.Hex)
+			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor.GDIP_Hex)
 
 		this.m_Image := Gdip_CreateBitmapFromFile(p_ImagePath)
 

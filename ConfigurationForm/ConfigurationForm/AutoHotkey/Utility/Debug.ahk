@@ -85,6 +85,45 @@ class StickOverlay
 	}
 }
 
+global TEXT_OVERLAY_COUNT := 0
+
+class TextOverlay
+{
+	static s_OverlayCount := 0
+
+	__New(p_BackgroundColor)
+	{
+		global
+
+		local _index := ++TEXT_OVERLAY_COUNT
+
+		this.m_BackgroundName := "TextOverlayBackground" . _index
+		local _guiName := this.m_BackgroundName
+
+		Gui, %_guiName%: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
+		Gui, %_guiName%: Font, s12
+		WinSet, Transparent,  175
+
+		this.m_GuiName := "TextOverlay" . _index
+		_guiName := this.m_GuiName
+
+		Gui, %_guiName%: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, %_guiName%: Color, %CustomColor%
+		Gui, %_guiName%: Font, s12
+		WinSet, TransColor, % p_BackgroundColor.Hex . " 255"
+	}
+
+	AutoSize()
+	{
+		local _guiName := this.m_BackgroundName
+		Gui, %_guiName%: Add, Text, vTheF cBlack, % _debugText
+		Gui, %_guiName%: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
+
+		Gui, %_guiName%: Add, Edit, vTheText cWhite ReadOnly -VScroll -E0x200, % _debugText
+		Gui, %_guiName%: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
+	}
+}
 class Debug
 {
 	static __singleton :=
@@ -113,11 +152,17 @@ class Debug
 		; Example: On-screen display (OSD) via transparent window:
 
 		CustomColor = 000000  ; Can be any RGB color (it will be made transparent below).
-		Gui, 1: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, 3: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, 3: Color, %CustomColor%
+		Gui, 3: Font, s12  ; Set a large font size (32-point).
+		WinSet, Transparent,  175
+
+		Gui, 1: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
 		Gui, 1: Color, %CustomColor%
 		Gui, 1: Font, s12  ; Set a large font size (32-point).
+		WinSet, TransColor,  %CustomColor% 254
 
-		Gui, 2: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, 2: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
 		Gui, 2: Color, %CustomColor%
 		Gui, 2: Font, s12  ; Set a large font size (32-point).
 
@@ -222,19 +267,28 @@ class Debug
 
 		local i, _delegate
 		For i, _delegate in this.OnToolTip
-			_debugText := _debugText . %_delegate%() . "`n`n"
+		{
+			_debugText .= %_delegate%()
+			if (i != this.OnToolTip.MaxIndex())
+				_debugText .= "`n`n"
+		}
 
 		static _textInit := False
 		if (!_textInit)
 		{
-			Gui, 1: Add, Text, vTheText cWhite, % _debugText
+			Gui, 3: Add, Text, vTheF cBlack, % _debugText
 			; Make all pixels of this color transparent and make the text itself translucent (150):
-			;WinSet, TransColor, %CustomColor% 150
+
+			Gui, 3: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
+
+			Gui, 1: Add, Edit, vTheText cWhite ReadOnly -VScroll -E0x200, % _debugText
+			; Make all pixels of this color transparent and make the text itself translucent (150):
+
 			Gui, 1: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
 			_textInit := True
 		}
 
-		GuiControl, 1:Text, TheText, % _debugText
+		GuiControl, 1:, TheText, % _debugText
 		;Graphics.DrawToolTip(_debugText, 0, 90, 7)
 
 		local _x, _y, _w, _h
@@ -256,7 +310,7 @@ class Debug
 				Gui, 2: Add, Text, vMyLog cWhite, % _debugLog
 				; Make all pixels of this color transparent and make the text itself translucent (150):
 				;WinSet, TransColor, %CustomColor% 150
-				Gui, 2: Show, x0 y500 NoActivate  ; NoActivate avoids deactivating the currently active window.
+				Gui, 2: Show, x0 y700 NoActivate  ; NoActivate avoids deactivating the currently active window.
 				_logInit := True
 			}
 			GuiControl, 2:Text, MyLog, % _debugLog
