@@ -63,7 +63,7 @@ class Vector2
 	String[]
 	{
 		get{
-			return "(" . this.m_X . ", " . this.m_Y . ")"
+			return "(" . Round(this.m_X, 2) . ", " . Round(this.m_Y, 2) . ")"
 		}
 	}
 }

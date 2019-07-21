@@ -84,39 +84,55 @@ class PressCounter
 
 class Controller
 {
-    static __singleton :=
-    static __init := False
+    static m_Init := False
+
+	static m_CursorMode 	:= False
+	static m_FreeTargetMode := False
+
+	static m_ShowCursorModeNotification :=
+	static m_ShowFreeTargetModeNotification :=
+
+	static m_MoveOnlyKey :=
+
+	static m_Moving				:= False
+	static m_ForceMouseUpdate 	:= True
+
+	static m_UsingReticule 			:= False
+	static m_ForceReticuleUpdate 	:= True
+
+	static m_RepeatForceMove		:=
+	static m_HaltMovementOnTarget	:=
+
+	static m_MouseOffset	:=
+	static m_TargetOffset 	:=
+
+	static m_TargetedKeybinds :=
+	static m_MovementKeybinds :=
+
+	static m_PressStack :=
+	static m_PressCount :=
+
+	static m_LootDelay		:=
+	static m_TargetingDelay	:=
+	static m_HoldDelay		:=
+
+	static m_VibeStrength :=
+	static m_VibeDuration :=
+
+	static m_Controls := Array()
+
+	static m_MovementStick    :=
+	static m_TargetStick      :=
+
+	static m_MousePos	:=
+	static m_TargetPos	:=
+
+	static m_BatteryStatus 		:=
+	static m_PrevBatteryStatus 	:=
 
 	static m_StickSpeed := 1300
 
     Init()
-    {
-		global
-
-        this.__singleton := new Controller()
-
-		local i, _control
-		For i, _control in this.Controls
-			_control.ParseTargeting()
-
-		Debug.AddToOnToolTip(new Delegate(Controller, "OnToolTip"))
-
-		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
-		if (_cursorModeAtStart)
-			this.EnableCursorMode()
-
-		local _freeTargetModeAtStart 	:= IniReader.ReadProfileKey(ProfileSection.Preferences, "FreeTarget_Mode_At_Start")
-		if (_freeTargetModeAtStart)
-			this.EnableFreeTargetMode()
-
-		local _swapSticksAtStart		:= IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Swap_Sticks_At_Start")
-		if (_swapSticksAtStart)
-			this.SwapSticks()
-
-        this.__init := True
-    }
-
-    __New()
     {
 		global
 
@@ -213,240 +229,167 @@ class Controller
 
 		this.m_BatteryStatus := -1
 		this.m_PrevBatteryStatus := this.m_BatteryStatus
+
+		local i, _control
+		For i, _control in this.m_Controls
+			_control.ParseTargeting()
+
+		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
+		if (_cursorModeAtStart)
+			this.EnableCursorMode()
+
+		local _freeTargetModeAtStart 	:= IniReader.ReadProfileKey(ProfileSection.Preferences, "FreeTarget_Mode_At_Start")
+		if (_freeTargetModeAtStart)
+			this.EnableFreeTargetMode()
+
+		local _swapSticksAtStart		:= IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Swap_Sticks_At_Start")
+		if (_swapSticksAtStart)
+			this.SwapSticks()
+
+		Debug.AddToOnToolTip(new Delegate(Controller, "OnToolTip"))
+
+        this.m_Init := True
     }
 
     CursorMode[]
     {
         get {
-            return this.__singleton.m_CursorMode
+            return this.m_CursorMode
         }
     }
     FreeTargetMode[]
     {
         get {
-            return this.__singleton.m_FreeTargetMode
+            return this.m_FreeTargetMode
         }
     }
 
-	ShowCursorModeNotification[]
-	{
-		get {
-			return this.__singleton.m_ShowCursorModeNotification
-		}
-	}
-	ShowFreeTargetModeNotification[]
-	{
-		get {
-			return this.__singleton.m_ShowFreeTargetModeNotification
-		}
-	}
-	ShowInventoryModeNotification[]
-	{
-		get {
-			return this.__singleton.m_ShowInventoryModeNotification
-		}
-	}
-
-    MoveOnlyKey[]
-    {
-        get {
-            return this.__singleton.m_MoveOnlyKey
-        }
-    }
-    Moving[]
-    {
-        get {
-            return this.__singleton.m_Moving
-        }
-    }
     ForceMouseUpdate[]
     {
         get {
-            return this.__singleton.m_ForceMouseUpdate
+            return this.m_ForceMouseUpdate
         }
 		set {
-			return this.__singleton.m_ForceMouseUpdate := value
+			return this.m_ForceMouseUpdate := value
 		}
-    }
-
-    UsingReticule[]
-    {
-        get {
-            return this.__singleton.m_UsingReticule
-        }
     }
     ForceReticuleUpdate[]
     {
         get {
-            return this.__singleton.m_ForceReticuleUpdate
+            return this.m_ForceReticuleUpdate
         }
 		set {
-			return this.__singleton.m_ForceReticuleUpdate := value
+			return this.m_ForceReticuleUpdate := value
 		}
     }
 
-	RepeatForceMove[]
-	{
-		get {
-			return this.__singleton.m_RepeatForceMove
-		}
-	}
 	HaltMovementOnTarget[]
 	{
 		get {
-			return this.__singleton.m_HaltMovementOnTarget
+			return this.m_HaltMovementOnTarget
 		}
 	}
-
-    MouseOffset[]
-    {
-        get {
-            return this.__singleton.m_MouseOffset
-        }
-    }
-    TargetOffset[]
-    {
-        get {
-            return this.__singleton.m_TargetOffset
-        }
-    }
 
 	TargetedKeybinds[]
 	{
 		get {
-			return this.__singleton.m_TargetedKeybinds
+			return this.m_TargetedKeybinds
 		}
 	}
 	MovementKeybinds[]
 	{
 		get {
-			return this.__singleton.m_MovementKeybinds
+			return this.m_MovementKeybinds
 		}
 	}
 
 	PressStack[]
 	{
 		get {
-			return this.__singleton.m_PressStack
+			return this.m_PressStack
 		}
 	}
     PressCount[]
     {
         get {
-            return this.__singleton.m_PressCount
+            return this.m_PressCount
         }
     }
-
-	VibeStrength[]
-	{
-		get {
-			return this.__singleton.m_VibeStrength
-		}
-	}
-	VibeDuration[]
-	{
-		get {
-			return this.__singleton.m_VibeDuration
-		}
-	}
 
 	LootDelay[]
 	{
 		get {
-			return this.__singleton.m_LootDelay
+			return this.m_LootDelay
 		}
 	}
 	TargetingDelay[]
 	{
 		get {
-			return this.__singleton.m_TargetingDelay
+			return this.m_TargetingDelay
 		}
 	}
 	HoldDelay[]
 	{
 		get {
-			return this.__singleton.m_HoldDelay
+			return this.m_HoldDelay
 		}
 	}
-
-	MovementRadius[]
-	{
-		get {
-			return this.__singleton.m_MovementRadius
-		}
-	}
-	TargetRadius[]
-	{
-		get {
-			return this.__singleton.m_TargetRadius
-		}
-	}
-
-    Controls[p_Index := 0]
-    {
-        get {
-			if (p_Index = 0)
-            	return this.__singleton.m_Controls
-			else
-				return this.__singleton.m_Controls[p_Index]
-        }
-    }
 
 	LeftStick[]
 	{
 		get {
-			return this.__singleton.m_LeftStick
+			return this.m_LeftStick
 		}
 	}
 	RightStick[]
 	{
 		get {
-			return this.__singleton.m_RightStick
+			return this.m_RightStick
 		}
 	}
 
     MovementStick[]
     {
         get {
-            return this.__singleton.m_MovementStick
+            return this.m_MovementStick
         }
     }
     TargetStick[]
     {
         get {
-            return this.__singleton.m_TargetStick
+            return this.m_TargetStick
         }
     }
 
     MousePos[]
     {
         get {
-            return this.__singleton.m_MousePos
+            return this.m_MousePos
         }
     }
     TargetPos[]
     {
         get {
-            return this.__singleton.m_TargetPos
+            return this.m_TargetPos
         }
     }
 
 	BatteryStatus[]
 	{
 		get {
-			return this.__singleton.m_BatteryStatus
+			return this.m_BatteryStatus
 		}
 		set {
-			return this.__singleton.m_BatteryStatus := value
+			return this.m_BatteryStatus := value
 		}
 	}
 	PrevBatteryStatus[]
 	{
 		get {
-			return this.__singleton.m_PrevBatteryStatus
+			return this.m_PrevBatteryStatus
 		}
 		set {
-			return this.__singleton.m_PrevBatteryStatus := value
+			return this.m_PrevBatteryStatus := value
 		}
 	}
 
@@ -461,14 +404,14 @@ class Controller
                 Continue
 
 			local i, _control
-            For i, _control in this.Controls
+            For i, _control in this.m_Controls
                 _control.RefreshState(_state)
 
-			this.LeftStick.RefreshState(_state)
-			this.RightStick.RefreshState(_state)
+			this.m_LeftStick.RefreshState(_state)
+			this.m_RightStick.RefreshState(_state)
 
-			this.PrevBatteryStatus := this.m_BatteryStatus
-			this.BatteryStatus := XInput_GetBatteryInformation(A_Index - 1, 0)
+			this.m_PrevBatteryStatus := this.m_BatteryStatus
+			this.m_BatteryStatus := XInput_GetBatteryInformation(A_Index - 1, 0)
         }
     }
 
@@ -477,7 +420,7 @@ class Controller
         global
 
 		local i, _control
-        For i, _control in this.Controls
+        For i, _control in this.m_Controls
         {
             ;Debug.AddToLog(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
             if (_control.State != _control.PrevState)
@@ -529,7 +472,7 @@ class Controller
                 ; The first frame a button has been held down long enough to trigger the hold action
 				if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
 					Inventory.ProcessHold(_control)
-				else if (_control.PressTick > 0 and A_TickCount >= _control.PressTick + this.HoldDelay)
+				else if (_control.PressTick > 0 and A_TickCount >= _control.PressTick + this.m_HoldDelay)
 				{
 					this.Vibrate()
 
@@ -544,28 +487,28 @@ class Controller
 		if (Inventory.Enabled)
 			Inventory.ProcessControlStack()
 
-		if ((this.MovementStick.StickValue.X != this.MovementStick.PrevStickValue.X
-        or this.MovementStick.StickValue.Y != this.MovementStick.PrevStickValue.Y)
-        or this.RepeatForceMove or this.ForceMouseUpdate or this.CursorMode)
+		if ((this.m_MovementStick.StickValue.X != this.m_MovementStick.PrevStickValue.X
+        or this.m_MovementStick.StickValue.Y != this.m_MovementStick.PrevStickValue.Y)
+        or this.m_RepeatForceMove or this.m_ForceMouseUpdate or this.CursorMode)
             this.ProcessMovementStick()
-        if ((this.TargetStick.StickValue.X != this.TargetStick.PrevStickValue.X
-        or this.TargetStick.StickValue.Y != this.TargetStick.PrevStickValue.Y)
-        or this.ForceReticuleUpdate or this.FreeTargetMode)
+        if ((this.m_TargetStick.StickValue.X != this.m_TargetStick.PrevStickValue.X
+        or this.m_TargetStick.StickValue.Y != this.m_TargetStick.PrevStickValue.Y)
+        or this.m_ForceReticuleUpdate or this.FreeTargetMode)
             this.ProcessTargetStick()
     }
 
 	ProcessMovementStick()
 	{
         global
-        local _stick := this.MovementStick
+        local _stick := this.m_MovementStick
 
         if (!this.CursorMode)
         {
 			if (_stick.State)
 			{
-				if ((!this.Moving or this.RepeatForceMove) and !this.PressStack.Peek)
+				if ((!this.m_Moving or this.m_RepeatForceMove) and !this.m_PressStack.Peek)
 				{
-					if (this.RepeatForceMove)
+					if (this.m_RepeatForceMove)
 					{
 						this.StartMoving()
 						this.StopMoving()
@@ -576,36 +519,36 @@ class Controller
 
 				local _centerOffset
 					:= new Vector2(Graphics.ActiveWinStats.Center.X
-								+ this.MouseOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								+ this.m_MouseOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
 								, Graphics.ActiveWinStats.Center.Y
-								+ this.MouseOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+								+ this.m_MouseOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
 				local _radius
-					:= new Vector2(this.MovementRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
-								, this.MovementRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+					:= new Vector2(this.m_MovementRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								, this.m_MovementRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
-				this.MousePos.X	:= _centerOffset.X + _stick.StickValue.Normalize.X * _radius.Width
-				this.MousePos.Y := _centerOffset.Y - _stick.StickValue.Normalize.Y * _radius.Height
+				this.m_MousePos.X	:= _centerOffset.X + _stick.StickValue.Normalize.X * _radius.Width
+				this.m_MousePos.Y := _centerOffset.Y - _stick.StickValue.Normalize.Y * _radius.Height
 			}
 			else
 			{
-				if (this.Moving and !this.PressStack.Peek)
+				if (this.m_Moving and !this.m_PressStack.Peek)
 					this.StopMoving()
 
-				this.MousePos
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.MouseOffset.X
-								, Graphics.ActiveWinStats.Center.Y + this.MouseOffset.Y)
+				this.m_MousePos
+					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.m_MouseOffset.X
+								, Graphics.ActiveWinStats.Center.Y + this.m_MouseOffset.Y)
 			}
 
-			if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
+			if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
 			{
-				if (Inventory.Enabled and !this.Moving)
+				if (Inventory.Enabled and !this.m_Moving)
 					InputHelper.MoveMouse(Inventory.GetGridPos())
 				else
-					InputHelper.MoveMouse(this.MousePos)
+					InputHelper.MoveMouse(this.m_MousePos)
 			}
 			else
-				Graphics.DrawReticule(this.MousePos)
+				Graphics.DrawReticule(this.m_MousePos)
         }
         else
         {
@@ -615,31 +558,31 @@ class Controller
 					:= new Vector2(FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
 								, FPS.DeltaTime * this.m_StickSpeed * -_stick.StickValue.Y * _stick.Sensitivity.Y)
 
-				this.MousePos.X := this.MousePos.X + _mouseDelta.X
-				this.MousePos.Y := this.MousePos.Y + _mouseDelta.Y
+				this.m_MousePos.X := this.m_MousePos.X + _mouseDelta.X
+				this.m_MousePos.Y := this.m_MousePos.Y + _mouseDelta.Y
 			}
 
-			if (_stick.State or this.ForceMouseUpdate)
+			if (_stick.State or this.m_ForceMouseUpdate)
 			{
-				if (this.PressStack.Peek.Type != KeybindType.Targeted or (!this.TargetStick.State and !this.FreeTargetMode))
-					InputHelper.MoveMouse(this.MousePos)
+				if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
+					InputHelper.MoveMouse(this.m_MousePos)
 				else
-					Graphics.DrawReticule(this.MousePos)
+					Graphics.DrawReticule(this.m_MousePos)
 			}
         }
 
-		this.ForceMouseUpdate := False
+		this.m_ForceMouseUpdate := False
 	}
 	ProcessTargetStick()
     {
         global
-        local _stick := this.TargetStick
+        local _stick := this.m_TargetStick
 
-		if ((_stick.State and this.PressStack.Peek.Type = KeybindType.Targeted)
+		if ((_stick.State and this.m_PressStack.Peek.Type = KeybindType.Targeted)
 		or (this.FreeTargetMode))
-			this.UsingReticule := True
+			this.m_UsingReticule := True
 		else
-			this.UsingReticule := False
+			this.m_UsingReticule := False
 
         if (!this.FreeTargetMode)
         {
@@ -647,28 +590,28 @@ class Controller
 			{
 				local _centerOffset
 					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X
-								+ this.TargetOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								+ this.m_TargetOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
 								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y
-								+ this.TargetOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+								+ this.m_TargetOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
 				local _radius
-					:= new Vector2(this.TargetRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
-								, this.TargetRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+					:= new Vector2(this.m_TargetRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
+								, this.m_TargetRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
 
-				this.TargetPos.X := _centerOffset.X + _stick.StickValue.X * _radius.Width
-				this.TargetPos.Y := _centerOffset.Y - _stick.StickValue.Y * _radius.Height
+				this.m_TargetPos.X := _centerOffset.X + _stick.StickValue.X * _radius.Width
+				this.m_TargetPos.Y := _centerOffset.Y - _stick.StickValue.Y * _radius.Height
 			}
 			else
 			{
-				this.TargetPos
+				this.m_TargetPos
 					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X
 								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y)
 			}
 
-            if (this.UsingReticule and this.PressStack.Peek.Type = KeybindType.Targeted)
-                InputHelper.MoveMouse(this.TargetPos)
-            else if (_stick.state and this.PressStack.Peek.Type != KeybindType.Targeted)
-                Graphics.DrawReticule(this.TargetPos)
+            if (this.m_UsingReticule and this.m_PressStack.Peek.Type = KeybindType.Targeted)
+                InputHelper.MoveMouse(this.m_TargetPos)
+            else if (_stick.state and this.m_PressStack.Peek.Type != KeybindType.Targeted)
+                Graphics.DrawReticule(this.m_TargetPos)
 			else
 				Graphics.HideReticule()
         }
@@ -680,23 +623,23 @@ class Controller
 					:= new Vector2(FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
 								, FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.Y * _stick.Sensitivity.Y)
 
-				if (this.UsingReticule)
+				if (this.m_UsingReticule)
 				{
-					this.TargetPos.X := this.TargetPos.X + _targetDelta.X
-					this.TargetPos.Y := this.TargetPos.Y - _targetDelta.Y
+					this.m_TargetPos.X := this.m_TargetPos.X + _targetDelta.X
+					this.m_TargetPos.Y := this.m_TargetPos.Y - _targetDelta.Y
 				}
 			}
 
-			if (_stick.State or this.ForceReticuleUpdate)
+			if (_stick.State or this.m_ForceReticuleUpdate)
 			{
-				if (this.PressStack.Peek.Type = KeybindType.Targeted)
-					InputHelper.MoveMouse(this.TargetPos)
+				if (this.m_PressStack.Peek.Type = KeybindType.Targeted)
+					InputHelper.MoveMouse(this.m_TargetPos)
 				else
-					Graphics.DrawReticule(this.TargetPos)
+					Graphics.DrawReticule(this.m_TargetPos)
 			}
         }
 
-		this.ForceReticuleUpdate := False
+		this.m_ForceReticuleUpdate := False
     }
 
 	Vibrate()
@@ -704,9 +647,9 @@ class Controller
 		Loop, 4
 		{
 			if XInput_GetState(A_Index-1)
-				XInput_SetState(A_Index-1, this.VibeStrength, this.VibeStrength) ; MAX 65535
+				XInput_SetState(A_Index-1, this.m_VibeStrength, this.m_VibeStrength) ; MAX 65535
 		}
-		SetTimer, VibeOff, % -this.VibeDuration
+		SetTimer, VibeOff, % -this.m_VibeDuration
 	}
 
 	ResetDPadTick()
@@ -715,7 +658,7 @@ class Controller
 
 		Loop, 4
 		{
-			local _control := this.Controls[A_Index + ControlIndex.DPadUp - 1]
+			local _control := this.m_Controls[A_Index + ControlIndex.DPadUp - 1]
 			_control.PressTick := -1
 			_control.HoldTick := -1
 		}
@@ -735,7 +678,7 @@ class Controller
         if (Inventory.Enabled)
             Inventory.Disable()
 
-		if (this.ShowCursorModeNotification)
+		if (this.m_ShowCursorModeNotification)
 		{
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("CursorMode"))
 
@@ -748,16 +691,16 @@ class Controller
 
 		this.StopMoving()
 
-		this.ForceMouseUpdate 	:= True
+		this.m_ForceMouseUpdate 	:= True
 		this.CursorMode 		:= True
     }
     DisableCursorMode()
     {
 		global
-		if (this.ShowCursorModeNotification)
+		if (this.m_ShowCursorModeNotification)
 			Graphics.HideToolTip(1)
 
-		this.ForceMouseUpdate	:= True
+		this.m_ForceMouseUpdate	:= True
 		this.CursorMode 		:= False
     }
 
@@ -771,7 +714,7 @@ class Controller
 	EnableFreeTargetMode()
 	{
 		global
-		if (this.ShowFreeTargetModeNotification)
+		if (this.m_ShowFreeTargetModeNotification)
 		{
 			local _controlInfo := this.FindControlInfo(IniReader.ParseKeybind("FreeTarget"))
 
@@ -782,42 +725,42 @@ class Controller
 								, 2, HorizontalAlignment.Center)
 		}
 
-		this.ForceReticuleUpdate 	:= True
+		this.m_ForceReticuleUpdate 	:= True
 		this.FreeTargetMode 		:= True
 	}
 	DisableFreeTargetMode()
 	{
 		global
-		if (this.ShowFreeTargetModeNotification)
+		if (this.m_ShowFreeTargetModeNotification)
 			Graphics.HideToolTip(2)
 
-		this.ForceReticuleUpdate 	:= True
+		this.m_ForceReticuleUpdate 	:= True
 		this.FreeTargetMode			:= False
 	}
 
 	SwapSticks()
 	{
-		local _temp := this.MovementStick
-		this.MovementStick := this.TargetStick
-		this.TargetStick := _temp
+		local _temp := this.m_MovementStick
+		this.m_MovementStick := this.m_TargetStick
+		this.m_TargetStick := _temp
 
-		this.ForceMouseUpdate 		:= True
-		this.ForceReticuleUpdate	:= True
+		this.m_ForceMouseUpdate 		:= True
+		this.m_ForceReticuleUpdate	:= True
 	}
 
 	StartMoving()
 	{
-		Debug.AddToLog("Pressing " . this.MoveOnlyKey.String)
-		InputHelper.PressKeybind(this.MoveOnlyKey)
+		Debug.AddToLog("Pressing " . this.m_MoveOnlyKey.String)
+		InputHelper.PressKeybind(this.m_MoveOnlyKey)
 
-		this.Moving := True
+		this.m_Moving := True
 	}
 	StopMoving()
 	{
-		Debug.AddToLog("Releasing " . this.MoveOnlyKey.String)
-		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
+		Debug.AddToLog("Releasing " . this.m_MoveOnlyKey.String)
+		InputHelper.ReleaseKeybind(this.m_MoveOnlyKey)
 
-		this.Moving := False
+		this.m_Moving := False
 	}
 
 	IsSpecial(p_Key)
@@ -833,7 +776,7 @@ class Controller
 		local i, _control
 		if (_isSpecial)
 		{
-			For i, _control in this.Controls
+			For i, _control in this.m_Controls
 			{
 				if (_control.Controlbind.OnPress.Action = p_Keybind.Action and !_control.Controlbind.OnPress.Modifier)
 					return new ControlInfo(_control, "Press")
@@ -842,7 +785,7 @@ class Controller
 			}
 		}
 
-		For i, _control in this.Controls
+		For i, _control in this.m_Controls
 		{
 			local _onPress := _control.Controlbind.OnPress
 
@@ -870,6 +813,7 @@ class Controller
 			local _keybindClone := p_Keybind.Clone()
 			_keybindClone.Modifier := _keybindClone.Action
 
+			Debug.AddToLog("Could not find " . p_Keybind.String . " in list of configured controls. Trying again...")
 			return this.FindControlInfo(_keybindClone)
 		}
 
@@ -880,41 +824,37 @@ class Controller
 	{
 		local _debugText :=
 
-        _debugText := _debugText . "MousePos: (" . Round(this.MousePos.X, 2) . ", " . Round(this.MousePos.Y, 2) . ") `n"
-        _debugText := _debugText . "Moving: " . this.Moving . " ForceMouseUpdate: " . this.ForceMouseUpdate . "`n"
-		_debugText := _debugText . "RawStickValue: " . this.MovementStick.RawStickValue.String "`n"
-		_debugText := _debugText . "ClampedStickValue: " . this.MovementStick.ClampedStickValue.String "`n"
-        _debugText := _debugText . this.MovementStick.Nickname . " - State: " . this.MovementStick.State " ("
-					. Round(this.MovementStick.StickValue.X, 2) . ", " . Round(this.MovementStick.StickValue.Y, 2) ") "
-                    . "Angle: " . Round(this.MovementStick.StickAngleDeg, 2) . "`n`n"
+        _debugText .= "MousePos: " . this.m_MousePos.String . " "
+        _debugText .= "Moving: " . this.m_Moving . " ForceMouseUpdate: " . this.m_ForceMouseUpdate . "`n"
+		_debugText .= "RawStickValue: " . this.m_MovementStick.RawStickValue.String "`n"
+		_debugText .= "ClampedStickValue: " . this.m_MovementStick.ClampedStickValue.String "`n"
+        _debugText .= this.m_MovementStick.Nickname . " - State: " . this.m_MovementStick.State " "
+					. this.m_MovementStick.StickValue.String . " Angle: " . Round(this.m_MovementStick.StickAngleDeg, 2) . "`n`n"
 
-        _debugText := _debugText . "TargetPos: (" . Round(this.TargetPos.X, 2) . ", " . Round(this.TargetPos.Y, 2) . ") `n"
-        _debugText := _debugText . "UsingReticule: " . this.UsingReticule . " ForceReticuleUpdate: " . this.ForceReticuleUpdate . "`n"
-		_debugText := _debugText . "RawStickValue: " . this.TargetStick.RawStickValue.String "`n"
-		_debugText := _debugText . this.TargetStick.Nickname . " - State: " . this.TargetStick.State " ("
-					. Round(this.TargetStick.StickValue.X, 2) . ", " . Round(this.TargetStick.StickValue.Y, 2) ") "
-                    . "Angle: " . Round(this.TargetStick.StickAngleDeg, 2) . "`n"
+        _debugText .= "TargetPos: " this.m_TargetPos.String "`n"
+        _debugText .= "UsingReticule: " . this.m_UsingReticule . " ForceReticuleUpdate: " . this.m_ForceReticuleUpdate . "`n"
+		_debugText .= "RawStickValue: " . this.m_TargetStick.RawStickValue.String "`n"
+		_debugText .= this.m_TargetStick.Nickname . " - State: " . this.m_TargetStick.State " "
+					. this.m_TargetStick.StickValue.String " Angle: " . Round(this.m_TargetStick.StickAngleDeg, 2) . "`n`n"
 
-        _debugText := _debugText . "PressStack - Length: " . this.PressStack.Length . " Peek: " . this.PressStack.Peek.Type . "`n"
+        _debugText .= "PressStack - Length: " . this.m_PressStack.Length . " Peek: " . this.m_PressStack.Peek.Type . "`n"
 					. "PressCount - "
-                    . "Targeted: " . this.PressCount.Targeted . " "
-                    . "Movement: " . this.PressCount.Movement . "`n`n"
+                    . "Targeted: " . this.m_PressCount.Targeted . " "
+                    . "Movement: " . this.m_PressCount.Movement . "`n`n"
 
 		local i, _control
-		For i, _control in this.Controls
+		For i, _control in this.m_Controls
 		{
 			_debugText := _debugText . _control.Nickname . ": "
 			if (_control.Index = ControlIndex.LTrigger or _control.Index = ControlIndex.RTrigger)
-				_debugText := _debugText . _control.TriggerValue . "   "
+				_debugText .= _control.TriggerValue . "   "
 			else
-				_debugText := _debugText . _control.State . "   "
+				_debugText .= _control.State . "   "
 
 			if (Mod(i, 4) = 0)
-				_debugText := _debugText . "`n"
+				_debugText .= "`n"
 		}
 
 		return _debugText
 	}
-
-
 }

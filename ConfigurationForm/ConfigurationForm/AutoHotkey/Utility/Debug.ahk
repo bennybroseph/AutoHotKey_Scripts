@@ -103,9 +103,11 @@ class Debug
 
 		this.__singleton := new Debug()
 
-		local _currentDate 
-		FormatTime, _currentDate, , MM_dd_yy-HH_mm_ss
-		this.m_LogFilename := "Logs\Log - " . _currentDate . ".txt"
+		FileCreateDir, % "Log\"
+
+		local _currentDate
+		FormatTime, _currentDate, , yyyy-MM-dd  hh-mm-ss tt
+		this.m_LogFilename := "Log\" . _currentDate . ".txt"
 		FileAppend, , % this.m_LogFilename
 
 		; Example: On-screen display (OSD) via transparent window:
@@ -247,14 +249,14 @@ class Debug
 
 			For i, _entry in this.LogEntries
 				_debugLog := _debugLog . _entry . "`n"
-			
+
 			static _logInit := False
 			if (!_logInit)
 			{
 				Gui, 2: Add, Text, vMyLog cWhite, % _debugLog
 				; Make all pixels of this color transparent and make the text itself translucent (150):
 				;WinSet, TransColor, %CustomColor% 150
-				Gui, 2: Show, x0 y200 NoActivate  ; NoActivate avoids deactivating the currently active window.
+				Gui, 2: Show, x0 y500 NoActivate  ; NoActivate avoids deactivating the currently active window.
 				_logInit := True
 			}
 			GuiControl, 2:Text, MyLog, % _debugLog
@@ -269,7 +271,7 @@ class Debug
 
 	AddToLog(p_Entry)
 	{
-		global 
+		global
 
 		if (this.LogEntries.Length() >= 50)
 			this.LogEntries.RemoveAt(1)

@@ -47,8 +47,6 @@ class FPS
 
 		this.m_CurrentTick := A_TickCount
 		this.m_DeltaTime := this.m_CurrentTick - this.m_PrevTick
-
-		Debug.AddToLog("DeltaTime: " . this.m_DeltaTime . "  SleepTime:" . this.m_SleepTime)
 	}
 
 	OnToolTip()
