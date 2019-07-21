@@ -66,6 +66,11 @@ class Vector2
 			return "(" . Round(this.m_X, 2) . ", " . Round(this.m_Y, 2) . ")"
 		}
 	}
+
+	IsEqual(a, b)
+	{
+		return a.X = b.X and a.Y = b.Y
+	}
 }
 
 class LooseStack
@@ -130,6 +135,30 @@ class Color
 		this.m_HexG := this.ConvertToHex(this.m_G, 2)
 		this.m_HexB := this.ConvertToHex(this.m_B, 2)
 		this.m_HexA := this.ConvertToHex(this.m_A, 2)
+	}
+	R[]
+	{
+		get {
+			return this.m_R
+		}
+	}
+	G[]
+	{
+		get {
+			return this.m_G
+		}
+	}
+	B[]
+	{
+		get {
+			return this.m_B
+		}
+	}
+	A[]
+	{
+		get {
+			return this.m_A
+		}
 	}
 
 	Hex[]

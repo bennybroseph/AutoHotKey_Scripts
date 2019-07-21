@@ -44,7 +44,7 @@ class StickOverlay
 						, new Color(0, 255, 0, _overlayAlpha))
 	}
 
-	DrawOverlay()
+	Draw()
 	{
 		global
 
@@ -71,7 +71,7 @@ class StickOverlay
 							* (this.m_OverlaySize.Height / 2)))
 	}
 
-	HideOverlay()
+	Hide()
 	{
 		Graphics.HideImage(this.m_MaxRangeEllipse)
 		Graphics.HideImage(this.m_OuterDeadzoneEllipse)
@@ -89,8 +89,6 @@ global TEXT_OVERLAY_COUNT := 0
 
 class TextOverlay
 {
-	static s_OverlayCount := 0
-
 	__New(p_BackgroundColor)
 	{
 		global
@@ -100,38 +98,116 @@ class TextOverlay
 		this.m_BackgroundName := "TextOverlayBackground" . _index
 		local _guiName := this.m_BackgroundName
 
-		Gui, %_guiName%: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
+		Gui, %_guiName%: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow
 		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
 		Gui, %_guiName%: Font, s12
-		WinSet, Transparent,  175
+		WinSet, Transparent,  % p_BackgroundColor.A
 
-		this.m_GuiName := "TextOverlay" . _index
-		_guiName := this.m_GuiName
+		this.m_BackgroundHWND := WinExist()
 
-		Gui, %_guiName%: +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
-		Gui, %_guiName%: Color, %CustomColor%
+		this.m_Foreground := "TextOverlay" . _index
+		_guiName := this.m_Foreground
+
+		Gui, %_guiName%: -Caption +E0x20 +LastFound +AlwaysOnTop +ToolWindow
+		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
 		Gui, %_guiName%: Font, s12
-		WinSet, TransColor, % p_BackgroundColor.Hex . " 255"
+		WinSet, TransColor, % p_BackgroundColor.Hex . " 254"
+
+		this.m_ForegroundHWND := WinExist()
+
+		this.m_IsVisible := False
+		this.m_SizeSet := False
 	}
 
-	AutoSize()
+	IsVisible[]
+	{
+		get {
+			return this.m_IsVisible
+		}
+	}
+
+	Pos[]
+	{
+		get {
+			return this.m_Pos
+		}
+	}
+	Size[]
+	{
+		get {
+			return this.m_Size
+		}
+	}
+
+	Show(p_Pos)
+	{
+		global
+
+		this.m_Pos := p_Pos
+
+		local _posX := this.m_Pos.X
+		local _posY := this.m_Pos.Y
+
+		local _guiName := this.m_BackgroundName
+		Gui, %_guiName%: Show, x%_posX% y%_posY% NA
+
+		_guiName := this.m_Foreground
+		Gui, %_guiName%: Show, x%_posX% y%_posY% NA
+
+		this.m_Size := Graphics.GetClientSize(this.m_BackgroundHWND)
+
+		this.m_IsVisible := True
+	}
+
+	Draw(p_Text, p_Pos)
+	{
+		global
+
+		if (!this.m_SizeSet)
+		{
+			local _guiName := this.m_BackgroundName
+			local _textName := _guiName . "Text"
+			Gui, %_guiName%: Add, Text, v%_textName% cBlack, % p_Text
+
+			_guiName := this.m_Foreground
+
+			local _editName
+			_editName := this.m_EditName := _guiName . "Edit"
+			Gui, %_guiName%: Add, Edit, v%_editName% cWhite ReadOnly -VScroll -E0x200, % p_Text
+
+			this.m_SizeSet := True
+		}
+
+		if (!this.m_IsVisible or !Vector2.IsEqual(this.m_Pos, p_Pos))
+			this.Show(p_Pos)
+
+		GuiControl, % this.m_Foreground . ":", % this.m_EditName, % p_Text
+	}
+
+	Hide()
 	{
 		local _guiName := this.m_BackgroundName
-		Gui, %_guiName%: Add, Text, vTheF cBlack, % _debugText
-		Gui, %_guiName%: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
+		Gui, %_guiName%: Hide
 
-		Gui, %_guiName%: Add, Edit, vTheText cWhite ReadOnly -VScroll -E0x200, % _debugText
-		Gui, %_guiName%: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
+		_guiName := this.m_Foreground
+		Gui, %_guiName%: Hide
+
+		this.m_IsVisible := False
 	}
 }
 class Debug
 {
-	static __singleton :=
-	static __init := False
+	static m_Enabled := False
+
+	static m_LogEntries := Array()
+	static m_UpdateLog := True
+
+	static m_OnToolTip := Array()
 
 	static m_LogFilename :=
-	static m_DebugTextGUI := "DebugText"
-	static m_DebugLogGUI := "DebugLog"
+
+	static m_DebugTextGUI :=
+	static m_DebugLogGUI :=
 
 	static m_LeftStickOverlay :=
 	static m_RightStickOverlay :=
@@ -140,8 +216,6 @@ class Debug
 	{
 		global
 
-		this.__singleton := new Debug()
-
 		FileCreateDir, % "Log\"
 
 		local _currentDate
@@ -149,39 +223,8 @@ class Debug
 		this.m_LogFilename := "Log\" . _currentDate . ".txt"
 		FileAppend, , % this.m_LogFilename
 
-		; Example: On-screen display (OSD) via transparent window:
-
-		CustomColor = 000000  ; Can be any RGB color (it will be made transparent below).
-		Gui, 3: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
-		Gui, 3: Color, %CustomColor%
-		Gui, 3: Font, s12  ; Set a large font size (32-point).
-		WinSet, Transparent,  175
-
-		Gui, 1: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
-		Gui, 1: Color, %CustomColor%
-		Gui, 1: Font, s12  ; Set a large font size (32-point).
-		WinSet, TransColor,  %CustomColor% 254
-
-		Gui, 2: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow  ; +ToolWindow avoids a taskbar button and an alt-tab menu item.
-		Gui, 2: Color, %CustomColor%
-		Gui, 2: Font, s12  ; Set a large font size (32-point).
-
-		this.__init := True
-	}
-
-	__New()
-	{
-		this.m_Enabled := False
-
-		this.m_StartupTick := A_TickCount
-
-		this.m_ToolTipPos	:= new Vector2()
-		this.m_ToolTipSize	:= new Vector2()
-
-		this.m_LogEntries := Array()
-		this.m_UpdateLog := True
-
-		this.m_OnToolTip := Array()
+		this.m_DebugTextGUI := new TextOverlay(new Color(0, 0, 0, 200))
+		this.m_DebugLogGUI := new TextOverlay(new Color(0, 0, 0, 200))
 	}
 
 	CurrentTickDelta[]
@@ -210,53 +253,24 @@ class Debug
 		}
 	}
 
-	Enabled[]
-	{
-		get {
-			return this.__singleton.m_Enabled
-		}
-	}
-
-	ToolTipPos[]
-	{
-		get {
-			return this.__singleton.m_ToolTipPos
-		}
-	}
-	ToolTipSize[]
-	{
-		get {
-			return this.__singleton.m_ToolTipSize
-		}
-	}
-
-	LogEntries[]
-	{
-		get {
-			return this.__singleton.m_LogEntries
-		}
-	}
-	UpdateLog[]
-	{
-		get {
-			return this.__singleton.m_UpdateLog
-		}
-		set {
-			return this.__singleton.m_UpdateLog := value
-		}
-	}
-
-	OnToolTip[]
-	{
-		get {
-			return this.__singleton.m_OnToolTip
-		}
-	}
-
 	InitControllerOverlay()
 	{
 		this.m_LeftStickOverlay := new StickOverlay("Left")
 		this.m_RightStickOverlay := new StickOverlay("Right")
+	}
+
+	Update()
+	{
+		global
+
+		static _prevKeyState := GetKeyState("F3")
+		if (GetKeyState("F3") and !_prevKeyState)
+			this.Toggle()
+
+		_prevKeyState := GetKeyState("F3")
+
+		if (this.m_Enabled)
+			this.DrawInfo()
 	}
 
 	DrawInfo()
@@ -266,86 +280,54 @@ class Debug
 		local _debugText :=
 
 		local i, _delegate
-		For i, _delegate in this.OnToolTip
+		For i, _delegate in this.m_OnToolTip
 		{
 			_debugText .= %_delegate%()
-			if (i != this.OnToolTip.MaxIndex())
+			if (i != this.m_OnToolTip.MaxIndex())
 				_debugText .= "`n`n"
 		}
 
-		static _textInit := False
-		if (!_textInit)
-		{
-			Gui, 3: Add, Text, vTheF cBlack, % _debugText
-			; Make all pixels of this color transparent and make the text itself translucent (150):
+		this.m_DebugTextGUI.Draw(_debugText, new Vector2(0, 90))
 
-			Gui, 3: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
-
-			Gui, 1: Add, Edit, vTheText cWhite ReadOnly -VScroll -E0x200, % _debugText
-			; Make all pixels of this color transparent and make the text itself translucent (150):
-
-			Gui, 1: Show, x0 y90 NoActivate  ; NoActivate avoids deactivating the currently active window.
-			_textInit := True
-		}
-
-		GuiControl, 1:, TheText, % _debugText
-		;Graphics.DrawToolTip(_debugText, 0, 90, 7)
-
-		local _x, _y, _w, _h
-		WinGetPos, _x, _y, _w, _h, ahk_class tooltips_class32
-
-		this.ToolTipPos		:= new Vector2(_x, _y)
-		this.ToolTipSize 	:= new Vector2(_w, _h)
-
-		if (this.UpdateLog)
+		if (this.m_UpdateLog)
 		{
 			local _debugLog := _debugLog . "Debug Log:`n"
 
-			For i, _entry in this.LogEntries
+			For i, _entry in this.m_LogEntries
 				_debugLog := _debugLog . _entry . "`n"
 
-			static _logInit := False
-			if (!_logInit)
-			{
-				Gui, 2: Add, Text, vMyLog cWhite, % _debugLog
-				; Make all pixels of this color transparent and make the text itself translucent (150):
-				;WinSet, TransColor, %CustomColor% 150
-				Gui, 2: Show, x0 y700 NoActivate  ; NoActivate avoids deactivating the currently active window.
-				_logInit := True
-			}
-			GuiControl, 2:Text, MyLog, % _debugLog
-			;Graphics.DrawToolTip(_debugLog, 0, this.ToolTipPos.Y + this.ToolTipSize.Height + 5, 8)
+			this.m_DebugLogGUI.Draw(_debugLog, new Vector2(0, this.m_DebugTextGUI.Pos.Y + this.m_DebugTextGUI.Size.Height))
 
-			this.UpdateLog := False
+			this.m_UpdateLog := False
 		}
 
-		this.m_LeftStickOverlay.DrawOverlay()
-		this.m_RightStickOverlay.DrawOverlay()
+		this.m_LeftStickOverlay.Draw()
+		this.m_RightStickOverlay.Draw()
 	}
 
 	AddToLog(p_Entry)
 	{
 		global
 
-		if (this.LogEntries.Length() >= 50)
-			this.LogEntries.RemoveAt(1)
+		if (this.m_LogEntries.Length() >= 50)
+			this.m_LogEntries.RemoveAt(1)
 
-		local _newEntry := "[" . this.CurrentRuntime . "]: " . p_Entry
+		local _newEntry := "[" . FPS.RuntimeString . "]: " . p_Entry
 
 		FileAppend, % _newEntry . "`n", % this.m_LogFilename
-		this.LogEntries.Push(_newEntry)
+		this.m_LogEntries.Push(_newEntry)
 
-		this.UpdateLog := True
+		this.m_UpdateLog := True
 	}
 
 	AddToOnToolTip(p_Delegate)
 	{
-		this.OnToolTip.Push(p_Delegate)
+		this.m_OnToolTip.Push(p_Delegate)
 	}
 
 	Toggle()
 	{
-		if (!this.Enabled)
+		if (!this.m_Enabled)
 			this.Enable()
 		else
 			this.Disable()
@@ -354,18 +336,19 @@ class Debug
 	{
 		Graphics.DrawToolTip("Debug mode enabled `nPress F3 to disable", 0, 50, 5)
 
-		this.UpdateLog := True
-		this.Enabled := True
+		this.m_UpdateLog := True
+		this.m_Enabled := True
 	}
 	Disable()
 	{
-		this.m_LeftStickOverlay.HideOverlay()
-		this.m_RightStickOverlay.HideOverlay()
+		this.m_DebugTextGUI.Hide()
+		this.m_DebugLogGUI.Hide()
+
+		this.m_LeftStickOverlay.Hide()
+		this.m_RightStickOverlay.Hide()
 
 		Graphics.HideToolTip(5)
-		Graphics.HideToolTip(7)
-		Graphics.HideToolTip(8)
 
-		this.Enabled := False
+		this.m_Enabled := False
 	}
 }

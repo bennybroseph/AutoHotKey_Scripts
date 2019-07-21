@@ -2,22 +2,24 @@
 
 class FPS
 {
-	static m_Frequency :=
+	static m_TargetFPS := 144
 
-	static m_TargetFPS := 72
-	static m_Delay :=
+	static m_DeltaTime := 0
+	static m_SleepDeltaTime := 0
 
-	static m_CurrentTick :=
-	static m_PrevTick :=
+	static m_CurrFPS := 0
 
-	static m_DeltaTime :=
-	static m_SleepTime :=
+	static m_AverageFPS := 0
+	static m_FrameCount := 0
+	static m_AddedDeltaTime := 0
 
-	static m_Counter :=
-	static m_PrevCounter :=
+	static m_Frequency
+	static m_Delay
 
-	static m_DeltaCounter :=
-	static m_SleepCount :=
+	static m_StartupTime
+
+	static m_CurrTime
+	static m_PrevTime
 
 	Init()
 	{
@@ -28,11 +30,10 @@ class FPS
 
 		this.m_Delay := 1000 / this.m_TargetFPS
 
-		this.m_CurrentTick := A_TickCount
-		this.m_PrevTick := this.m_CurrentTick
+		this.m_StartupTime := this.GetCurrentTime()
 
-		this.m_DeltaTime := 0
-		this.m_SleepTime := 0
+		this.m_CurrTime := this.m_StartupTime
+		this.m_PrevTime := this.m_CurrTime
 
 		Debug.AddToOnToolTip(new Delegate(FPS, "OnToolTip"))
 	}
@@ -44,35 +45,84 @@ class FPS
 		}
 	}
 
+	Runtime[]
+	{
+		get {
+			return this.GetCurrentTime() - this.m_StartupTime
+		}
+	}
+	RuntimeString[]
+	{
+		get {
+			local _ticksRemaining := this.Runtime
+
+			local _hours 	:= Floor(_ticksRemaining / 1000 / 60 / 60)
+			_ticksRemaining := _ticksRemaining - (_hours * 1000 * 60 * 60)
+
+			local _minutes 	:= Floor(_ticksRemaining / 1000 / 60)
+			_ticksRemaining := _ticksRemaining - (_minutes * 1000 * 60)
+
+			local _seconds := Floor(_ticksRemaining / 1000)
+			_ticksRemaining := _ticksRemaining - (_seconds * 1000)
+
+			local _miliseconds := Round(_ticksRemaining)
+
+			return _hours . ":" . _minutes  . ":" . _seconds . ":" . _miliseconds
+		}
+	}
+
 	Update()
 	{
 		global
 
-		this.m_PrevCounter := this.m_Counter
-		this.m_PrevTick := this.m_CurrentTick
+		this.m_PrevTime := this.m_CurrTime
 
+		local _counter := this.GetCurrentTime()
+		local _deltaTime := _counter - this.m_PrevTime
+
+		if (_deltaTime < this.m_Delay)
+			Sleep(this.m_Delay - _deltaTime)
+
+		local _sleepDeltaTime := this.GetCurrentTime()
+		this.m_SleepDeltaTime := _sleepDeltaTime - _counter
+
+		this.m_CurrTime := _sleepDeltaTime
+		this.m_DeltaTime := this.m_CurrTime - this.m_PrevTime
+
+		this.m_CurrFPS := 1000 / this.m_DeltaTime
+
+		this.m_AddedDeltaTime += this.m_DeltaTime
+		if (this.m_AddedDeltaTime > 1000)
+		{
+			this.m_AverageFPS := (this.m_FrameCount * 1000) / this.m_AddedDeltaTime
+
+			this.m_AddedDeltaTime := 0
+			this.m_FrameCount := 0
+		}
+
+		++this.m_FrameCount
+	}
+
+	ToMilliseconds(p_Counter)
+	{
+		return p_Counter * 1000 / this.m_Frequency
+	}
+	ToCounter(p_Time)
+	{
+		return p_Time * this.m_Frequency / 1000
+	}
+
+	QueryCounter()
+	{
 		local _counter
 		DllCall("QueryPerformanceCounter", "Int64*", _counter)
 
-		local _deltaCounter := (_counter - this.m_PrevCounter) * 1000 / this.m_Frequency
+		return _counter
+	}
 
-		local _currentTick := A_TickCount
-		local _deltaTime := _currentTick - this.m_PrevTick
-
-		if (_deltaCounter < this.m_Delay)
-			Sleep(this.m_Delay - _deltaCounter)
-
-		local _sleepCounter
-		DllCall("QueryPerformanceCounter", "Int64*", _sleepCounter)
-
-		this.m_SleepCount := _sleepCounter - _counter
-		this.m_SleepTime := A_TickCount - _currentTick
-
-		this.m_Counter := _sleepCounter
-		this.m_DeltaCounter := (this.m_Counter - this.m_PrevCounter) * 1000 / this.m_Frequency
-
-		this.m_CurrentTick := A_TickCount
-		this.m_DeltaTime := this.m_CurrentTick - this.m_PrevTick
+	GetCurrentTime()
+	{
+		return this.ToMilliseconds(this.QueryCounter())
 	}
 
 	OnToolTip()
@@ -81,8 +131,8 @@ class FPS
 
 		local _debugText :=
 
-		_debugText .= "FPS - DeltaTime: " . this.m_DeltaTime . "`tSleepTime: " . this.m_SleepTime . "`n"
-		_debugText .= "DeltaCounter: " . this.m_DeltaCounter . "`tSleepCount: " . this.m_SleepCount
+		_debugText .= "FPS - CurrFPS: " . this.m_CurrFPS . "`tAverageFPS: " . this.m_AverageFPS . "`tDelay: " . this.m_Delay . "`n"
+		_debugText .= "DeltaTime: " . this.m_DeltaTime . "`tSleepCount: " . this.m_SleepDeltaTime
 
 		return _debugText
 	}

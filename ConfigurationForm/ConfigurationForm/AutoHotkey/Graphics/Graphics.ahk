@@ -192,7 +192,7 @@ class Graphics
 		}
 		local _index := p_Image.Index
 
-		Gui, %_index%:Show, x%_imageX% y%_imageY% NoActivate
+		Gui, %_index%:Show, x%_imageX% y%_imageY% NA
 	}
 	HideImage(p_Image)
 	{
@@ -292,6 +292,20 @@ class Graphics
 
 			this.DrawImage(_newImage, _newImagePos)
 		}
+	}
+
+	GetClientSize(p_HWND)
+	{
+		global
+
+		local _rc
+		VarSetCapacity(_rc, 16)
+
+    	DllCall("GetClientRect", "uint", p_HWND, "uint", &_rc)
+
+		local _size := new Vector2(NumGet(_rc, 8, "int"), NumGet(_rc, 12, "int"))
+
+		return _size
 	}
 
 	OnToolTip()

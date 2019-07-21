@@ -130,7 +130,7 @@ class Controller
 	static m_BatteryStatus 		:=
 	static m_PrevBatteryStatus 	:=
 
-	static m_StickSpeed := 1300
+	static m_StickSpeed := 1500
 
     Init()
     {
@@ -393,6 +393,13 @@ class Controller
 		}
 	}
 
+	StickSpeed[]
+	{
+		get {
+			return Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height * this.m_StickSpeed
+		}
+	}
+
     RefreshState()
     {
         global
@@ -555,8 +562,8 @@ class Controller
 			if (_stick.State)
 			{
 				local _mouseDelta
-					:= new Vector2(FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
-								, FPS.DeltaTime * this.m_StickSpeed * -_stick.StickValue.Y * _stick.Sensitivity.Y)
+					:= new Vector2(FPS.DeltaTime * this.StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
+								, FPS.DeltaTime * this.StickSpeed * -_stick.StickValue.Y * _stick.Sensitivity.Y)
 
 				this.m_MousePos.X := this.m_MousePos.X + _mouseDelta.X
 				this.m_MousePos.Y := this.m_MousePos.Y + _mouseDelta.Y
@@ -620,8 +627,8 @@ class Controller
 			if (_stick.State)
 			{
 				local _targetDelta
-					:= new Vector2(FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
-								, FPS.DeltaTime * this.m_StickSpeed * _stick.StickValue.Y * _stick.Sensitivity.Y)
+					:= new Vector2(FPS.DeltaTime * this.StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
+								, FPS.DeltaTime * this.StickSpeed * _stick.StickValue.Y * _stick.Sensitivity.Y)
 
 				if (this.m_UsingReticule)
 				{

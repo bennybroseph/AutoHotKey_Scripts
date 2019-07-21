@@ -80,19 +80,13 @@ Loop
 	; if (GetKeyState("F3"))
 	; 	Debug.Toggle()
 
-	if (Debug.Enabled)
-		Debug.DrawInfo()
+	Debug.Update()
 }
 
-; Toggles Debug Mode
-$F3::
-	Debug.Toggle()
-return
-
 ; Reloades the config values when F5 is pressed
-;$F5::
-;	Reload
-;return
+$F6::
+	Reload
+return
 
 ; Pauses the script and displays a message indicating so whenever F10 is pressed.
 ; The '$' ensures the hotkey can't be triggered with a 'Send' command
