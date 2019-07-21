@@ -12,8 +12,8 @@ class StickOverlay
 
 		local _overlayAlpha := 150
 		this.m_OverlaySize
-			:= new Vector2(Round(Graphics.ActiveWinStats.Size.Height / 2, 0)
-						, Round(Graphics.ActiveWinStats.Size.Height / 2, 0))
+			:= new Vector2(Round(Graphics.ActiveWinStats.Size.Height / 2.15, 0)
+						, Round(Graphics.ActiveWinStats.Size.Height / 2.15, 0))
 
 		this.m_MaxRangeEllipse := new Ellipse(this.m_OverlaySize, new Color(255, 0, 255, _overlayAlpha), false, 1)
 		this.m_OuterDeadzoneEllipse
@@ -45,6 +45,8 @@ class StickOverlay
 		this.m_ClampedInputEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
 						, new Color(0, 255, 0, _overlayAlpha))
+
+		this.m_FirstDraw := True
 	}
 
 	Draw()
@@ -52,15 +54,22 @@ class StickOverlay
 		global
 
 		local _center := new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y)
+
 		_center.X += (Graphics.ActiveWinStats.Size.Width / 4) * 3
 		_center.Y += (Graphics.ActiveWinStats.Size.Height / 4) * (this.m_Direction = "Left" ? 1 : 3)
 
-		Graphics.DrawImage(this.m_MaxRangeEllipse, _center)
-		Graphics.DrawImage(this.m_OuterDeadzoneEllipse, _center)
-		Graphics.DrawImage(this.m_InnerDeadzoneEllipse, _center)
+		if (this.m_FirstDraw)
+		{
+			Graphics.DrawImage(this.m_MaxRangeEllipse, _center)
+			Graphics.DrawImage(this.m_OuterDeadzoneEllipse, _center)
+			Graphics.DrawImage(this.m_InnerDeadzoneEllipse, _center)
 
-		Graphics.DrawImage(this.m_AxisX, _center)
-		Graphics.DrawImage(this.m_AxisY, _center)
+			Graphics.DrawImage(this.m_AxisX, _center)
+			Graphics.DrawImage(this.m_AxisY, _center)
+		}
+
+		if (!this.m_FirstDraw and Vector2.IsEqual(this.m_Stick.RawStickValue, this.m_Stick.PrevRawStickValue))
+			return
 
 		Graphics.DrawImage(this.m_RawInputEllipse
 			, new Vector2(_center.X + this.m_Stick.RawStickValue.X
@@ -77,6 +86,8 @@ class StickOverlay
 							* (this.m_OverlaySize.Width / 2)
 						, _center.Y - this.m_Stick.ClampedStickValue.Y
 							* (this.m_OverlaySize.Height / 2)))
+
+		this.m_FirstDraw := False
 	}
 
 	Hide()
@@ -89,7 +100,10 @@ class StickOverlay
 		Graphics.HideImage(this.m_AxisY)
 
 		Graphics.HideImage(this.m_RawInputEllipse)
+		Graphics.HideImage(this.m_AdjustedInputEllipse)
 		Graphics.HideImage(this.m_ClampedInputEllipse)
+
+		this.m_FirstDraw := True
 	}
 }
 
@@ -97,28 +111,30 @@ global TEXT_OVERLAY_COUNT := 0
 
 class TextOverlay
 {
-	__New(p_BackgroundColor)
+	__New(p_BackgroundColor, p_AutoSize := False)
 	{
 		global
+
+		this.m_AutoSize := p_AutoSize
 
 		local _index := ++TEXT_OVERLAY_COUNT
 
 		this.m_BackgroundName := "TextOverlayBackground" . _index
 		local _guiName := this.m_BackgroundName
 
-		Gui, %_guiName%: +E0x20 +LastFound +AlwaysOnTop -Caption +ToolWindow
+		Gui, %_guiName%: -Caption +E0x20 +LastFound +AlwaysOnTop +ToolWindow
 		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
-		Gui, %_guiName%: Font, s12
+		Gui, %_guiName%: Font, s10
 		WinSet, Transparent,  % p_BackgroundColor.A
 
 		this.m_BackgroundHWND := WinExist()
 
-		this.m_Foreground := "TextOverlay" . _index
-		_guiName := this.m_Foreground
+		this.m_ForegroundName := "TextOverlay" . _index
+		_guiName := this.m_ForegroundName
 
 		Gui, %_guiName%: -Caption +E0x20 +LastFound +AlwaysOnTop +ToolWindow
 		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
-		Gui, %_guiName%: Font, s12
+		Gui, %_guiName%: Font, s10
 		WinSet, TransColor, % p_BackgroundColor.Hex . " 254"
 
 		this.m_ForegroundHWND := WinExist()
@@ -157,10 +173,10 @@ class TextOverlay
 		local _posY := this.m_Pos.Y
 
 		local _guiName := this.m_BackgroundName
-		Gui, %_guiName%: Show, x%_posX% y%_posY% NA
+		Gui, %_guiName%: Show, x%_posX% y%_posY% NA AutoSize
 
-		_guiName := this.m_Foreground
-		Gui, %_guiName%: Show, x%_posX% y%_posY% NA
+		_guiName := this.m_ForegroundName
+		Gui, %_guiName%: Show, x%_posX% y%_posY% NA AutoSize
 
 		this.m_Size := Graphics.GetClientSize(this.m_BackgroundHWND)
 
@@ -174,22 +190,35 @@ class TextOverlay
 		if (!this.m_SizeSet)
 		{
 			local _guiName := this.m_BackgroundName
-			local _textName := _guiName . "Text"
+
+			local _textName
+			_textName := this.m_TextName := _guiName . "Text"
 			Gui, %_guiName%: Add, Text, v%_textName% cBlack, % p_Text
 
-			_guiName := this.m_Foreground
+			_guiName := this.m_ForegroundName
 
 			local _editName
 			_editName := this.m_EditName := _guiName . "Edit"
 			Gui, %_guiName%: Add, Edit, v%_editName% cWhite ReadOnly -VScroll -E0x200, % p_Text
+		}
+		else if (this.m_AutoSize)
+		{
+			local _size := Graphics.GetControlAutoSize(p_Text)
+			if (!Vector2.IsEqual(_size, this.m_Size))
+			{
+				GuiControl, % this.m_BackgroundName . ": Move", % this.m_TextName, % "w" _size.Width "h" _size.Height
+				GuiControl, % this.m_ForegroundName . ": Move", % this.m_EditName, % "w" _size.Width "h" _size.Height
 
-			this.m_SizeSet := True
+				this.Show(p_Pos)
+			}
 		}
 
 		if (!this.m_IsVisible or !Vector2.IsEqual(this.m_Pos, p_Pos))
 			this.Show(p_Pos)
 
-		GuiControl, % this.m_Foreground . ":", % this.m_EditName, % p_Text
+		GuiControl, % this.m_ForegroundName . ":", % this.m_EditName, % p_Text
+
+		this.m_SizeSet := True
 	}
 
 	Hide()
@@ -197,7 +226,7 @@ class TextOverlay
 		local _guiName := this.m_BackgroundName
 		Gui, %_guiName%: Hide
 
-		_guiName := this.m_Foreground
+		_guiName := this.m_ForegroundName
 		Gui, %_guiName%: Hide
 
 		this.m_IsVisible := False
@@ -232,7 +261,7 @@ class Debug
 		FileAppend, , % this.m_LogFilename
 
 		this.m_DebugTextGUI := new TextOverlay(new Color(0, 0, 0, 200))
-		this.m_DebugLogGUI := new TextOverlay(new Color(0, 0, 0, 200))
+		this.m_DebugLogGUI := new TextOverlay(new Color(0, 0, 0, 200), True)
 	}
 
 	CurrentTickDelta[]
@@ -301,8 +330,13 @@ class Debug
 		{
 			local _debugLog := _debugLog . "Debug Log:`n"
 
+			local i, _entry
 			For i, _entry in this.m_LogEntries
-				_debugLog := _debugLog . _entry . "`n"
+			{
+				_debugLog .= _entry
+				if (i != this.m_LogEntries.MaxIndex())
+					_debugLog .= "`n"
+			}
 
 			this.m_DebugLogGUI.Draw(_debugLog, new Vector2(0, this.m_DebugTextGUI.Pos.Y + this.m_DebugTextGUI.Size.Height))
 

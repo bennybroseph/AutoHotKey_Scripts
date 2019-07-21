@@ -181,6 +181,8 @@ class Stick extends Control
 		this.m_Direction := p_Direction
 
 		this.m_RawStickValue 		:= new Vector2()
+		this.m_RawStickValue 		:= new Vector2()
+
 		this.m_AdjustedStickValue 	:= new Vector2()
 		this.m_ClampedStickValue 	:= new Vector2()
 
@@ -210,6 +212,13 @@ class Stick extends Control
 			return this.m_RawStickValue
 		}
 	}
+	PrevRawStickValue[]
+	{
+		get {
+			return this.m_PrevRawStickValue
+		}
+	}
+
 	AdjustedStickValue[]
 	{
 		get {
@@ -284,7 +293,8 @@ class Stick extends Control
 
 		base.RefreshState(p_State)
 
-		this.m_PrevStickValue := new Vector2(this.m_StickValue.X, this.m_StickValue.Y)
+		this.m_PrevRawStickValue 	:= this.m_RawStickValue.Clone()
+		this.m_PrevStickValue 		:= this.m_StickValue.Clone()
 
 		this.m_RawStickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) / this.s_MaxValue
 		this.m_RawStickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) / this.s_MaxValue

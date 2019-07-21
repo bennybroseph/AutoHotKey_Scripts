@@ -91,6 +91,7 @@ class ImageOverlay
 
 		this.m_ShowBatteryStatus := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Show_Battery_Status")
 
+		this.m_BatteryImages.Push(new Image("Images\Battery_Empty.png", ImageOverlay.m_ImageScale))
 		this.m_BatteryImages.Push(new Image("Images\Battery_Low.png", ImageOverlay.m_ImageScale))
 		this.m_BatteryImages.Push(new Image("Images\Battery_Medium.png", ImageOverlay.m_ImageScale))
 		this.m_BatteryImages.Push(new Image("Images\Battery_High.png", ImageOverlay.m_ImageScale))
@@ -120,7 +121,7 @@ class ImageOverlay
 			local i, _batteryImage
 			For i, _batteryImage in this.m_BatteryImages
 			{
-				if (Controller.BatteryStatus.BatteryLevel = i)
+				if (Controller.BatteryStatus.BatteryLevel = i - 1)
 					Graphics.DrawImage(_batteryImage
 									, new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y), False)
 				else

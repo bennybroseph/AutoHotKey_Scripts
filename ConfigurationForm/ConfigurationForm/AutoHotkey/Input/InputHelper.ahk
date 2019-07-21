@@ -33,6 +33,7 @@ class InputHelper
 					else
 						_newMousePos := Controller.MousePos
 				}
+				Send {CTRL Down} {LALT Down} {"1" Down}
 
 				if (Controller.HaltMovementOnTarget)
 					Controller.StopMoving()

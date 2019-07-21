@@ -182,11 +182,16 @@ class Graphics
 
 	DrawImage(p_Image, p_Pos, p_CenterImage := True)
 	{
+		global
+
 		local _imageX := p_Pos.X
 		local _imageY := p_Pos.Y
 
 		if (p_CenterImage)
 		{
+			if (!p_Image.Size)
+				Debug.AddToLog("The image " . p_Image.Index . " has an invalid size and can't be centered!")
+
 			_imageX := _imageX - (p_Image.Size.Width / 2)
 			_imageY := _imageY - (p_Image.Size.Height / 2)
 		}
@@ -198,6 +203,23 @@ class Graphics
 	{
 		local _index := p_Image.Index
 		Gui, %_index%:Hide
+	}
+
+	GetControlAutoSize(p_Text)
+	{
+		global
+
+		local _index := "NewGUI"
+
+		Gui, %_index%: Default
+		Gui, %_index%: Font, s10
+		Gui, %_index%: Add, Edit, vt2 -VScroll -E0x200, % p_Text
+		GuiControlGet, t2, Pos ; this will work as soon as a control exists, regardless of whether the gui ever gets 'shown'.
+		Gui, %_index%: Destroy
+
+		Gui, 1:Default
+
+		return new Vector2(t2w, t2h)
 	}
 
 	DrawReticule(p_Pos, p_CenterImage := True)

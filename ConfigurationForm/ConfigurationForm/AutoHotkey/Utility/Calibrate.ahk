@@ -21,13 +21,45 @@ Calibrate()
 			. "4). Repeat this for the Right Analog Stick.`n`n"
 			. "Press 'OK' to begin."
 
+	local _overlayAlpha := 150
+	local _overlaySize
+		:= new Vector2(Round(Graphics.ActiveWinStats.Size.Height / 2, 0)
+					, Round(Graphics.ActiveWinStats.Size.Height / 2, 0))
+
+	local _maxRangeEllipse := new Ellipse(_overlaySize, new Color(0, 255, 150, _overlayAlpha), false, 5)
+
+	local _axisX
+		:= new Line(new Vector2(0, _overlaySize.Height / 2)
+				, new Vector2(_overlaySize.Width, _overlaySize.Height / 2)
+				, _overlaySize
+				, new Color(0, 255, 150, _overlayAlpha), 1)
+	local _axisY
+		:= new Line(new Vector2(_overlaySize.Width / 2, 0)
+				, new Vector2(_overlaySize.Width / 2, _overlaySize.Height)
+				, _overlaySize
+				, new Color(0, 255, 150, _overlayAlpha), 1)
+
+	local _rightInputEllipse
+		:= new Ellipse(new Vector2(_overlaySize.Width * 0.03, _overlaySize.Height * 0.03)
+					, new Color(255, 150, 0, _overlayAlpha))
+	local _leftInputEllipse
+		:= new Ellipse(new Vector2(_overlaySize.Width * 0.03, _overlaySize.Height * 0.03)
+					, new Color(0, 150, 255, _overlayAlpha))
+
+	local _center := Graphics.ActiveWinStats.Center
+
+	Graphics.DrawImage(_maxRangeEllipse, _center)
+	Graphics.DrawImage(_axisX, _center)
+	Graphics.DrawImage(_axisY, _center)
+
 	Loop, 2
 	{
-		_stickCalibration = A_Index = 1 ? "Left" : "Right"
+		local _stickCalibration := A_Index = 1 ? "Left" : "Right"
+		Graphics.HideImage(_stickCalibration != "Left" ? _leftInputEllipse : _rightInputEllipse)
 
 		Graphics.DrawToolTip("Start by moving the stick upwards until you hit the frame."
 				, Graphics.ActiveWinStats.Center.X
-				, Graphics.ActiveWinStats.Center.Y
+				, 0
 				, 1
 				, HorizontalAlignment.Center
 				, VerticalAlignment.Center)
@@ -44,6 +76,11 @@ Calibrate()
 				{
 					_stickValueL	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
 					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
+
+					local _stickValue := _stickCalibration = "Left" ? _stickValueL : _stickValueR
+					Graphics.DrawImage(_stickCalibration = "Left" ? _leftInputEllipse : _rightInputEllipse
+									, new Vector2(_center.X + _stickValue.X * (_overlaySize.Width / 2)
+												, _center.Y - _stickValue.Y * (_overlaySize.Height / 2)))
 				}
 			}
 		}Until _stickValueL.Magnitude >= 1 or _stickValueR.Magnitude >= 1
@@ -51,7 +88,7 @@ Calibrate()
 		Graphics.DrawToolTip("Now, spin the stick in a circle multiple times while still making contact with the frame.`n"
 							. "Press any button when complete."
 				, Graphics.ActiveWinStats.Center.X
-				, Graphics.ActiveWinStats.Center.Y
+				, 0
 				, 1
 				, HorizontalAlignment.Center
 				, VerticalAlignment.Center)
@@ -68,6 +105,11 @@ Calibrate()
 
 					_stickValueL 	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
 					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
+
+					local _stickValue := _stickCalibration = "Left" ? _stickValueL : _stickValueR
+					Graphics.DrawImage(_stickCalibration = "Left" ? _leftInputEllipse : _rightInputEllipse
+									, new Vector2(_center.X + _stickValue.X * (_overlaySize.Width / 2)
+												, _center.Y - _stickValue.Y * (_overlaySize.Height / 2)))
 				}
 			}
 			if (_stickValueL.Magnitude < _maxMagnitudeL and _stickCalibration = "Left")
@@ -81,7 +123,7 @@ Calibrate()
 
 		Graphics.DrawToolTip("Now let's calibrate the right stick."
 				, Graphics.ActiveWinStats.Center.X
-				, Graphics.ActiveWinStats.Center.Y
+				, 0
 				, 1
 				, HorizontalAlignment.Center
 				, VerticalAlignment.Center)
@@ -104,6 +146,12 @@ Calibrate()
 		Graphics.HideToolTip(1)
 	}
 
+	Graphics.HideImage(_maxRangeEllipse)
+	Graphics.HideImage(_axisX)
+	Graphics.HideImage(_axisY)
+	Graphics.HideImage(_leftInputEllipse)
+	Graphics.HideImage(_rightInputEllipse)
+
 	Graphics.HideToolTip(1)
 
 	local _maxThresholdL := _maxMagnitudeL - 0.025
@@ -118,6 +166,10 @@ Calibrate()
 			. "4). Repeat this " . _repetitions . " times.`n`n"
 			. "Press 'OK' to begin."
 
+	Graphics.DrawImage(_maxRangeEllipse, _center)
+	Graphics.DrawImage(_axisX, _center)
+	Graphics.DrawImage(_axisY, _center)
+
 	local _minZeroL := 1, local _maxZeroL := 0
 	local _minZeroR := 1, local _maxZeroR := 0
 
@@ -128,7 +180,7 @@ Calibrate()
 		Graphics.DrawToolTip("Move the sticks in random directions, then let them come to rest. Press any button when complete.`n"
 							. _repetitions - (A_Index - 1) . " more input(s) needed."
 			, Graphics.ActiveWinStats.Center.X
-			, Graphics.ActiveWinStats.Center.Y
+			, 0
 			, 1
 			, HorizontalAlignment.Center
 			, VerticalAlignment.Center)
@@ -141,6 +193,16 @@ Calibrate()
 				if _state := XInput_GetState(A_Index-1)
 				{
 					_buttonState := _state.Buttons
+
+					_stickValueL	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
+					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
+
+					Graphics.DrawImage(_leftInputEllipse
+									, new Vector2(_center.X + _stickValueL.X * (_overlaySize.Width / 2)
+												, _center.Y - _stickValueL.Y * (_overlaySize.Height / 2)))
+					Graphics.DrawImage(_rightInputEllipse
+									, new Vector2(_center.X + _stickValueR.X * (_overlaySize.Width / 2)
+												, _center.Y - _stickValueR.Y * (_overlaySize.Height / 2)))
 				}
 			}
 		}Until _buttonState
@@ -173,16 +235,23 @@ Calibrate()
 
 		Sleep(500)
 	}
+
+	Graphics.HideImage(_maxRangeEllipse)
+	Graphics.HideImage(_axisX)
+	Graphics.HideImage(_axisY)
+	Graphics.HideImage(_leftInputEllipse)
+	Graphics.HideImage(_rightInputEllipse)
+
 	_minValueAverageL := Vector2.Div(_minValueAverageL, _repetitions)
 	_minValueAverageR := Vector2.Div(_minValueAverageR, _repetitions)
 
-	local _zeroDeltaL := (_maxZeroL - _minZeroL) + 0.125
-	local _zeroDeltaR := (_maxZeroR - _minZeroR) + 0.125
+	local _zeroDeltaL := _minValueAverageL.Magnitude + 0.125
+	local _zeroDeltaR := _minValueAverageR.Magnitude + 0.125
 
 	MsgBox, , % "Calibration Complete"
 		, % "That concludes the calibration! `n`n"
 			. "Thank you for taking the time to complete these instructions. `n"
-			. "If for any reason you think these values are incorrect, you can either edit them yourself"
+			. "If for any reason you think these values are incorrect, you can either edit them yourself "
 			. "or set 'Calibrate = true' in:`n" . IniReader.ConfigPath . "`nto run this again."
 
 	IniReader.WriteConfigKey(_maxThresholdL, ConfigSection.Calibration, "Left_Analog_Max_Value")

@@ -145,8 +145,8 @@ class Ellipse extends Shape
 		if (this.m_Pen)
 			Gdip_DrawEllipse(this.m_Graphics
 						, this.m_Pen
-						, 0, 0
-						, this.m_Size.Width - (this.m_Thickness * 2), this.m_Size.Height - (this.m_Thickness * 2))
+						, this.m_Thickness / 2 - 1, this.m_Thickness / 2 - 1
+						, this.m_Size.Width - this.m_Thickness, this.m_Size.Height - this.m_Thickness)
 	}
 }
 
