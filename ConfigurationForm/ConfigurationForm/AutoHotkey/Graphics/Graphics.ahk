@@ -212,7 +212,7 @@ class Graphics
 		local _index := "NewGUI"
 
 		Gui, %_index%: Default
-		Gui, %_index%: Font, s10
+		Gui, %_index%: Font, s11, Consolas
 		Gui, %_index%: Add, Edit, vt2 -VScroll -E0x200, % p_Text
 		GuiControlGet, t2, Pos ; this will work as soon as a control exists, regardless of whether the gui ever gets 'shown'.
 		Gui, %_index%: Destroy

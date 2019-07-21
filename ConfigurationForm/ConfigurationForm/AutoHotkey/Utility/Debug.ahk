@@ -115,6 +115,7 @@ class TextOverlay
 	{
 		global
 
+		this.m_BackgroundColor := p_BackgroundColor
 		this.m_AutoSize := p_AutoSize
 
 		local _index := ++TEXT_OVERLAY_COUNT
@@ -123,9 +124,9 @@ class TextOverlay
 		local _guiName := this.m_BackgroundName
 
 		Gui, %_guiName%: -Caption +E0x20 +LastFound +AlwaysOnTop +ToolWindow
-		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
-		Gui, %_guiName%: Font, s10
-		WinSet, Transparent,  % p_BackgroundColor.A
+		Gui, %_guiName%: Color, % this.m_BackgroundColor.Hex
+		Gui, %_guiName%: Font, s11, Consolas
+		WinSet, Transparent,  % this.m_BackgroundColor.A
 
 		this.m_BackgroundHWND := WinExist()
 
@@ -133,9 +134,9 @@ class TextOverlay
 		_guiName := this.m_ForegroundName
 
 		Gui, %_guiName%: -Caption +E0x20 +LastFound +AlwaysOnTop +ToolWindow
-		Gui, %_guiName%: Color, % p_BackgroundColor.Hex
-		Gui, %_guiName%: Font, s10
-		WinSet, TransColor, % p_BackgroundColor.Hex . " 254"
+		Gui, %_guiName%: Color, % this.m_BackgroundColor.Hex
+		Gui, %_guiName%: Font, s11, Consolas
+		WinSet, TransColor, % this.m_BackgroundColor.Hex . " 254"
 
 		this.m_ForegroundHWND := WinExist()
 
@@ -191,15 +192,16 @@ class TextOverlay
 		{
 			local _guiName := this.m_BackgroundName
 
+			local _backgroundColor := this.m_BackgroundColor.Hex
 			local _textName
 			_textName := this.m_TextName := _guiName . "Text"
-			Gui, %_guiName%: Add, Text, v%_textName% cBlack, % p_Text
+			Gui, %_guiName%: Add, Text, v%_textName% c%_backgroundColor%, % p_Text
 
 			_guiName := this.m_ForegroundName
 
 			local _editName
 			_editName := this.m_EditName := _guiName . "Edit"
-			Gui, %_guiName%: Add, Edit, v%_editName% cWhite ReadOnly -VScroll -E0x200, % p_Text
+			Gui, %_guiName%: Add, Edit, v%_editName% cd4d4d4 ReadOnly -VScroll -E0x200, % p_Text
 		}
 		else if (this.m_AutoSize)
 		{
@@ -260,8 +262,8 @@ class Debug
 		this.m_LogFilename := "Log\" . _currentDate . ".txt"
 		FileAppend, , % this.m_LogFilename
 
-		this.m_DebugTextGUI := new TextOverlay(new Color(0, 0, 0, 200))
-		this.m_DebugLogGUI := new TextOverlay(new Color(0, 0, 0, 200), True)
+		this.m_DebugTextGUI := new TextOverlay(new Color(30, 30, 30, 210))
+		this.m_DebugLogGUI := new TextOverlay(new Color(30, 30, 30, 210), True)
 	}
 
 	CurrentTickDelta[]
@@ -351,7 +353,7 @@ class Debug
 	{
 		global
 
-		if (this.m_LogEntries.Length() >= 50)
+		if (this.m_LogEntries.Length() >= 35)
 			this.m_LogEntries.RemoveAt(1)
 
 		local _newEntry := "[" . FPS.RuntimeString . "]: " . p_Entry
