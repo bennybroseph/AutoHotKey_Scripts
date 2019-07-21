@@ -71,6 +71,39 @@ class Vector2
 	{
 		return a.X = b.X and a.Y = b.Y
 	}
+
+	Negative()
+	{
+		return new Vector2(-this.m_X, -this.m_Y)
+	}
+	Reciprocal()
+	{
+		return new Vector2(1 / this.m_X, 1 / this.m_Y)
+	}
+
+	Add(a, b)
+	{
+		return new Vector2(a.X + b.X, a.Y + b.Y)
+	}
+	Sub(a, b)
+	{
+		return Vector2.Add(a, b.Negative())
+	}
+
+	Mul(a, b)
+	{
+		if b is Number
+			return new Vector2(a.X * b, a.Y * b)
+
+		return new Vector2(a.X * b.X, a.Y * b.Y)
+	}
+	Div(a, b)
+	{
+		if b is Number
+			return new Vector2(a.X / b, a.Y / b)
+
+		return Vector2.Mul(a, b.Reciprocal())
+	}
 }
 
 class LooseStack

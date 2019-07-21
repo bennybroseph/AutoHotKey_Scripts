@@ -834,6 +834,7 @@ class Controller
         _debugText .= "MousePos: " . this.m_MousePos.String . "`n"
         _debugText .= "Moving: " . this.m_Moving . " ForceMouseUpdate: " . this.m_ForceMouseUpdate . "`n"
 		_debugText .= "RawStickValue: " . this.m_MovementStick.RawStickValue.String "`n"
+		_debugText .= "AdjustedStickValue: " . this.m_MovementStick.AdjustedStickValue.String "`n"
 		_debugText .= "ClampedStickValue: " . this.m_MovementStick.ClampedStickValue.String "`n"
         _debugText .= this.m_MovementStick.Nickname . " - State: " . this.m_MovementStick.State " "
 					. this.m_MovementStick.StickValue.String . "`tAngle: " . Round(this.m_MovementStick.StickAngleDeg, 2) . "`n`n"
@@ -841,6 +842,8 @@ class Controller
         _debugText .= "TargetPos: " this.m_TargetPos.String "`n"
         _debugText .= "UsingReticule: " . this.m_UsingReticule . " ForceReticuleUpdate: " . this.m_ForceReticuleUpdate . "`n"
 		_debugText .= "RawStickValue: " . this.m_TargetStick.RawStickValue.String "`n"
+		_debugText .= "AdjustedStickValue: " . this.m_TargetStick.AdjustedStickValue.String "`n"
+		_debugText .= "ClampedStickValue: " . this.m_TargetStick.ClampedStickValue.String "`n"
 		_debugText .= this.m_TargetStick.Nickname . " - State: " . this.m_TargetStick.State " "
 					. this.m_TargetStick.StickValue.String " Angle: " . Round(this.m_TargetStick.StickAngleDeg, 2) . "`n`n"
 

@@ -12,120 +12,190 @@ Calibrate()
 
 	MsgBox, , % "Calibration"
 		, % "Since this appears to be the first time using the program, "
-			. "We need to calibrate the controller for use with it."
+			. "we need to calibrate the controller for use with it."
 	MsgBox, , % "Instructions"
-		, % "To begin, I need to determine the max range that your analog sticks are able to reach. `n`n"
-			. "1). Move both the Left AND Right analog stick all the way up at the same time. `n"
-			. "2). Move them both in a circle multiple times. `n"
-			. "3). Press any button while CONTINUING to hold them at max range."
+		, % "To begin, we need to determine the max range that your analog sticks are able to reach. `n`n"
+			. "1). Move both the Left Analog Stick all the way up. `n"
+			. "2). Move the Left Stick in a max range circle multiple times. `n"
+			. "3). Press any button while CONTINUING to hold the Left Stick at max range.`n"
+			. "4). Repeat this for the Right Analog Stick.`n`n"
+			. "Press 'OK' to begin."
 
-	local _state :=
-
-	local _leftStickValue := new Vector2()
-	local _rightStickValue := new Vector2()
-	Loop
+	Loop, 2
 	{
-		Loop, 4
+		_stickCalibration = A_Index = 1 ? "Left" : "Right"
+
+		Graphics.DrawToolTip("Start by moving the stick upwards until you hit the frame."
+				, Graphics.ActiveWinStats.Center.X
+				, Graphics.ActiveWinStats.Center.Y
+				, 1
+				, HorizontalAlignment.Center
+				, VerticalAlignment.Center)
+
+		local _state :=
+
+		local _stickValueL := new Vector2()
+		local _stickValueR := new Vector2()
+		Loop
 		{
-			if _state := XInput_GetState(A_Index-1)
+			Loop, 4
 			{
-				_leftStickValue.X := _state.ThumbLX
-				_leftStickValue.Y := _state.ThumbLY
-
-				_rightStickValue.X := _state.ThumbRX
-				_rightStickValue.Y := _state.ThumbRY
+				if _state := XInput_GetState(A_Index-1)
+				{
+					_stickValueL	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
+					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
+				}
 			}
-		}
-	}Until _leftStickValue.Y = 32767 and _rightStickValue.Y = 32767
+		}Until _stickValueL.Magnitude >= 1 or _stickValueR.Magnitude >= 1
 
-	Graphics.DrawToolTip("Now, spin the sticks in a max range circle multiple times. Press any button when complete."
-			, Graphics.ActiveWinStats.Center.X
-			, Graphics.ActiveWinStats.Center.Y
-			, 1
-			, "Center")
+		Graphics.DrawToolTip("Now, spin the stick in a circle multiple times while still making contact with the frame.`n"
+							. "Press any button when complete."
+				, Graphics.ActiveWinStats.Center.X
+				, Graphics.ActiveWinStats.Center.Y
+				, 1
+				, HorizontalAlignment.Center
+				, VerticalAlignment.Center)
 
-	local _maxValueL := 1, _maxValueR := 1
-	Loop
-	{
-		Loop, 4
+		local _maxMagnitudeL := 1
+		local _maxMagnitudeR := 1
+		Loop
 		{
-			if _state := XInput_GetState(A_Index-1)
+			Loop, 4
 			{
-				_buttonState := _state.Buttons
+				if _state := XInput_GetState(A_Index-1)
+				{
+					_buttonState := _state.Buttons
 
-				_leftStickValue.X := _state.ThumbLX / Stick.s_MaxValue
-				_leftStickValue.Y := _state.ThumbLY / Stick.s_MaxValue
-
-				_rightStickValue.X := _state.ThumbRX / Stick.s_MaxValue
-				_rightStickValue.Y := _state.ThumbRY / Stick.s_MaxValue
+					_stickValueL 	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
+					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
+				}
 			}
-		}
-		if (_maxValueL > _leftStickValue.Magnitude)
-			_maxValueL := _leftStickValue.Magnitude
-		if (_maxValueR > _rightStickValue.Magnitude)
-			_maxValueR := _rightStickValue.Magnitude
+			if (_stickValueL.Magnitude < _maxMagnitudeL and _stickCalibration = "Left")
+				_maxMagnitudeL := _stickValueL.Magnitude
+			if (_stickValueR.Magnitude < _maxMagnitudeR and _stickCalibration = "Right")
+				_maxMagnitudeR := _stickValueR.Magnitude
+		}Until _buttonState
 
-		; if(Abs(_leftStickValue.X) < _maxValueL && Abs(_leftStickValue.X) >= Abs(_leftStickValue.Y))
-		; 	_maxValueL := Abs(_leftStickValue.X)
-		; if(Abs(_leftStickValue.Y) < _maxValueL && Abs(_leftStickValue.Y) > Abs(_leftStickValue.X))
-		; 	_maxValueL := Abs(_leftStickValue.Y)
-		; if(Abs(_rightStickValue.X) < _maxValueR && Abs(_rightStickValue.X) >= Abs(_rightStickValue.Y))
-		; 	_maxValueR := Abs(_rightStickValue.X)
-		; if(Abs(_rightStickValue.Y) < _maxValueR && Abs(_rightStickValue.Y) > Abs(_rightStickValue.X))
-		; 	_maxValueR := Abs(_rightStickValue.Y)
-	}Until _buttonState
+		if (A_Index = 2)
+			continue
+
+		Graphics.DrawToolTip("Now let's calibrate the right stick."
+				, Graphics.ActiveWinStats.Center.X
+				, Graphics.ActiveWinStats.Center.Y
+				, 1
+				, HorizontalAlignment.Center
+				, VerticalAlignment.Center)
+
+		Loop
+		{
+			Loop, 4
+			{
+				if _state := XInput_GetState(A_Index-1)
+				{
+					_stickValueL	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
+					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
+				}
+			}
+		}Until _stickValueL.Magnitude <= 0.2 and _stickValueR.Magnitude <= 0.2
+
+
+		Sleep(500)
+
+		Graphics.HideToolTip(1)
+	}
 
 	Graphics.HideToolTip(1)
 
-	local _maxThresholdL := _maxValueL - 0.015
-	local _maxThresholdR := _maxValueR - 0.015
+	local _maxThresholdL := _maxMagnitudeL - 0.025
+	local _maxThresholdR := _maxMagnitudeR - 0.025
 
+	local _repetitions := 3
 	MsgBox, , % "Instructions"
 		, % "Now I need to determine where the sticks rest when you aren't pressing them. `n`n"
 			. "1). Move both sticks around a bunch in random directions. `n"
 			. "2). Let go of both sticks and allow them to come to rest. `n"
-			. "3). Once they are completely still, press any button on the controller."
+			. "3). Once they are completely still, press any button on the controller.`n"
+			. "4). Repeat this " . _repetitions . " times.`n`n"
+			. "Press 'OK' to begin."
 
-	_buttonState := 0
-	Loop
+	local _minZeroL := 1, local _maxZeroL := 0
+	local _minZeroR := 1, local _maxZeroR := 0
+
+	local _minValueAverageL := new Vector2()
+	local _minValueAverageR := new Vector2()
+	Loop, % _repetitions
 	{
+		Graphics.DrawToolTip("Move the sticks in random directions, then let them come to rest. Press any button when complete.`n"
+							. _repetitions - (A_Index - 1) . " more input(s) needed."
+			, Graphics.ActiveWinStats.Center.X
+			, Graphics.ActiveWinStats.Center.Y
+			, 1
+			, HorizontalAlignment.Center
+			, VerticalAlignment.Center)
+
+		_buttonState := 0
+		Loop
+		{
+			Loop, 4
+			{
+				if _state := XInput_GetState(A_Index-1)
+				{
+					_buttonState := _state.Buttons
+				}
+			}
+		}Until _buttonState
+
 		Loop, 4
 		{
 			if _state := XInput_GetState(A_Index-1)
 			{
-				_buttonState := _state.Buttons
+				_stickValueL	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
+				_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
 			}
 		}
-	}Until _buttonState
+		_minValueAverageL := Vector2.Add(_minValueAverageL, _stickValueL)
+		_minValueAverageR := Vector2.Add(_minValueAverageR, _stickValueR)
 
-	Loop, 4
-	{
-		if _state := XInput_GetState(A_Index-1)
-		{
-			_leftStickValue.X := _state.ThumbLX
-			_leftStickValue.Y := _state.ThumbLY
+		if (_stickValueL.Magnitude < _minZeroL)
+			_minZeroL := _stickValueL.Magnitude
+		if (_stickValueL.Magnitude > _maxZeroL)
+			_maxZeroL := _stickValueL.Magnitude
 
-			_rightStickValue.X := _state.ThumbRX
-			_rightStickValue.Y := _state.ThumbRY
-		}
+		if (_stickValueR.Magnitude < _minZeroR)
+			_minZeroR := _stickValueR.Magnitude
+		if (_stickValueR.Magnitude > _maxZeroR)
+			_maxZeroR := _stickValueR.Magnitude
+
+		Graphics.HideToolTip(1)
+
+		if (A_Index = _repetitions)
+			continue
+
+		Sleep(500)
 	}
-	_minValueL := new Vector2(_leftStickValue.X, _leftStickValue.Y)
-	_minValueR := new Vector2(_rightStickValue.X, _rightStickValue.Y)
+	_minValueAverageL := Vector2.Div(_minValueAverageL, _repetitions)
+	_minValueAverageR := Vector2.Div(_minValueAverageR, _repetitions)
+
+	local _zeroDeltaL := (_maxZeroL - _minZeroL) + 0.125
+	local _zeroDeltaR := (_maxZeroR - _minZeroR) + 0.125
 
 	MsgBox, , % "Calibration Complete"
 		, % "That concludes the calibration! `n`n"
 			. "Thank you for taking the time to complete these instructions. `n"
-			. "If for any reason you think these values are incorrect, you can either edit them yourself (not recommended) "
-			. "or set 'Calibrate = true' in " . IniReader.ConfigPath . " to 'true' to run this again."
+			. "If for any reason you think these values are incorrect, you can either edit them yourself"
+			. "or set 'Calibrate = true' in:`n" . IniReader.ConfigPath . "`nto run this again."
 
 	IniReader.WriteConfigKey(_maxThresholdL, ConfigSection.Calibration, "Left_Analog_Max_Value")
 	IniReader.WriteConfigKey(_maxThresholdR, ConfigSection.Calibration, "Right_Analog_Max_Value")
 
-	IniReader.WriteConfigKey(_minValueL.X, ConfigSection.Calibration, "Left_Analog_Zero_Offset_X")
-	IniReader.WriteConfigKey(_minValueL.Y, ConfigSection.Calibration, "Left_Analog_Zero_Offset_Y")
+	IniReader.WriteConfigKey(_minValueAverageL.X, ConfigSection.Calibration, "Left_Analog_Zero_Average_X")
+	IniReader.WriteConfigKey(_minValueAverageL.Y, ConfigSection.Calibration, "Left_Analog_Zero_Average_Y")
 
-	IniReader.WriteConfigKey(_minValueR.X, ConfigSection.Calibration, "Right_Analog_Zero_Offset_X")
-	IniReader.WriteConfigKey(_minValueR.Y, ConfigSection.Calibration, "Right_Analog_Zero_Offset_Y")
+	IniReader.WriteConfigKey(_minValueAverageR.X, ConfigSection.Calibration, "Right_Analog_Zero_Average_X")
+	IniReader.WriteConfigKey(_minValueAverageR.Y, ConfigSection.Calibration, "Right_Analog_Zero_Average_Y")
+
+	IniReader.WriteConfigKey(_zeroDeltaL, ConfigSection.Calibration, "Left_Analog_Deadzone ")
+	IniReader.WriteConfigKey(_zeroDeltaR, ConfigSection.Calibration, "Right_Analog_Deadzone ")
 
 	IniReader.WriteConfigKey("false", ConfigSection.Calibration, "Calibrate")
 }

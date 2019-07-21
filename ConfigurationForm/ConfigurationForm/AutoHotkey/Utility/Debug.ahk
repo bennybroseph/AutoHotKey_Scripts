@@ -39,6 +39,9 @@ class StickOverlay
 		this.m_RawInputEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
 						, new Color(100, 0, 255, _overlayAlpha))
+		this.m_AdjustedInputEllipse
+			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
+						, new Color(0, 100, 255, _overlayAlpha))
 		this.m_ClampedInputEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
 						, new Color(0, 255, 0, _overlayAlpha))
@@ -63,6 +66,11 @@ class StickOverlay
 			, new Vector2(_center.X + this.m_Stick.RawStickValue.X
 							* (this.m_OverlaySize.Width / 2)
 						, _center.Y - this.m_Stick.RawStickValue.Y
+							* (this.m_OverlaySize.Height / 2)))
+		Graphics.DrawImage(this.m_AdjustedInputEllipse
+			, new Vector2(_center.X + this.m_Stick.AdjustedStickValue.X
+							* (this.m_OverlaySize.Width / 2)
+						, _center.Y - this.m_Stick.AdjustedStickValue.Y
 							* (this.m_OverlaySize.Height / 2)))
 		Graphics.DrawImage(this.m_ClampedInputEllipse
 			, new Vector2(_center.X + this.m_Stick.ClampedStickValue.X

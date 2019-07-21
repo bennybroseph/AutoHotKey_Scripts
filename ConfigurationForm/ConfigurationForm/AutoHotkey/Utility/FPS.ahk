@@ -131,7 +131,7 @@ class FPS
 
 		local _debugText :=
 
-		_debugText .= "FPS - CurrFPS: " . this.m_CurrFPS . "`tAverageFPS: " . this.m_AverageFPS . "`tDelay: " . this.m_Delay . "`n"
+		_debugText .= "AverageFPS: " . this.m_AverageFPS . "`tCurrFPS: " . this.m_CurrFPS . "`tDelay: " . this.m_Delay . "`n"
 		_debugText .= "DeltaTime: " . this.m_DeltaTime . "`tSleepCount: " . this.m_SleepDeltaTime
 
 		return _debugText

@@ -181,7 +181,9 @@ class Stick extends Control
 		this.m_Direction := p_Direction
 
 		this.m_RawStickValue 		:= new Vector2()
+		this.m_AdjustedStickValue 	:= new Vector2()
 		this.m_ClampedStickValue 	:= new Vector2()
+
 		this.m_StickValue 			:= new Vector2()
 		this.m_PrevStickValue 		:= new Vector2()
 
@@ -192,6 +194,10 @@ class Stick extends Control
 
 		this.m_MaxValue	:= IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Max_Value")
 		this.m_Deadzone := IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Deadzone")
+
+		this.m_Zero
+			:= new Vector2(IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Zero_Average_X")
+						, IniReader.ReadConfigKey(ConfigSection.Calibration, this.m_Direction . "_Analog_Zero_Average_Y"))
 
 		this.m_Sensitivity
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, this.m_Direction . "_Analog_Cursor_Sensitivity_X")
@@ -204,12 +210,19 @@ class Stick extends Control
 			return this.m_RawStickValue
 		}
 	}
+	AdjustedStickValue[]
+	{
+		get {
+			return this.m_AdjustedStickValue
+		}
+	}
 	ClampedStickValue[]
 	{
 		get {
 			return this.m_ClampedStickValue
 		}
 	}
+
 	StickValue[]
 	{
 		get {
@@ -276,6 +289,8 @@ class Stick extends Control
 		this.m_RawStickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) / this.s_MaxValue
 		this.m_RawStickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) / this.s_MaxValue
 
+		this.m_AdjustedStickValue := Vector2.Sub(this.m_RawStickValue, this.m_Zero)
+
 		local _scale := 0
 		if (this.m_RawStickValue.Magnitude > this.m_Deadzone)
 		{
@@ -284,8 +299,7 @@ class Stick extends Control
 			_scale := _normalizedMag / this.m_RawStickValue.Magnitude
 		}
 
-		this.m_ClampedStickValue.X := this.m_RawStickValue.X * _scale
-		this.m_ClampedStickValue.Y := this.m_RawStickValue.Y * _scale
+		this.m_ClampedStickValue := Vector2.Mul(this.m_RawStickValue, _scale)
 
 		this.m_StickValue.X := this.m_ClampedStickValue.X
 		this.m_StickValue.Y := this.m_ClampedStickValue.Y
