@@ -127,6 +127,8 @@ class Controller
 	static m_MousePos	:=
 	static m_TargetPos	:=
 
+	static m_Reticule :=
+
 	static m_BatteryStatus 		:=
 	static m_PrevBatteryStatus 	:=
 
@@ -227,6 +229,8 @@ class Controller
         this.m_MousePos		:= InputHelper.GetMousePos()
         this.m_TargetPos	:= new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
 
+		this.m_Reticule := new Image("Images\Target.png")
+
 		this.m_BatteryStatus := -1
 		this.m_PrevBatteryStatus := this.m_BatteryStatus
 
@@ -246,7 +250,7 @@ class Controller
 		if (_swapSticksAtStart)
 			this.SwapSticks()
 
-		Debug.AddToOnToolTip(new Delegate(Controller, "OnToolTip"))
+		Debug.OnToolTipAddListener(new Delegate(Controller, "OnToolTip"))
 
         this.m_Init := True
     }
@@ -429,7 +433,7 @@ class Controller
 		local i, _control
         For i, _control in this.m_Controls
         {
-            ;Debug.AddToLog(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
+            ;Debug.Log(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
             if (_control.State != _control.PrevState)
             {
                 if (_control.State)
@@ -441,7 +445,7 @@ class Controller
                     	_control.PressTick := A_TickCount
 					else
 					{
-                    	Debug.AddToLog(_control.Name . " pressed " . _control.Controlbind.OnPress.String)
+                    	Debug.Log(_control.Name . " pressed " . _control.Controlbind.OnPress.String)
 						InputHelper.PressKeybind(_control.Controlbind.OnPress)
 					}
                 }
@@ -452,7 +456,7 @@ class Controller
 						Inventory.ProcessReleaseHold(_control)
 					else
 					{
-						Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnHold.String . " after being held")
+						Debug.Log(_control.Name . " released " . _control.Controlbind.OnHold.String . " after being held")
 						InputHelper.ReleaseKeybind(_control.Controlbind.OnHold)
 					}
                 }
@@ -463,13 +467,13 @@ class Controller
 						Inventory.ProcessReleasePress(_control)
 					else if (_control.Controlbind.OnHold.Action and _control.PressTick != -1)
 					{
-						Debug.AddToLog(_control.Name . " pressed and released " . _control.Controlbind.OnPress.String)
+						Debug.Log(_control.Name . " pressed and released " . _control.Controlbind.OnPress.String)
 						InputHelper.PressKeybind(_control.Controlbind.OnPress)
 						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
 					}
 					else
 					{
-                    	Debug.AddToLog(_control.Name . " released " . _control.Controlbind.OnPress.String)
+                    	Debug.Log(_control.Name . " released " . _control.Controlbind.OnPress.String)
 						InputHelper.ReleaseKeybind(_control.Controlbind.OnPress)
 					}
                 }
@@ -483,7 +487,7 @@ class Controller
 				{
 					this.Vibrate()
 
-					Debug.AddToLog(_control.Name . " held down " . _control.Controlbind.OnHold.String)
+					Debug.Log(_control.Name . " held down " . _control.Controlbind.OnHold.String)
 					InputHelper.PressKeybind(_control.Controlbind.OnHold)
 
 					_control.PressTick := 0
@@ -555,7 +559,7 @@ class Controller
 					InputHelper.MoveMouse(this.m_MousePos)
 			}
 			else
-				Graphics.DrawReticule(this.m_MousePos)
+				this.m_Reticule.Draw(this.m_MousePos)
         }
         else
         {
@@ -574,7 +578,7 @@ class Controller
 				if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
 					InputHelper.MoveMouse(this.m_MousePos)
 				else
-					Graphics.DrawReticule(this.m_MousePos)
+					this.m_Reticule.Draw(this.m_MousePos)
 			}
         }
 
@@ -618,9 +622,9 @@ class Controller
             if (this.m_UsingReticule and this.m_PressStack.Peek.Type = KeybindType.Targeted)
                 InputHelper.MoveMouse(this.m_TargetPos)
             else if (_stick.state and this.m_PressStack.Peek.Type != KeybindType.Targeted)
-                Graphics.DrawReticule(this.m_TargetPos)
+                this.m_Reticule.Draw(this.m_TargetPos)
 			else
-				Graphics.HideReticule()
+				this.m_Reticule.Hide()
         }
         else
         {
@@ -642,7 +646,7 @@ class Controller
 				if (this.m_PressStack.Peek.Type = KeybindType.Targeted)
 					InputHelper.MoveMouse(this.m_TargetPos)
 				else
-					Graphics.DrawReticule(this.m_TargetPos)
+					this.m_Reticule.Draw(this.m_TargetPos)
 			}
         }
 
@@ -700,6 +704,8 @@ class Controller
 
 		this.m_ForceMouseUpdate 	:= True
 		this.CursorMode 		:= True
+
+		Debug.Log("Cursor Mode: Enabled")
     }
     DisableCursorMode()
     {
@@ -709,6 +715,8 @@ class Controller
 
 		this.m_ForceMouseUpdate	:= True
 		this.CursorMode 		:= False
+
+		Debug.Log("Cursor Mode: Disabled")
     }
 
 	ToggleFreeTargetMode()
@@ -734,6 +742,8 @@ class Controller
 
 		this.m_ForceReticuleUpdate 	:= True
 		this.FreeTargetMode 		:= True
+
+		Debug.Log("FreeTarget Mode: Enabled")
 	}
 	DisableFreeTargetMode()
 	{
@@ -743,6 +753,8 @@ class Controller
 
 		this.m_ForceReticuleUpdate 	:= True
 		this.FreeTargetMode			:= False
+
+		Debug.Log("FreeTarget Mode: Disabled")
 	}
 
 	SwapSticks()
@@ -757,14 +769,14 @@ class Controller
 
 	StartMoving()
 	{
-		Debug.AddToLog("Pressing " . this.m_MoveOnlyKey.String)
+		Debug.Log("Pressing " . this.m_MoveOnlyKey.String)
 		InputHelper.PressKeybind(this.m_MoveOnlyKey)
 
 		this.m_Moving := True
 	}
 	StopMoving()
 	{
-		Debug.AddToLog("Releasing " . this.m_MoveOnlyKey.String)
+		Debug.Log("Releasing " . this.m_MoveOnlyKey.String)
 		InputHelper.ReleaseKeybind(this.m_MoveOnlyKey)
 
 		this.m_Moving := False
@@ -820,11 +832,11 @@ class Controller
 			local _keybindClone := p_Keybind.Clone()
 			_keybindClone.Modifier := _keybindClone.Action
 
-			Debug.AddToLog("Could not find " . p_Keybind.String . " in list of configured controls. Trying again...")
+			Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls. Trying again...")
 			return this.FindControlInfo(_keybindClone)
 		}
 
-		Debug.AddToLog("Could not find " . p_Keybind.String . " in list of configured controls")
+		Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls")
 	}
 
 	OnToolTip()

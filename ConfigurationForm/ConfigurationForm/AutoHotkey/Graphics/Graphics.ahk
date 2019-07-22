@@ -73,29 +73,23 @@ class WinStats
 
 class Graphics
 {
-	static __singleton :=
-	static __init := False
+	static m_Token
 
-	static m_ImageOverlay :=
+	static m_ApplicationTitle
+
+	static m_ActiveWinStats
+
+	static m_BaseResolution
+	static m_CenterOffset
 
 	Init()
 	{
-		Graphics.__singleton := new Graphics()
-
-		if WinExist(this.ApplicationTitle)
-			WinActivate ; Activate Application Window if it exists
-
-		this.SetActiveWinStats()
-		if (this.ActiveWinStats.Size.Height > 1080)
-			ToolTipFont("s10")
-
-		Debug.AddToOnToolTip(new Delegate(Graphics, "OnToolTip"))
-		Graphics.__init := False
-	}
-
-	__New()
-	{
-		global
+		if (!this.m_Token := Gdip_Startup())
+		{
+			MsgBox, 48, % "Gdiplus error!", % "Gdiplus failed to start. Please ensure you have Gdiplus on your system."
+			Run, https://github.com/tariqporter/Gdip/blob/master/gdiplus.dll
+			ExitApp, -1
+		}
 
 		this.m_ApplicationTitle := IniReader.ReadProfileKey(ProfileSection.Preferences, "Application_Name")
 
@@ -108,49 +102,33 @@ class Graphics
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_Offset_X")
 						, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Center_Offset_Y"))
 
-		if (!this.m_Token := Gdip_Startup())
-		{
-			MsgBox, 48, % "Gdiplus error!, Gdiplus failed to start. Please ensure you have Gdiplus on your system."
-			return
-		}
+		if WinExist(this.m_ApplicationTitle)
+			WinActivate ; Activate Application Window if it exists
 
-		this.m_Reticule := new Image("Images\Target.png")
-	}
+		this.SetActiveWinStats()
+		if (this.m_ActiveWinStats.Size.Height > 1080)
+			ToolTipFont("s10")
 
-	ApplicationTitle[]
-	{
-		get {
-			return this.__singleton.m_ApplicationTitle
-		}
+		Debug.OnToolTipAddListener(new Delegate(Graphics, "OnToolTip"))
 	}
 
 	ActiveWinStats[]
 	{
 		get {
-			return this.__singleton.m_ActiveWinStats
-		}
-		set {
-			return this.__singleton.m_ActiveWinStats := value
+			return this.m_ActiveWinStats
 		}
 	}
 
 	BaseResolution[]
 	{
 		get {
-			return this.__singleton.m_BaseResolution
+			return this.m_BaseResolution
 		}
 	}
-	CenterOffset[]
+	ResolutionScale[]
 	{
 		get {
-			return this.__singleton.m_CenterOffset
-		}
-	}
-
-	Reticule
-	{
-		get {
-			return this.__singleton.m_Reticule
+			return Vector2.Div(this.m_ActiveWinStats.Size, this.m_BaseResolution)
 		}
 	}
 
@@ -166,43 +144,20 @@ class Graphics
 
 	SetActiveWinStats()
 	{
-		this.ActiveWinStats := this.GetActiveWinStats()
+		local _winStats := this.GetActiveWinStats()
+		if (!_winStats.Title)
+			return
 
-		this.ActiveWinStats.Center.X := (this.ActiveWinStats.Size.Width / 2)
-		this.ActiveWinStats.Center.Y := (this.ActiveWinStats.Size.Height / 2)
+		if (_winStats.Title != this.m_ActiveWinStats.Title)
+			Debug.Log("Active window changed from " . this.m_ActiveWinStats.Title . " to " . _winStats.Title)
 
-		if (WinActive(this.ApplicationTitle))
-		{
-			this.ActiveWinStats.Center.X
-				:= this.ActiveWinStats.Center.X + this.CenterOffset.X * (this.ActiveWinStats.Size.Width / this.BaseResolution.Width)
-			this.ActiveWinStats.Center.Y
-				:= this.ActiveWinStats.Center.Y + this.CenterOffset.Y * (this.ActiveWinStats.Size.Height / this.BaseResolution.Height)
-		}
-	}
+		this.m_ActiveWinStats := _winStats
 
-	DrawImage(p_Image, p_Pos, p_CenterImage := True)
-	{
-		global
+		this.m_ActiveWinStats.Center := Vector2.Div(this.m_ActiveWinStats.Size, 2)
 
-		local _imageX := p_Pos.X
-		local _imageY := p_Pos.Y
-
-		if (p_CenterImage)
-		{
-			if (!p_Image.Size)
-				Debug.AddToLog("The image " . p_Image.Index . " has an invalid size and can't be centered!")
-
-			_imageX := _imageX - (p_Image.Size.Width / 2)
-			_imageY := _imageY - (p_Image.Size.Height / 2)
-		}
-		local _index := p_Image.Index
-
-		Gui, %_index%:Show, x%_imageX% y%_imageY% NA
-	}
-	HideImage(p_Image)
-	{
-		local _index := p_Image.Index
-		Gui, %_index%:Hide
+		if (WinActive(this.m_ApplicationTitle))
+			this.m_ActiveWinStats.Center
+				:= Vector2.Add(this.m_ActiveWinStats.Center, Vector2.Mul(this.m_CenterOffset, this.ResolutionScale))
 	}
 
 	GetControlAutoSize(p_Text)
@@ -212,23 +167,14 @@ class Graphics
 		local _index := "NewGUI"
 
 		Gui, %_index%: Default
-		Gui, %_index%: Font, s11, Consolas
-		Gui, %_index%: Add, Edit, vt2 -VScroll -E0x200, % p_Text
+		Gui, Font, s11, Consolas
+		Gui, Add, Edit, vt2, % p_Text
 		GuiControlGet, t2, Pos ; this will work as soon as a control exists, regardless of whether the gui ever gets 'shown'.
-		Gui, %_index%: Destroy
+		Gui, Destroy
 
 		Gui, 1:Default
 
 		return new Vector2(t2w, t2h)
-	}
-
-	DrawReticule(p_Pos, p_CenterImage := True)
-	{
-		this.DrawImage(this.Reticule, p_Pos, p_CenterImage)
-	}
-	HideReticule()
-	{
-		this.HideImage(this.Reticule)
 	}
 
 	DrawToolTip(p_Text
@@ -270,52 +216,6 @@ class Graphics
 		ToolTip, , , , % p_Index
 	}
 
-	DrawImageOverlay()
-	{
-		global
-
-		local _imageOverlay := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Enable_Image_Overlay")
-		if (!_imageOverlay)
-			return
-
-		local _baseResolution
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Width")
-						, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Base_Resolution_Height"))
-
-		local _imageScale := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Scale")
-		_imageScale := _imageScale * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
-
-		local _imageSet := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Set")
-		local _imageSetSize := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image_Set_Size")
-		Loop
-		{
-			local _newImageKey := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Keybind")
-			if (_newImageKey = Error)
-				break
-
-			local _newImageKeybind := IniReader.ParseKeybind(_newImageKey)
-			local _newImagePos
-				:= new Vector2(IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Pos_X")
-							, IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Pos_Y"))
-
-			_newImagePos.X := _newImagePos.X * (this.ActiveWinStats.Size.Width / _baseResolution.Width)
-			_newImagePos.Y := _newImagePos.Y * (this.ActiveWinStats.Size.Height / _baseResolution.Height)
-
-			_newImagePos.X := _newImagePos.X + this.ActiveWinStats.Pos.X
-			_newImagePos.Y := _newImagePos.Y + this.ActiveWinStats.Pos.Y
-
-			local _newImageBackground = IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Image" . A_Index . "_Background")
-
-			local _controlInfo := Controller.FindControlInfo(_newImageKeybind)
-
-			local _newImagePath
-				:= "Images\" . _imageSet . "\" . _controlInfo.Act . "\" . _imageSetSize . "\" . _controlInfo.Control.Key . ".png"
-			local _newImage := new Image(_newImagePath, _imageScale, _newImageBackground)
-
-			this.DrawImage(_newImage, _newImagePos)
-		}
-	}
-
 	GetClientSize(p_HWND)
 	{
 		global
@@ -333,10 +233,10 @@ class Graphics
 	OnToolTip()
 	{
 		local _debugText
-			:= "'" . this.ActiveWinStats.Title . "' "
-					. "Size: (" . Round(this.ActiveWinStats.Size.Width, 2) . ", " . Round(this.ActiveWinStats.Size.Height, 2) . ") "
-					. "Pos: (" . this.ActiveWinStats.Pos.X . ", " . this.ActiveWinStats.Pos.Y . ") "
-					. "Center: (" . Round(this.ActiveWinStats.Center.X, 2) . ", " . Round(this.ActiveWinStats.Center.Y, 2) . ")"
+			.= this.m_ActiveWinStats.Title . "`n"
+			. "Size: (" . Round(this.m_ActiveWinStats.Size.Width, 2) . ", " . Round(this.m_ActiveWinStats.Size.Height, 2) . ") "
+			. "Pos: (" . this.m_ActiveWinStats.Pos.X . ", " . this.m_ActiveWinStats.Pos.Y . ") "
+			. "Center: (" . Round(this.m_ActiveWinStats.Center.X, 2) . ", " . Round(this.m_ActiveWinStats.Center.Y, 2) . ")"
 
 		return _debugText
 	}

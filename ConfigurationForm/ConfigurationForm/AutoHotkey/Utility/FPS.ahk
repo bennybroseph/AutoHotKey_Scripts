@@ -2,8 +2,6 @@
 
 class FPS
 {
-	static m_TargetFPS := 144
-
 	static m_DeltaTime := 0
 	static m_SleepDeltaTime := 0
 
@@ -12,6 +10,8 @@ class FPS
 	static m_AverageFPS := 0
 	static m_FrameCount := 0
 	static m_AddedDeltaTime := 0
+
+	static m_TargetFPS
 
 	static m_Frequency
 	static m_Delay
@@ -28,6 +28,8 @@ class FPS
 
 		this.m_Frequency := _frequency
 
+		this.m_TargetFPS := IniReader.ReadConfigKey(ConfigSection.Other, "Target_FPS")
+
 		this.m_Delay := 1000 / this.m_TargetFPS
 
 		this.m_StartupTime := this.GetCurrentTime()
@@ -35,7 +37,7 @@ class FPS
 		this.m_CurrTime := this.m_StartupTime
 		this.m_PrevTime := this.m_CurrTime
 
-		Debug.AddToOnToolTip(new Delegate(FPS, "OnToolTip"))
+		Debug.OnToolTipAddListener(new Delegate(FPS, "OnToolTip"))
 	}
 
 	DeltaTime[]

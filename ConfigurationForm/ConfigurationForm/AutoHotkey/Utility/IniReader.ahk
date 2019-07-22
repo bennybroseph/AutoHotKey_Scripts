@@ -64,7 +64,7 @@ class IniReader
 
 		if (_temp = "ERROR")
 		{
-			Debug.AddToLog("Could not find key '" . p_Key . "' in '" . p_IniPath . "' in section '" . p_Section . "'")
+			Debug.Log("Could not find key '" . p_Key . "' in '" . p_IniPath . "' in section '" . p_Section . "'")
 			return ERROR
 		}
 
@@ -123,7 +123,7 @@ class IniReader
         ; Returns an error when the requested key is not in the current profile
         if (_controlbindString = "ERROR")
 		{
-			Debug.AddToLog("Could not find key '" . p_Key . "' in the profile ini's keybindings")
+			Debug.Log("Could not find key '" . p_Key . "' in the profile ini's keybindings")
             return ERROR
 		}
 
@@ -156,7 +156,7 @@ class IniReader
 
 		if (_keybindArrayString = "ERROR")
 		{
-			Debug.AddToLog("Could not find key '" . p_Key . "' in the profile ini's keybindings")
+			Debug.Log("Could not find key '" . p_Key . "' in the profile ini's keybindings")
 			return ERROR
 		}
 

@@ -51,8 +51,8 @@ global PI := 3.141592653589793 ; Define PI for easier use
 XInput_Init() ; Initialize XInput
 
 Debug.Init()
-FPS.Init()
 IniReader.Init()
+FPS.Init()
 
 global IsPaused := False
 global ShowPausedNotification := IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Paused_Notification")
@@ -77,14 +77,11 @@ Loop
 	Controller.RefreshState()
 	Controller.ProcessInput()
 
-	; if (GetKeyState("F3"))
-	; 	Debug.Toggle()
-
 	Debug.Update()
 }
 
 ; Reloades the config values when F5 is pressed
-$F6::
+$F5::
 	Reload
 return
 

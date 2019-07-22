@@ -11,6 +11,10 @@ class Graphic
 		local _index := "Image" . ++GRAPHIC_COUNT
 		this.m_Index := _index
 
+		this.m_HasDrawn := False
+		this.m_IsVisible := False
+		this.m_Pos := new Vector2()
+
 		Gui, %_index%: -Caption +E0x80000 +LastFound +Owner +AlwaysOnTop +ToolWindow
 		Gui, %_index%: Show, NA
 		WinSet, ExStyle, +0x20
@@ -24,11 +28,7 @@ class Graphic
 
 		this.SetDrawingMode()
 
-		this.DrawGraphic()
-		UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width, this.m_Size.Height)
-
-		Gui, %_index%:Hide
-		this.UnloadGraphic()
+		Gui, %_index%: Hide
 	}
 
 	Index[]
@@ -37,6 +37,13 @@ class Graphic
 			return this.m_Index
 		}
 	}
+	IsVisible[]
+	{
+		get {
+			return this.m_IsVisible
+		}
+	}
+
 	Size[]
 	{
 		get {
@@ -44,18 +51,47 @@ class Graphic
 		}
 	}
 
-	SetDrawingMode()
-	{
-
-	}
-	DrawGraphic()
-	{
-
+	SetDrawingMode() {
 	}
 
-	UnloadGraphic()
-	{
+	DrawGraphic() {
+	}
 
+	Draw(p_Pos, p_Centered := True)
+	{
+		if (!this.m_HasDrawn)
+		{
+			this.DrawGraphic()
+			UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width, this.m_Size.Height)
+			this.UnloadGraphic()
+
+			this.m_HasDrawn := True
+		}
+
+		if (p_Centered)
+			p_Pos := Vector2.Sub(p_Pos, Vector2.Div(this.m_Size, 2))
+
+		if (this.m_IsVisible and Vector2.IsEqual(this.m_Pos, p_Pos))
+			return
+
+		if (!Vector2.IsEqual(this.m_Pos, p_Pos))
+			this.m_Pos := p_Pos
+
+		Gui, % this.m_Index . ": Show", % "x" this.m_Pos.X "y" this.m_Pos.Y "NA"
+
+		this.m_IsVisible := True
+	}
+	Hide()
+	{
+		if (!this.m_IsVisible)
+			return
+
+		Gui, % this.m_Index . ": Hide"
+
+		this.m_IsVisible := False
+	}
+
+	UnloadGraphic()	{
 	}
 
 	__Delete()
@@ -180,7 +216,7 @@ class Image extends Graphic
 		if (this.m_Brush)
 			Gdip_FillRectangle(this.m_Graphics, this.m_Brush, 0, 0, this.m_Size.Width, this.m_Size.Height)
 
-		Gdip_DrawImage(this.m_Graphics, this.m_Image, 0, 0, this.m_Size.Width, this.m_Size.Height)
+		Gdip_DrawImage(this.m_Graphics, this.m_Image, 0, 0, this.m_Size.Width - 1, this.m_Size.Height - 1)
 	}
 
 	UnloadGraphic()

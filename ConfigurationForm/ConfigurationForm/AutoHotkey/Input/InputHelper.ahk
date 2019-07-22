@@ -33,7 +33,6 @@ class InputHelper
 					else
 						_newMousePos := Controller.MousePos
 				}
-				Send {CTRL Down} {LALT Down} {"1" Down}
 
 				if (Controller.HaltMovementOnTarget)
 					Controller.StopMoving()
@@ -59,8 +58,6 @@ class InputHelper
 		if (p_Keybind.Modifier)
 			this.PressKey(p_Keybind.Modifier)
 		this.PressKey(p_Keybind.Action)
-
-		Debug.AddToLog(p_Keybind.String . " pressed")
 	}
 	ReleaseKeybind(p_Keybind)
 	{
@@ -70,7 +67,6 @@ class InputHelper
 		if (p_Keybind.Modifier)
 			this.ReleaseKey(p_Keybind.Modifier)
 
-		Debug.AddToLog(p_Keybind.String . " released")
 		if (p_Keybind.Type != KeybindType.UnTargeted)
 		{
 			Controller.ForceMouseUpdate 	:= True

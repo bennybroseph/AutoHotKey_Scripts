@@ -1,3 +1,28 @@
+
+class Event
+{
+	__New()
+	{
+		this.m_Listeners := Array()
+	}
+
+	AddListener(p_Delegate)
+	{
+		this.m_Listeners.Push(p_Delegate)
+	}
+
+	; RemoveListener() Maybe later...
+
+	Invoke(p_Params*)
+	{
+		global
+
+		local i, _delegate
+		for i, _delegate in this.m_Listeners
+			%_delegate%(p_Params)
+	}
+}
+
 class Delegate
 {
 	Reference := 0

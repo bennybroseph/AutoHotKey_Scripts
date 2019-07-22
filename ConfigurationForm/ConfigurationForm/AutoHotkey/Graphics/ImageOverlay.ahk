@@ -96,6 +96,7 @@ class ImageOverlay
 		this.m_BatteryImages.Push(new Image("Images\Battery_Medium.png", ImageOverlay.m_ImageScale))
 		this.m_BatteryImages.Push(new Image("Images\Battery_High.png", ImageOverlay.m_ImageScale))
 	}
+
 	DrawImageOverlay()
 	{
 		global
@@ -105,9 +106,8 @@ class ImageOverlay
 
 		local i, _overlayImage
 		For i, _overlayImage in this.m_Images
-			Graphics.DrawImage(_overlayImage.Image, _overlayImage.Pos)
+			_overlayImage.Image.Draw(_overlayImage.Pos)
 	}
-
 	DrawBatteryStatus()
 	{
 		global
@@ -122,10 +122,9 @@ class ImageOverlay
 			For i, _batteryImage in this.m_BatteryImages
 			{
 				if (Controller.BatteryStatus.BatteryLevel = i - 1)
-					Graphics.DrawImage(_batteryImage
-									, new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y), False)
+					_batteryImage.Draw(new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y), False)
 				else
-					Graphics.HideImage(_batteryImage)
+					_batteryImage.Hide()
 			}
 		}
 	}

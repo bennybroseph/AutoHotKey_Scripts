@@ -48,14 +48,14 @@ Calibrate()
 
 	local _center := Graphics.ActiveWinStats.Center
 
-	Graphics.DrawImage(_maxRangeEllipse, _center)
-	Graphics.DrawImage(_axisX, _center)
-	Graphics.DrawImage(_axisY, _center)
+	_maxRangeEllipse.Draw(_center)
+	_axisX.Draw(_center)
+	_axisY.Draw(_center)
 
 	Loop, 2
 	{
 		local _stickCalibration := A_Index = 1 ? "Left" : "Right"
-		Graphics.HideImage(_stickCalibration != "Left" ? _leftInputEllipse : _rightInputEllipse)
+		(_stickCalibration != "Left" ? _leftInputEllipse : _rightInputEllipse).Hide()
 
 		Graphics.DrawToolTip("Start by moving the stick upwards until you hit the frame."
 				, Graphics.ActiveWinStats.Center.X
@@ -78,9 +78,9 @@ Calibrate()
 					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
 
 					local _stickValue := _stickCalibration = "Left" ? _stickValueL : _stickValueR
-					Graphics.DrawImage(_stickCalibration = "Left" ? _leftInputEllipse : _rightInputEllipse
-									, new Vector2(_center.X + _stickValue.X * (_overlaySize.Width / 2)
-												, _center.Y - _stickValue.Y * (_overlaySize.Height / 2)))
+					(_stickCalibration = "Left" ? _leftInputEllipse : _rightInputEllipse)
+						.Draw(new Vector2(_center.X + _stickValue.X * (_overlaySize.Width / 2)
+										, _center.Y - _stickValue.Y * (_overlaySize.Height / 2)))
 				}
 			}
 		}Until _stickValueL.Magnitude >= 1 or _stickValueR.Magnitude >= 1
@@ -107,9 +107,9 @@ Calibrate()
 					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
 
 					local _stickValue := _stickCalibration = "Left" ? _stickValueL : _stickValueR
-					Graphics.DrawImage(_stickCalibration = "Left" ? _leftInputEllipse : _rightInputEllipse
-									, new Vector2(_center.X + _stickValue.X * (_overlaySize.Width / 2)
-												, _center.Y - _stickValue.Y * (_overlaySize.Height / 2)))
+					(_stickCalibration = "Left" ? _leftInputEllipse : _rightInputEllipse)
+						.Draw(new Vector2(_center.X + _stickValue.X * (_overlaySize.Width / 2)
+										, _center.Y - _stickValue.Y * (_overlaySize.Height / 2)))
 				}
 			}
 			if (_stickValueL.Magnitude < _maxMagnitudeL and _stickCalibration = "Left")
@@ -146,11 +146,11 @@ Calibrate()
 		Graphics.HideToolTip(1)
 	}
 
-	Graphics.HideImage(_maxRangeEllipse)
-	Graphics.HideImage(_axisX)
-	Graphics.HideImage(_axisY)
-	Graphics.HideImage(_leftInputEllipse)
-	Graphics.HideImage(_rightInputEllipse)
+	_maxRangeEllipse.Hide()
+	_axisX.Hide()
+	_axisY.Hide()
+	_leftInputEllipse.Hide()
+	_rightInputEllipse.Hide()
 
 	Graphics.HideToolTip(1)
 
@@ -166,9 +166,9 @@ Calibrate()
 			. "4). Repeat this " . _repetitions . " times.`n`n"
 			. "Press 'OK' to begin."
 
-	Graphics.DrawImage(_maxRangeEllipse, _center)
-	Graphics.DrawImage(_axisX, _center)
-	Graphics.DrawImage(_axisY, _center)
+	_maxRangeEllipse.Draw(_center)
+	_axisX.Draw(_center)
+	_axisY.Draw(_center)
 
 	local _minZeroL := 1, local _maxZeroL := 0
 	local _minZeroR := 1, local _maxZeroR := 0
@@ -197,12 +197,12 @@ Calibrate()
 					_stickValueL	:= new Vector2(_state.ThumbLX / Stick.s_MaxValue, _state.ThumbLY / Stick.s_MaxValue)
 					_stickValueR	:= new Vector2(_state.ThumbRX / Stick.s_MaxValue, _state.ThumbRY / Stick.s_MaxValue)
 
-					Graphics.DrawImage(_leftInputEllipse
-									, new Vector2(_center.X + _stickValueL.X * (_overlaySize.Width / 2)
-												, _center.Y - _stickValueL.Y * (_overlaySize.Height / 2)))
-					Graphics.DrawImage(_rightInputEllipse
-									, new Vector2(_center.X + _stickValueR.X * (_overlaySize.Width / 2)
-												, _center.Y - _stickValueR.Y * (_overlaySize.Height / 2)))
+					_leftInputEllipse
+						.Draw(new Vector2(_center.X + _stickValueL.X * (_overlaySize.Width / 2)
+										, _center.Y - _stickValueL.Y * (_overlaySize.Height / 2)))
+					_rightInputEllipse
+						.Draw(new Vector2(_center.X + _stickValueR.X * (_overlaySize.Width / 2)
+										, _center.Y - _stickValueR.Y * (_overlaySize.Height / 2)))
 				}
 			}
 		}Until _buttonState
@@ -236,11 +236,11 @@ Calibrate()
 		Sleep(500)
 	}
 
-	Graphics.HideImage(_maxRangeEllipse)
-	Graphics.HideImage(_axisX)
-	Graphics.HideImage(_axisY)
-	Graphics.HideImage(_leftInputEllipse)
-	Graphics.HideImage(_rightInputEllipse)
+	_maxRangeEllipse.Hide()
+	_axisX.Hide()
+	_axisY.Hide()
+	_leftInputEllipse.Hide()
+	_rightInputEllipse.Hide()
 
 	_minValueAverageL := Vector2.Div(_minValueAverageL, _repetitions)
 	_minValueAverageR := Vector2.Div(_minValueAverageR, _repetitions)

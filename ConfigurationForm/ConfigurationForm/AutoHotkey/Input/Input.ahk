@@ -16,7 +16,7 @@ class Control
 
         this.m_Controlbind   := IniReader.ParseControlbind(this.m_Key)
 
-		;Debug.AddToLog(this.m_Name . " - "
+		;Debug.Log(this.m_Name . " - "
 		;	. "OnPress: " . this.m_Controlbind.OnPress.String . " "
 		;	. "OnHold: " . this.m_Controlbind.OnHold.String)
     }

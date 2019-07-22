@@ -45,8 +45,6 @@ class StickOverlay
 		this.m_ClampedInputEllipse
 			:= new Ellipse(new Vector2(this.m_OverlaySize.Width * 0.03, this.m_OverlaySize.Height * 0.03)
 						, new Color(0, 255, 0, _overlayAlpha))
-
-		this.m_FirstDraw := True
 	}
 
 	Draw()
@@ -58,50 +56,45 @@ class StickOverlay
 		_center.X += (Graphics.ActiveWinStats.Size.Width / 4) * 3
 		_center.Y += (Graphics.ActiveWinStats.Size.Height / 4) * (this.m_Direction = "Left" ? 1 : 3)
 
-		if (this.m_FirstDraw)
-		{
-			Graphics.DrawImage(this.m_MaxRangeEllipse, _center)
-			Graphics.DrawImage(this.m_OuterDeadzoneEllipse, _center)
-			Graphics.DrawImage(this.m_InnerDeadzoneEllipse, _center)
+		this.m_MaxRangeEllipse.Draw(_center)
+		this.m_OuterDeadzoneEllipse.Draw(_center)
+		this.m_InnerDeadzoneEllipse.Draw(_center)
 
-			Graphics.DrawImage(this.m_AxisX, _center)
-			Graphics.DrawImage(this.m_AxisY, _center)
-		}
+		this.m_AxisX.Draw(_center)
+		this.m_AxisY.Draw(_center)
 
-		if (!this.m_FirstDraw and Vector2.IsEqual(this.m_Stick.RawStickValue, this.m_Stick.PrevRawStickValue))
-			return
 
-		Graphics.DrawImage(this.m_RawInputEllipse
-			, new Vector2(_center.X + this.m_Stick.RawStickValue.X
-							* (this.m_OverlaySize.Width / 2)
-						, _center.Y - this.m_Stick.RawStickValue.Y
-							* (this.m_OverlaySize.Height / 2)))
-		Graphics.DrawImage(this.m_AdjustedInputEllipse
-			, new Vector2(_center.X + this.m_Stick.AdjustedStickValue.X
-							* (this.m_OverlaySize.Width / 2)
-						, _center.Y - this.m_Stick.AdjustedStickValue.Y
-							* (this.m_OverlaySize.Height / 2)))
-		Graphics.DrawImage(this.m_ClampedInputEllipse
-			, new Vector2(_center.X + this.m_Stick.ClampedStickValue.X
-							* (this.m_OverlaySize.Width / 2)
-						, _center.Y - this.m_Stick.ClampedStickValue.Y
-							* (this.m_OverlaySize.Height / 2)))
+		this.m_RawInputEllipse
+			.Draw(new Vector2(_center.X + this.m_Stick.RawStickValue.X
+								* (this.m_OverlaySize.Width / 2)
+							, _center.Y - this.m_Stick.RawStickValue.Y
+								* (this.m_OverlaySize.Height / 2)))
+		this.m_AdjustedInputEllipse
+			.Draw(new Vector2(_center.X + this.m_Stick.AdjustedStickValue.X
+								* (this.m_OverlaySize.Width / 2)
+							, _center.Y - this.m_Stick.AdjustedStickValue.Y
+								* (this.m_OverlaySize.Height / 2)))
+		this.m_ClampedInputEllipse
+			.Draw(new Vector2(_center.X + this.m_Stick.ClampedStickValue.X
+								* (this.m_OverlaySize.Width / 2)
+							, _center.Y - this.m_Stick.ClampedStickValue.Y
+								* (this.m_OverlaySize.Height / 2)))
 
 		this.m_FirstDraw := False
 	}
 
 	Hide()
 	{
-		Graphics.HideImage(this.m_MaxRangeEllipse)
-		Graphics.HideImage(this.m_OuterDeadzoneEllipse)
-		Graphics.HideImage(this.m_InnerDeadzoneEllipse)
+		this.m_MaxRangeEllipse.Hide()
+		this.m_OuterDeadzoneEllipse.Hide()
+		this.m_InnerDeadzoneEllipse.Hide()
 
-		Graphics.HideImage(this.m_AxisX)
-		Graphics.HideImage(this.m_AxisY)
+		this.m_AxisX.Hide()
+		this.m_AxisY.Hide()
 
-		Graphics.HideImage(this.m_RawInputEllipse)
-		Graphics.HideImage(this.m_AdjustedInputEllipse)
-		Graphics.HideImage(this.m_ClampedInputEllipse)
+		this.m_RawInputEllipse.Hide()
+		this.m_AdjustedInputEllipse.Hide()
+		this.m_ClampedInputEllipse.Hide()
 
 		this.m_FirstDraw := True
 	}
@@ -243,13 +236,13 @@ class Debug
 
 	static m_OnToolTip := Array()
 
-	static m_LogFilename :=
+	static m_LogFilename
 
-	static m_DebugTextGUI :=
-	static m_DebugLogGUI :=
+	static m_DebugTextGUI
+	static m_DebugLogGUI
 
-	static m_LeftStickOverlay :=
-	static m_RightStickOverlay :=
+	static m_LeftStickOverlay
+	static m_RightStickOverlay
 
 	Init()
 	{
@@ -349,11 +342,11 @@ class Debug
 		this.m_RightStickOverlay.Draw()
 	}
 
-	AddToLog(p_Entry)
+	Log(p_Entry)
 	{
 		global
 
-		if (this.m_LogEntries.Length() >= 35)
+		if (this.m_LogEntries.Length() >= 40)
 			this.m_LogEntries.RemoveAt(1)
 
 		local _newEntry := "[" . FPS.RuntimeString . "]: " . p_Entry
@@ -364,7 +357,7 @@ class Debug
 		this.m_UpdateLog := True
 	}
 
-	AddToOnToolTip(p_Delegate)
+	OnToolTipAddListener(p_Delegate)
 	{
 		this.m_OnToolTip.Push(p_Delegate)
 	}

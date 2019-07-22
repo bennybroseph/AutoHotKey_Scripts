@@ -11,7 +11,7 @@ class Inventory
 
 		this.__singleton := new Inventory()
 
-		Debug.AddToOnToolTip(new Delegate(Inventory, "OnToolTip"))
+		Debug.OnToolTipAddListener(new Delegate(Inventory, "OnToolTip"))
 
 		this.__init := True
 	}
@@ -174,7 +174,7 @@ class Inventory
 		{
 			Controller.Vibrate()
 
-			Debug.AddToLog(p_DPadButton.Name . " held down " . p_DPadButton.Controlbind.OnPress.String)
+			Debug.Log(p_DPadButton.Name . " held down " . p_DPadButton.Controlbind.OnPress.String)
 			InputHelper.PressKeybind(p_DPadButton.Controlbind.OnPress)
 
 			_control.PressTick := 0
@@ -239,6 +239,8 @@ class Inventory
 
 		Controller.ForceMouseUpdate := True
 		this.Enabled := True
+
+		Debug.Log("Inventory Mode: Enabled")
 	}
     Disable()
     {
@@ -253,15 +255,17 @@ class Inventory
 
 		Controller.ForceMouseUpdate := True
 		this.Enabled := False
+
+		Debug.Log("Inventory Mode: Disabled")
     }
 
 	OnToolTip()
 	{
 		global
 
-		local _debugText := _debugText . "Inventory - " . this.Enabled . " Pos: (" . this.Pos.X . ", " . this.Pos.Y . ") "
-						. "Value: (" . this.GetGridPos().X . ", " . this.GetGridPos().Y . ") "
-						. "HoldToMove: " . this.HoldToMove
+		local _debugText
+			.= "Inventory - " . this.Enabled . "`n"
+			. "Pos: " . this.Pos.String . " Value: " . this.GetGridPos().String . " HoldToMove: " . this.HoldToMove
 
 		return _debugText
 	}

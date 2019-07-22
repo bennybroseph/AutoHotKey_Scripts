@@ -83,10 +83,16 @@ class Vector2
 
 	Add(a, b)
 	{
+		if b is Number
+			return new Vector2(a.X + b, a.Y + b)
+
 		return new Vector2(a.X + b.X, a.Y + b.Y)
 	}
 	Sub(a, b)
 	{
+		if b is Number
+			return Vector2.Add(a, -b)
+
 		return Vector2.Add(a, b.Negative())
 	}
 
@@ -100,7 +106,7 @@ class Vector2
 	Div(a, b)
 	{
 		if b is Number
-			return new Vector2(a.X / b, a.Y / b)
+			return Vector2.Mul(a, 1 / b)
 
 		return Vector2.Mul(a, b.Reciprocal())
 	}
