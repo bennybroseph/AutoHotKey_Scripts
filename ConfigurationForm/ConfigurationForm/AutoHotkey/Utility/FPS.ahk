@@ -82,8 +82,9 @@ class FPS
 		local _counter := this.GetCurrentTime()
 		local _deltaTime := _counter - this.m_PrevTime
 
-		if (_deltaTime < this.m_Delay)
-			Sleep(this.m_Delay - _deltaTime)
+		local _delay := Max(this.m_Delay - _deltaTime, 0)
+		if (_delay > 0)
+			Sleep(_delay)
 
 		local _sleepDeltaTime := this.GetCurrentTime()
 		this.m_SleepDeltaTime := _sleepDeltaTime - _counter
@@ -97,6 +98,8 @@ class FPS
 		if (this.m_AddedDeltaTime > 1000)
 		{
 			this.m_AverageFPS := (this.m_FrameCount * 1000) / this.m_AddedDeltaTime
+			if (!Debug.Enabled and this.m_AverageFPS < this.m_TargetFPS * 0.9)
+				Debug.Log("FPS dropped below 90%")
 
 			this.m_AddedDeltaTime := 0
 			this.m_FrameCount := 0
@@ -133,8 +136,8 @@ class FPS
 
 		local _debugText :=
 
-		_debugText .= "AverageFPS: " . this.m_AverageFPS . "`tCurrFPS: " . this.m_CurrFPS . "`tDelay: " . this.m_Delay . "`n"
-		_debugText .= "DeltaTime: " . this.m_DeltaTime . "`tSleepCount: " . this.m_SleepDeltaTime
+		_debugText .= "AverageFPS: " . Round(this.m_AverageFPS, 2) . "`tCurrFPS: " . Round(this.m_CurrFPS, 2) . "`n"
+		_debugText .= "DeltaTime: " . Round(this.m_DeltaTime, 2) . "`tSleepDeltaTime: " . Round(this.m_SleepDeltaTime, 2)
 
 		return _debugText
 	}

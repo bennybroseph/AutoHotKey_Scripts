@@ -1,4 +1,14 @@
-; Contains multiple data structures including the very basic vector class
+; Contains multiple data structures including the vector, rect and color class
+
+Clamp(a, min, max)
+{
+	local _result := a
+
+	_result := Max(_result, min)
+	_result := Min(_result, max)
+
+	return _result
+}
 
 class Vector2
 {
@@ -56,7 +66,7 @@ class Vector2
 	Normalize[]
 	{
 		get {
-			return new Vector2(this.m_X / this.Magnitude, this.m_Y / this.Magnitude)
+			return Vector2.Div(this, this.Magnitude)
 		}
 	}
 
@@ -67,26 +77,45 @@ class Vector2
 		}
 	}
 
-	IsEqual(a, b)
+	IsEqual(a, b, dec := 2)
 	{
-		return a.X = b.X and a.Y = b.Y
+		return Round(a.X, dec) = Round(b.X, dec) and Round(a.Y, dec) = Round(b.Y, dec)
 	}
 
 	Negative()
 	{
-		return new Vector2(-this.m_X, -this.m_Y)
+		local _result := this.Clone()
+
+		_result.m_X := -_result.m_X
+		_result.m_Y := -_result.m_Y
+
+		return _result
 	}
 	Reciprocal()
 	{
-		return new Vector2(1 / this.m_X, 1 / this.m_Y)
+		local _result := this.Clone()
+
+		_result.m_X := 1 / _result.m_X
+		_result.m_Y := 1 / _result.m_Y
+
+		return _result
 	}
 
 	Add(a, b)
 	{
+		local _result := a.Clone()
 		if b is Number
-			return new Vector2(a.X + b, a.Y + b)
+		{
+			_result.X += b
+			_result.Y += b
+		}
+		else
+		{
+			_result.X += b.X
+			_result.Y += b.Y
+		}
 
-		return new Vector2(a.X + b.X, a.Y + b.Y)
+		return _result
 	}
 	Sub(a, b)
 	{
@@ -98,10 +127,19 @@ class Vector2
 
 	Mul(a, b)
 	{
+		local _result := a.Clone()
 		if b is Number
-			return new Vector2(a.X * b, a.Y * b)
+		{
+			_result.X *= b
+			_result.Y *= b
+		}
+		else
+		{
+			_result.X *= b.X
+			_result.Y *= b.Y
+		}
 
-		return new Vector2(a.X * b.X, a.Y * b.Y)
+		return _result
 	}
 	Div(a, b)
 	{
@@ -109,6 +147,78 @@ class Vector2
 			return Vector2.Mul(a, 1 / b)
 
 		return Vector2.Mul(a, b.Reciprocal())
+	}
+
+	Clamp(a, min, max)
+	{
+		local _result := a.Clone()
+
+		if (min is Number and max is Number)
+		{
+			_result.X := Clamp(_result.X, min, max)
+			_result.Y := Clamp(_result.Y, min, max)
+		}
+		else
+		{
+			_result.X := Clamp(_result.X, min.X, max.X)
+			_result.Y := Clamp(_result.Y, min.Y, max.Y)
+		}
+
+		return _result
+	}
+}
+
+class Rect
+{
+	__New(p_Min := -1, p_Max := -1)
+	{
+		if (p_Min = -1)
+			p_Min := new Vector2()
+		if (p_Max = -1)
+			p_Max := new Vector2()
+
+		this.m_Min := p_Min
+		this.m_Max := p_Max
+	}
+
+	Min[]
+	{
+		get {
+			return this.m_Min
+		}
+		set {
+			return this.m_Min := value
+		}
+	}
+	Max[]
+	{
+		get {
+			return this.m_Max
+		}
+		set {
+			return this.m_Max := value
+		}
+	}
+
+	Size[]
+	{
+		get {
+			return Vector2.Sub(this.m_Max, this.m_Min)
+		}
+	}
+
+	Center[]
+	{
+		get {
+			return Vector2.Add(this.m_Min, Vector2.Div(this.Size, 2))
+		}
+	}
+
+	String[]
+	{
+		get {
+			return "Min: " . this.m_Min.String . " Max: " . this.m_Max.String
+		}
 	}
 }
 

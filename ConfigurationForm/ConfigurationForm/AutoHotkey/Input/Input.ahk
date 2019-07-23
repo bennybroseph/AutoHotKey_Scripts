@@ -189,8 +189,6 @@ class Stick extends Control
 		this.m_StickValue 			:= new Vector2()
 		this.m_PrevStickValue 		:= new Vector2()
 
-		this.m_StickDelta := new Vector2()
-
 		this.m_StickAngleDeg := new Vector2()
 		this.m_StickAngleRad := new Vector2()
 
@@ -245,13 +243,6 @@ class Stick extends Control
 		}
 	}
 
-	StickDelta[]
-	{
-		get {
-			return this.m_StickDelta
-		}
-	}
-
 	StickAngleDeg[]
 	{
 		get {
@@ -299,6 +290,9 @@ class Stick extends Control
 		this.m_RawStickValue.X := (this.m_Direction = "Left" ? p_State.ThumbLX : p_State.ThumbRX) / this.s_MaxValue
 		this.m_RawStickValue.Y := (this.m_Direction = "Left" ? p_State.ThumbLY : p_State.ThumbRY) / this.s_MaxValue
 
+		if (Vector2.IsEqual(this.m_RawStickValue, this.m_PrevRawStickValue))
+			return
+
 		this.m_AdjustedStickValue := Vector2.Sub(this.m_RawStickValue, this.m_Zero)
 
 		local _scale := 0
@@ -311,11 +305,7 @@ class Stick extends Control
 
 		this.m_ClampedStickValue := Vector2.Mul(this.m_RawStickValue, _scale)
 
-		this.m_StickValue.X := this.m_ClampedStickValue.X
-		this.m_StickValue.Y := this.m_ClampedStickValue.Y
-
-		this.m_StickDelta.X := (this.m_StickValue.X - this.m_PrevStickValue.X) * this.m_Sensitivity.X
-		this.m_StickDelta.Y := (this.m_StickValue.Y - this.m_PrevStickValue.Y) * this.m_Sensitivity.Y
+		this.m_StickValue := this.m_ClampedStickValue.Clone()
 
 		this.m_State := this.m_StickValue.Magnitude > 0
 

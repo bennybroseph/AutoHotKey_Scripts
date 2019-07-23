@@ -20,20 +20,13 @@ class KeybindingSection
 
 class IniReader
 {
-    static __singleton :=
-    static __init := False
+	static m_ConfigPath := A_WorkingDir . "\" . "config.ini"
+
+	static m_ProfilePath
+	static m_KeybindingPath
 
     Init()
     {
-        IniReader.__singleton := new IniReader()
-
-        IniReader.__init := True
-    }
-
-    __New()
-    {
-        this.m_ConfigPath := A_WorkingDir . "\" . "config.ini"
-
         this.m_ProfilePath := A_WorkingDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Path")
 		this.m_KeybindingPath := A_WorkingDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Keybinding_Path")
     }
@@ -41,13 +34,13 @@ class IniReader
 	ConfigPath[]
     {
         get {
-            return this.__singleton.m_ConfigPath
+            return this.m_ConfigPath
         }
     }
     ProfilePath[]
     {
         get {
-            return this.__singleton.m_ProfilePath
+            return this.m_ProfilePath
         }
     }
 	KeybindingPath[]
@@ -79,15 +72,15 @@ class IniReader
     }
     ReadConfigKey(p_Section, p_Key)
     {
-        return this.ReadKey(this.ConfigPath, p_Section, p_Key)
+        return this.ReadKey(this.m_ConfigPath, p_Section, p_Key)
     }
     ReadProfileKey(p_Section, p_Key)
     {
-        return this.ReadKey(this.ProfilePath, p_Section, p_Key)
+        return this.ReadKey(this.m_ProfilePath, p_Section, p_Key)
     }
 	ReadKeybindingKey(p_Section, p_Key)
 	{
-		return this.ReadKey(this.KeybindingPath, p_Section, p_Key)
+		return this.ReadKey(this.m_KeybindingPath, p_Section, p_Key)
 	}
 
 	WriteKey(p_Value, p_IniPath, p_Section, p_Key)
@@ -96,7 +89,7 @@ class IniReader
 	}
 	WriteConfigKey(p_Value, p_Section, p_Key)
 	{
-		this.WriteKey(p_Value, this.ConfigPath, p_Section, p_Key)
+		this.WriteKey(p_Value, this.m_ConfigPath, p_Section, p_Key)
 	}
 
     ParseKeybind(p_KeybindString)

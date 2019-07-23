@@ -515,6 +515,12 @@ class Controller
 
         if (!this.CursorMode)
         {
+			local _centerOffset
+				:= Vector2.Add(Vector2.Add(Graphics.ActiveWinStats.Pos, Graphics.ActiveWinStats.Center)
+							, Vector2.Mul(this.m_MouseOffset, Graphics.ResolutionScale))
+
+			this.m_MousePos := _centerOffset
+
 			if (_stick.State)
 			{
 				if ((!this.m_Moving or this.m_RepeatForceMove) and !this.m_PressStack.Peek)
@@ -528,28 +534,13 @@ class Controller
 						this.StartMoving()
 				}
 
-				local _centerOffset
-					:= new Vector2(Graphics.ActiveWinStats.Center.X
-								+ this.m_MouseOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
-								, Graphics.ActiveWinStats.Center.Y
-								+ this.m_MouseOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+				local _radius := Vector2.Mul(this.m_MovementRadius, Graphics.ResolutionScale)
 
-				local _radius
-					:= new Vector2(this.m_MovementRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
-								, this.m_MovementRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
-
-				this.m_MousePos.X	:= _centerOffset.X + _stick.StickValue.Normalize.X * _radius.Width
-				this.m_MousePos.Y := _centerOffset.Y - _stick.StickValue.Normalize.Y * _radius.Height
+				this.m_MousePos.X += _stick.StickValue.Normalize.X * _radius.Width
+				this.m_MousePos.Y -= _stick.StickValue.Normalize.Y * _radius.Height
 			}
-			else
-			{
-				if (this.m_Moving and !this.m_PressStack.Peek)
-					this.StopMoving()
-
-				this.m_MousePos
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + this.m_MouseOffset.X
-								, Graphics.ActiveWinStats.Center.Y + this.m_MouseOffset.Y)
-			}
+			else if (this.m_Moving and !this.m_PressStack.Peek)
+				this.StopMoving()
 
 			if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
 			{
@@ -561,25 +552,23 @@ class Controller
 			else
 				this.m_Reticule.Draw(this.m_MousePos)
         }
-        else
+        else if (_stick.State or this.m_ForceMouseUpdate)
         {
 			if (_stick.State)
 			{
 				local _mouseDelta
-					:= new Vector2(FPS.DeltaTime * this.StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
-								, FPS.DeltaTime * this.StickSpeed * -_stick.StickValue.Y * _stick.Sensitivity.Y)
+					:= Vector2.Mul(Vector2.Mul(_stick.StickValue, FPS.DeltaTime * this.StickSpeed), _stick.Sensitivity)
 
-				this.m_MousePos.X := this.m_MousePos.X + _mouseDelta.X
-				this.m_MousePos.Y := this.m_MousePos.Y + _mouseDelta.Y
+				this.m_MousePos.X += _mouseDelta.X
+				this.m_MousePos.Y -= _mouseDelta.Y
+
+				this.m_MousePos := Vector2.Clamp(this.m_MousePos, Graphics.ScreenBounds.Min, Graphics.ScreenBounds.Max)
 			}
 
-			if (_stick.State or this.m_ForceMouseUpdate)
-			{
-				if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
-					InputHelper.MoveMouse(this.m_MousePos)
-				else
-					this.m_Reticule.Draw(this.m_MousePos)
-			}
+			if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
+				InputHelper.MoveMouse(this.m_MousePos)
+			else
+				this.m_Reticule.Draw(this.m_MousePos)
         }
 
 		this.m_ForceMouseUpdate := False
@@ -597,26 +586,18 @@ class Controller
 
         if (!this.FreeTargetMode)
         {
+			local _centerOffset
+				:= Vector2.Add(Vector2.Add(Graphics.ActiveWinStats.Pos, Graphics.ActiveWinStats.Center)
+							, Vector2.Mul(this.m_TargetOffset, Graphics.ResolutionScale))
+
+			this.m_TargetPos := _centerOffset
+
 			if (_stick.State)
 			{
-				local _centerOffset
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X
-								+ this.m_TargetOffset.X * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
-								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y
-								+ this.m_TargetOffset.Y * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
+				local _radius := Vector2.Mul(this.m_TargetRadius, Graphics.ResolutionScale)
 
-				local _radius
-					:= new Vector2(this.m_TargetRadius.Width * (Graphics.ActiveWinStats.Size.Width / Graphics.BaseResolution.Width)
-								, this.m_TargetRadius.Height * (Graphics.ActiveWinStats.Size.Height / Graphics.BaseResolution.Height))
-
-				this.m_TargetPos.X := _centerOffset.X + _stick.StickValue.X * _radius.Width
-				this.m_TargetPos.Y := _centerOffset.Y - _stick.StickValue.Y * _radius.Height
-			}
-			else
-			{
-				this.m_TargetPos
-					:= new Vector2(Graphics.ActiveWinStats.Center.X + Graphics.ActiveWinStats.Pos.X
-								, Graphics.ActiveWinStats.Center.Y + Graphics.ActiveWinStats.Pos.Y)
+				this.m_TargetPos.X += _stick.StickValue.X * _radius.Width
+				this.m_TargetPos.Y -= _stick.StickValue.Y * _radius.Height
 			}
 
             if (this.m_UsingReticule and this.m_PressStack.Peek.Type = KeybindType.Targeted)
@@ -626,28 +607,26 @@ class Controller
 			else
 				this.m_Reticule.Hide()
         }
-        else
+        else if (_stick.State or this.m_ForceReticuleUpdate)
         {
 			if (_stick.State)
 			{
 				local _targetDelta
-					:= new Vector2(FPS.DeltaTime * this.StickSpeed * _stick.StickValue.X * _stick.Sensitivity.X
-								, FPS.DeltaTime * this.StickSpeed * _stick.StickValue.Y * _stick.Sensitivity.Y)
+					:= Vector2.Mul(Vector2.Mul(_stick.StickValue, FPS.DeltaTime * this.StickSpeed), _stick.Sensitivity)
 
 				if (this.m_UsingReticule)
 				{
-					this.m_TargetPos.X := this.m_TargetPos.X + _targetDelta.X
-					this.m_TargetPos.Y := this.m_TargetPos.Y - _targetDelta.Y
+					this.m_TargetPos.X += _targetDelta.X
+					this.m_TargetPos.Y -= _targetDelta.Y
 				}
+
+				this.m_TargetPos := Vector2.Clamp(this.m_TargetPos, Graphics.ScreenBounds.Min, Graphics.ScreenBounds.Max)
 			}
 
-			if (_stick.State or this.m_ForceReticuleUpdate)
-			{
-				if (this.m_PressStack.Peek.Type = KeybindType.Targeted)
-					InputHelper.MoveMouse(this.m_TargetPos)
-				else
-					this.m_Reticule.Draw(this.m_TargetPos)
-			}
+			if (this.m_PressStack.Peek.Type = KeybindType.Targeted)
+				InputHelper.MoveMouse(this.m_TargetPos)
+			else
+				this.m_Reticule.Draw(this.m_TargetPos)
         }
 
 		this.m_ForceReticuleUpdate := False

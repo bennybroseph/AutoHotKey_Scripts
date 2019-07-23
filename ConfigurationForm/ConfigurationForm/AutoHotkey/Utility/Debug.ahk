@@ -255,8 +255,15 @@ class Debug
 		this.m_LogFilename := "Log\" . _currentDate . ".txt"
 		FileAppend, , % this.m_LogFilename
 
-		this.m_DebugTextGUI := new TextOverlay(new Color(30, 30, 30, 210))
-		this.m_DebugLogGUI := new TextOverlay(new Color(30, 30, 30, 210), True)
+		this.m_DebugTextGUI := new TextOverlay(new Color(30, 30, 30, 225))
+		this.m_DebugLogGUI := new TextOverlay(new Color(30, 30, 30, 225), True)
+	}
+
+	Enabled[]
+	{
+		get {
+			return this.m_Enabled
+		}
 	}
 
 	CurrentTickDelta[]

@@ -77,6 +77,8 @@ class Graphics
 
 	static m_ApplicationTitle
 
+	static m_ScreenBounds
+
 	static m_ActiveWinStats
 
 	static m_BaseResolution
@@ -84,6 +86,8 @@ class Graphics
 
 	Init()
 	{
+		global
+
 		if (!this.m_Token := Gdip_Startup())
 		{
 			MsgBox, 48, % "Gdiplus error!", % "Gdiplus failed to start. Please ensure you have Gdiplus on your system."
@@ -92,6 +96,12 @@ class Graphics
 		}
 
 		this.m_ApplicationTitle := IniReader.ReadProfileKey(ProfileSection.Preferences, "Application_Name")
+
+		local _maxX, _maxY
+		Sysget, _maxX, 78
+		Sysget, _maxY, 79
+
+		this.m_ScreenBounds := new Rect(new Vector2(), new Vector2(_maxX, _maxY))
 
 		this.m_ActiveWinStats := new WinStats()
 
@@ -110,6 +120,13 @@ class Graphics
 			ToolTipFont("s10")
 
 		Debug.OnToolTipAddListener(new Delegate(Graphics, "OnToolTip"))
+	}
+
+	ScreenBounds[]
+	{
+		get {
+			return this.m_ScreenBounds
+		}
 	}
 
 	ActiveWinStats[]
@@ -234,9 +251,9 @@ class Graphics
 	{
 		local _debugText
 			.= this.m_ActiveWinStats.Title . "`n"
-			. "Size: (" . Round(this.m_ActiveWinStats.Size.Width, 2) . ", " . Round(this.m_ActiveWinStats.Size.Height, 2) . ") "
-			. "Pos: (" . this.m_ActiveWinStats.Pos.X . ", " . this.m_ActiveWinStats.Pos.Y . ") "
-			. "Center: (" . Round(this.m_ActiveWinStats.Center.X, 2) . ", " . Round(this.m_ActiveWinStats.Center.Y, 2) . ")"
+			. "Size: " this.m_ActiveWinStats.Size.String . "`t"
+			. "Pos: " this.m_ActiveWinStats.Pos.String "`n"
+			. "Center: " this.m_ActiveWinStats.Center.String
 
 		return _debugText
 	}
