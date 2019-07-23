@@ -2,21 +2,7 @@
 
 class Inventory
 {
-	static __singleton :=
-	static __init := False
-
 	Init()
-	{
-		global
-
-		this.__singleton := new Inventory()
-
-		Debug.OnToolTipAddListener(new Delegate(Inventory, "OnToolTip"))
-
-		this.__init := True
-	}
-
-	__New()
 	{
 		global
 
@@ -38,81 +24,21 @@ class Inventory
 		this.m_Scaling
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Width")
 						, IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Height"))
+
+		Debug.OnToolTipAddListener(new Delegate(Inventory, "OnToolTip"))
 	}
 
 	Enabled[]
 	{
 		get {
-			return this.__singleton.m_Enabled
+			return this.m_Enabled
 		}
 	}
 
-	Grid[p_IndexX := 0, p_IndexY := 0]
-	{
-		get {
-			if (p_IndexX = 0 and p_IndexY)
-				return this.__singleton.m_Grid
-			else
-				return this.__singleton.m_Grid[p_IndexX, p_IndexY]
-		}
-	}
-
-	Pos[]
-	{
-		get {
-			return this.__singleton.m_Pos
-		}
-	}
 	MaxPos[]
 	{
 		get {
-			return new Vector2(this.__singleton.m_Grid.MaxIndex(), this.__singleton.m_Grid[1].MaxIndex())
-		}
-	}
-
-	DPadStack[]
-	{
-		get {
-			return this.__singleton.m_ControlStack
-		}
-	}
-
-	HoldToMove[]
-	{
-		get {
-			return this.__singleton.m_HoldToMove
-		}
-	}
-	HoldDelay[]
-	{
-		get {
-			return this.__singleton.m_HoldDelay
-		}
-	}
-
-	ShowInventoryModeNotification[]
-	{
-		get {
-			return this.__singleton.m_ShowInventoryModeNotification
-		}
-	}
-	RememberPosition[]
-	{
-		get {
-			return this.__singleton.m_RemeberPosition
-		}
-	}
-
-	BaseResolution[]
-	{
-		get {
-			return this.__singleton.m_BaseResolution
-		}
-	}
-	Scaling[]
-	{
-		get {
-			return this.__singleton.m_Scaling
+			return new Vector2(this.m_Grid.MaxIndex(), this.m_Grid[1].MaxIndex())
 		}
 	}
 
@@ -121,56 +47,57 @@ class Inventory
 		global
 
 		if (p_X = 0)
-			p_X := this.Pos.X
+			p_X := this.m_Pos.X
 		if (p_Y = 0)
-			p_Y := this.Pos.Y
+			p_Y := this.m_Pos.Y
 
-		local _gridPos := new Vector2(this.Grid[p_X, p_Y].X, this.Grid[p_X, p_Y].Y)
-		_gridPos.X := (_gridPos.X * (Graphics.ActiveWinStats.Size.Width / this.BaseResolution.Width)) * this.Scaling.X
-		_gridPos.Y := (_gridPos.Y * (Graphics.ActiveWinStats.Size.Height / this.BaseResolution.Height)) * this.Scaling.Y
+		local _gridPos
+			:= Vector2
+				.Mul(Vector2
+					.Mul(this.m_Grid[p_X, p_Y], Vector2.Div(Graphics.ActiveWinStats.Size, this.m_BaseResolution)), this.m_Scaling)
 
 		return _gridPos
 	}
 
 	ProcessPress(p_DPadButton)
 	{
-		if (p_DPadButton.Controlbind.OnPress.Action or this.HoldToMove)
+		if (p_DPadButton.Controlbind.OnPress.Action or this.m_HoldToMove)
 			p_DPadButton.PressTick := A_TickCount
 
-		if (!p_DPadButton.Controlbind.OnPress.Action or this.HoldToMove)
+		if (!p_DPadButton.Controlbind.OnPress.Action or this.m_HoldToMove)
 			this.PressControl(p_DPadButton.Index)
 	}
 	ProcessReleaseHold(p_DPadButton)
 	{
-		if (!this.HoldToMove)
+		if (!this.m_HoldToMove)
 			InputHelper.ReleaseKeybind(p_DPadButton.Controlbind.OnPress)
 		else
 			p_DPadButton.HoldTick := 0
 	}
 	ProcessReleasePress(p_DPadButton)
 	{
-		if (!this.HoldToMove)
+		if (!this.m_HoldToMove)
 			this.PressControl(p_DPadButton.Index)
 	}
 	ProcessHold(p_DPadButton)
 	{
-		if (this.HoldToMove)
+		if (this.m_HoldToMove)
 		{
-			if (p_DPadButton.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.HoldDelay)
+			if (p_DPadButton.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.m_HoldDelay)
 			{
 				this.PressControl(p_DPadButton.Index)
 
 				p_DPadButton.HoldTick	:= A_TickCount
 				p_DPadButton.PressTick 	:= 0
 			}
-			else if (p_DPadButton.HoldTick > 0 and A_TickCount >= p_DPadButton.HoldTick + Inventory.HoldDelay)
+			else if (p_DPadButton.HoldTick > 0 and A_TickCount >= p_DPadButton.HoldTick + Inventory.m_HoldDelay)
 			{
 				this.PressControl(p_DPadButton.Index)
 
 				p_DPadButton.HoldTick	:= A_TickCount
 			}
 		}
-		else if (_control.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.HoldDelay)
+		else if (_control.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.m_HoldDelay)
 		{
 			Controller.Vibrate()
 
@@ -189,23 +116,23 @@ class Inventory
 		Loop
 		{
 			if (p_ControlIndex = ControlIndex.DPadUp)
-				this.Pos.Y--
+				this.m_Pos.Y--
 			if (p_ControlIndex = ControlIndex.DPadDown)
-				this.Pos.Y++
+				this.m_Pos.Y++
 			if (p_ControlIndex = ControlIndex.DPadLeft)
-				this.Pos.X--
+				this.m_Pos.X--
 			if (p_ControlIndex = ControlIndex.DPadRight)
-				this.Pos.X++
+				this.m_Pos.X++
 
-			if (this.Pos.X < 1)
-				this.Pos.X := this.MaxPos.X
-			if (this.Pos.X > this.MaxPos.X)
-				this.Pos.X := 1
+			if (this.m_Pos.X < 1)
+				this.m_Pos.X := this.MaxPos.X
+			if (this.m_Pos.X > this.MaxPos.X)
+				this.m_Pos.X := 1
 
-			if (this.Pos.Y < 1)
-				this.Pos.Y := this.MaxPos.Y
-			if (this.Pos.Y > this.MaxPos.Y)
-				this.Pos.Y := 1
+			if (this.m_Pos.Y < 1)
+				this.m_Pos.Y := this.MaxPos.Y
+			if (this.m_Pos.Y > this.MaxPos.Y)
+				this.m_Pos.Y := 1
 		} Until (this.GetGridPos().X != _prevGridPos.X
 			or this.GetGridPos().Y != _prevGridPos.Y)
 
@@ -214,7 +141,7 @@ class Inventory
 
 	Toggle()
 	{
-		if (!this.Enabled)
+		if (!this.m_Enabled)
 			this.Enable()
 		else
 			this.Disable()
@@ -226,11 +153,11 @@ class Inventory
 		if (Controller.CursorMode)
 			Controller.DisableCursorMode()
 
-		if (this.ShowInventoryModeNotification)
+		if (this.m_ShowInventoryModeNotification)
 		{
 			local _controlInfo := Controller.FindControlInfo(IniReader.ParseKeybind("Inventory"))
 
-			Graphics.DrawToolTip("Inventory Mode: Enabled `n"
+			Graphics.DrawToolTip("Inventory Mode: m_Enabled `n"
 								. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable"
 								, Graphics.ActiveWinStats.Center.X
 								, 0
@@ -238,23 +165,23 @@ class Inventory
 		}
 
 		Controller.ForceMouseUpdate := True
-		this.Enabled := True
+		this.m_Enabled := True
 
-		Debug.Log("Inventory Mode: Enabled")
+		Debug.Log("Inventory Mode: m_Enabled")
 	}
     Disable()
     {
 		global
 
-		if (this.ShowInventoryModeNotification)
+		if (this.m_ShowInventoryModeNotification)
 			Graphics.HideToolTip(1)
 
 		Controller.ResetDPadTick()
-		if (!this.RememberPosition)
-			this.Pos := new Vector2(1, 6)
+		if (!this.m_RememberPosition)
+			this.m_Pos := new Vector2(1, 6)
 
 		Controller.ForceMouseUpdate := True
-		this.Enabled := False
+		this.m_Enabled := False
 
 		Debug.Log("Inventory Mode: Disabled")
     }
@@ -264,8 +191,8 @@ class Inventory
 		global
 
 		local _debugText
-			.= "Inventory - " . this.Enabled . "`n"
-			. "Pos: " . this.Pos.String . " Value: " . this.GetGridPos().String . " HoldToMove: " . this.HoldToMove
+			.= "Inventory - " . this.m_Enabled . "`n"
+			. "m_Pos: " . this.m_Pos.String . " Value: " . this.GetGridPos().String . " m_HoldToMove: " . this.m_HoldToMove
 
 		return _debugText
 	}
@@ -279,7 +206,7 @@ class InventoryGrids
 
 		if (p_Type = "Diablo III")
 		{
-			; Base Inventory Grid
+			; Base Inventory m_Grid
 			Loop, 10
 			{
 				i := A_Index
