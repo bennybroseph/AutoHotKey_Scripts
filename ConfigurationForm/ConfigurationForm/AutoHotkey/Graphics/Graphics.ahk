@@ -80,6 +80,7 @@ class Graphics
 	static m_ScreenBounds
 
 	static m_ActiveWinStats
+	static m_OnActiveWindowChanged
 
 	static m_BaseResolution
 	static m_CenterOffset
@@ -104,6 +105,7 @@ class Graphics
 		this.m_ScreenBounds := new Rect(new Vector2(), new Vector2(_maxX, _maxY))
 
 		this.m_ActiveWinStats := new WinStats()
+		this.m_OnActiveWindowChanged := new Event()
 
 		this.m_BaseResolution
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Base_Resolution_Height")
@@ -133,6 +135,12 @@ class Graphics
 	{
 		get {
 			return this.m_ActiveWinStats
+		}
+	}
+	OnActiveWindowChanged
+	{
+		get {
+			return this.m_OnActiveWindowChanged
 		}
 	}
 
@@ -165,8 +173,7 @@ class Graphics
 		if (!_winStats.Title)
 			return
 
-		if (_winStats.Title != this.m_ActiveWinStats.Title)
-			Debug.Log("Active window changed from " . this.m_ActiveWinStats.Title . " to " . _winStats.Title)
+		local _windowChanged := _winStats.Title != this.m_ActiveWinStats.Title
 
 		this.m_ActiveWinStats := _winStats
 
@@ -175,6 +182,12 @@ class Graphics
 		if (WinActive(this.m_ApplicationTitle))
 			this.m_ActiveWinStats.Center
 				:= Vector2.Add(this.m_ActiveWinStats.Center, Vector2.Mul(this.m_CenterOffset, this.ResolutionScale))
+
+		if (_windowChanged)
+		{
+			Debug.Log("Active window changed from " . this.m_ActiveWinStats.Title . " to " . _winStats.Title)
+			this.m_OnActiveWindowChanged.Invoke()
+		}
 	}
 
 	GetControlAutoSize(p_Text)

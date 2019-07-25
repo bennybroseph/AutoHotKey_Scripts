@@ -89,10 +89,10 @@ class Controller
 	static m_CursorMode 	:= False
 	static m_FreeTargetMode := False
 
-	static m_ShowCursorModeNotification :=
-	static m_ShowFreeTargetModeNotification :=
+	static m_ShowCursorModeNotification
+	static m_ShowFreeTargetModeNotification
 
-	static m_MoveOnlyKey :=
+	static m_MoveOnlyKey
 
 	static m_Moving				:= False
 	static m_ForceMouseUpdate 	:= True
@@ -100,37 +100,40 @@ class Controller
 	static m_UsingReticule 			:= False
 	static m_ForceReticuleUpdate 	:= True
 
-	static m_RepeatForceMove		:=
-	static m_HaltMovementOnTarget	:=
+	static m_RepeatForceMove
+	static m_HaltMovementOnTarget
 
-	static m_MouseOffset	:=
-	static m_TargetOffset 	:=
+	static m_MouseOffset
+	static m_TargetOffset
 
-	static m_TargetedKeybinds :=
-	static m_MovementKeybinds :=
+	static m_TargetedKeybinds
+	static m_MovementKeybinds
 
-	static m_PressStack :=
-	static m_PressCount :=
+	static m_PressStack
+	static m_PressCount
 
-	static m_LootDelay		:=
-	static m_TargetingDelay	:=
-	static m_HoldDelay		:=
+	static m_LootDelay
+	static m_TargetingDelay
+	static m_HoldDelay
 
-	static m_VibeStrength :=
-	static m_VibeDuration :=
+	static m_VibeStrength
+	static m_VibeDuration
+
+	static m_MovementRadius
+	static m_TargetRadius
 
 	static m_Controls := Array()
 
-	static m_MovementStick    :=
-	static m_TargetStick      :=
+	static m_MovementStick
+	static m_TargetStick
 
-	static m_MousePos	:=
-	static m_TargetPos	:=
+	static m_MousePos
+	static m_TargetPos
 
-	static m_Reticule :=
+	static m_Reticule
 
-	static m_BatteryStatus 		:=
-	static m_PrevBatteryStatus 	:=
+	static m_BatteryStatus
+	static m_PrevBatteryStatus
 
 	static m_StickSpeed := 1500
 
@@ -177,11 +180,17 @@ class Controller
 		this.m_VibeDuration := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Duration")
 
 		this.m_MovementRadius
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Radius_Width")
-						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Radius_Height"))
+			:= new Rect(new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Min_Radius_Width")
+								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Min_Radius_Height"))
+					, new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Max_Radius_Width")
+								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Max_Radius_Height")))
+
+
 		this.m_TargetRadius
-			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Radius_Width")
-						,IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Radius_Height"))
+			:= new Rect(new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Min_Radius_Width")
+								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Min_Radius_Height"))
+					, new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Max_Radius_Width")
+								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Max_Radius_Height")))
 
 		this.m_Controls := Array()
 
@@ -534,10 +543,14 @@ class Controller
 						this.StartMoving()
 				}
 
-				local _radius := Vector2.Mul(this.m_MovementRadius, Graphics.ResolutionScale)
+				local _radius 
+					:= new Rect(Vector2.Mul(this.m_MovementRadius.Min, Graphics.ResolutionScale)
+							, Vector2.Mul(this.m_MovementRadius.Max, Graphics.ResolutionScale))
 
-				this.m_MousePos.X += _stick.StickValue.Normalize.X * _radius.Width
-				this.m_MousePos.Y -= _stick.StickValue.Normalize.Y * _radius.Height
+				this.m_MousePos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X) 
+									+ (_radius.Size.Width * _stick.StickValue.X)
+				this.m_MousePos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y) 
+									+ (_radius.Size.Height * _stick.StickValue.Y)
 			}
 			else if (this.m_Moving and !this.m_PressStack.Peek)
 				this.StopMoving()
@@ -594,10 +607,14 @@ class Controller
 
 			if (_stick.State)
 			{
-				local _radius := Vector2.Mul(this.m_TargetRadius, Graphics.ResolutionScale)
+				local _radius 
+					:= new Rect(Vector2.Mul(this.m_TargetRadius.Min, Graphics.ResolutionScale)
+							, Vector2.Mul(this.m_TargetRadius.Max, Graphics.ResolutionScale))
 
-				this.m_TargetPos.X += _stick.StickValue.X * _radius.Width
-				this.m_TargetPos.Y -= _stick.StickValue.Y * _radius.Height
+				this.m_TargetPos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X) 
+									+ (_radius.Size.Width * _stick.StickValue.X)
+				this.m_TargetPos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y) 
+									+ (_radius.Size.Height * _stick.StickValue.Y)
 			}
 
             if (this.m_UsingReticule and this.m_PressStack.Peek.Type = KeybindType.Targeted)
