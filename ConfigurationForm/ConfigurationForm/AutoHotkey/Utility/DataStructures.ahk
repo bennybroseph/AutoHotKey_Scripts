@@ -14,52 +14,33 @@ class Vector2
 {
 	__New(p_X := 0, p_Y := 0)
 	{
-		this.m_X := p_X
-		this.m_Y := p_Y
-	}
-
-	X[]
-	{
-		get {
-			return this.m_X
-		}
-		set {
-			return this.m_X := value
-		}
-	}
-	Y[]
-	{
-		get {
-			return this.m_Y
-		}
-		set {
-			return this.m_Y := value
-		}
+		this.X := p_X
+		this.Y := p_Y
 	}
 
 	Width[]
 	{
 		get {
-			return this.m_X
+			return this.X
 		}
 		set {
-			return this.m_X := value
+			return this.X := value
 		}
 	}
 	Height[]
 	{
 		get {
-			return this.m_Y
+			return this.Y
 		}
 		set {
-			return this.m_Y := value
+			return this.Y := value
 		}
 	}
 
 	Magnitude[]
 	{
 		get {
-			return Sqrt(this.m_X * this.m_X + this.m_Y * this.m_Y)
+			return Sqrt(this.X * this.X + this.Y * this.Y)
 		}
 	}
 
@@ -73,7 +54,7 @@ class Vector2
 	String[]
 	{
 		get{
-			return "(" . Round(this.m_X, 2) . ", " . Round(this.m_Y, 2) . ")"
+			return "(" . Round(this.X, 2) . ", " . Round(this.Y, 2) . ")"
 		}
 	}
 
@@ -86,8 +67,8 @@ class Vector2
 	{
 		local _result := this.Clone()
 
-		_result.m_X := -_result.m_X
-		_result.m_Y := -_result.m_Y
+		_result.X := -_result.X
+		_result.Y := -_result.Y
 
 		return _result
 	}
@@ -95,8 +76,8 @@ class Vector2
 	{
 		local _result := this.Clone()
 
-		_result.m_X := 1 / _result.m_X
-		_result.m_Y := 1 / _result.m_Y
+		_result.X := 1 / _result.X
+		_result.Y := 1 / _result.Y
 
 		return _result
 	}
@@ -177,47 +158,28 @@ class Rect
 		if (p_Max = -1)
 			p_Max := new Vector2()
 
-		this.m_Min := p_Min
-		this.m_Max := p_Max
-	}
-
-	Min[]
-	{
-		get {
-			return this.m_Min
-		}
-		set {
-			return this.m_Min := value
-		}
-	}
-	Max[]
-	{
-		get {
-			return this.m_Max
-		}
-		set {
-			return this.m_Max := value
-		}
+		this.Min := p_Min
+		this.Max := p_Max
 	}
 
 	Size[]
 	{
 		get {
-			return Vector2.Sub(this.m_Max, this.m_Min)
+			return Vector2.Sub(this.Max, this.Min)
 		}
 	}
 
 	Center[]
 	{
 		get {
-			return Vector2.Add(this.m_Min, Vector2.Div(this.Size, 2))
+			return Vector2.Add(this.Min, Vector2.Div(this.Size, 2))
 		}
 	}
 
 	String[]
 	{
 		get {
-			return "Min: " . this.m_Min.String . " Max: " . this.m_Max.String
+			return "Min: " . this.Min.String . " Max: " . this.Max.String
 		}
 	}
 }
@@ -351,7 +313,7 @@ class Color
 		} Until _hex = 0
 
 		While, StrLen(_result) < p_MinLength
-			_result .= "0"
+			_result := "0" . _result
 
 		return _result
 	}

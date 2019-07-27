@@ -88,394 +88,406 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Content Include="AutoHotkey\config.ini">
+    <None Include="AutoHotkey\config.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Analog_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Battery_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Battery_High.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\A_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Battery_Low.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Back_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Battery_Medium.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Analog_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\B_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Console.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\A_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Controller.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Back_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Down.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\B_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Horizontal.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Console.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Left.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Controller.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Right.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Up.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Vertical.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Horizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Guide_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Left_Analog_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Left_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Up.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Left_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\D-Pad_Vertical.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Left_Bumper_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Guide_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Left_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Left_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Left_Trigger_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Left_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Right_Analog_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Left_Bumper_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Right_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Left_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Right_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Left_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Right_Bumper_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Left_Trigger_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Right_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Right_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Right_Trigger_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Right_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\sheet.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Right_Bumper_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Start_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Right_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\X_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Right_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\128\Y_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Right_Trigger_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\sheet.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\A_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Start_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Back_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\X_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\B_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\128\Y_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Console.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Controller.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\A_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Back_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Down.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\B_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Horizontal.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Console.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Left.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Controller.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Right.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Up.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Vertical.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Horizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Left_bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Left_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Up.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Right_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\D-Pad_Vertical.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Right_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Guide_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Left_bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Left_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Left_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Left_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Right_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Left_Stick_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Empty_Right_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Left_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Guide_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Right_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Left_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Right_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Left_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Right_Stick_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Left_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Right_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Left_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Start_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Right_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Stick_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Right_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\X_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Right_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Hold\64\Y_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Right_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Analog_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Start_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\A_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\X_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Back_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Hold\64\Y_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\B_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Analog_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Console.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Controller.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\A_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Back_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Down.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\B_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Horizontal.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Console.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Left.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Controller.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Right.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Up.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Vertical.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Horizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Empty_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Guide_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Left_Analog_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Up.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Left_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\D-Pad_Vertical.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Left_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Empty_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Left_Bumper_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Guide_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Left_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Left_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Left_Trigger_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Left_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Right_Analog_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Left_Bumper_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Right_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Left_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Right_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Left_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Right_Bumper_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Left_Trigger_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Right_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Right_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Right_Trigger_Empty.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Right_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Start_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Right_Bumper_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\X_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Right_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\128\Y_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Right_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\A_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Right_Trigger_Empty.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Back_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Start_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\B_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\X_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Console.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\128\Y_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Controller.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\A_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Back_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Down.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\B_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Horizontal.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Console.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Left.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Controller.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Right.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Up.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Vertical.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Horizontal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Analog.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Left_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Up.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Left_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\D-Pad_Vertical.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Right_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Analog.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Right_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Empty_Stick_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Left_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Guide_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Left_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\joystick1_right_press.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Right_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Left_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Right_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Left_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Empty_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Left_Stick_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Guide_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Left_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Left_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Right_Analog_Stick.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Left_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Right_Bumper.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Left_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Right_Trigger.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Left_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Start_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Right_Analog_Stick.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\X_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Right_Bumper.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Xbox\Press\64\Y_Button.png">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Right_Stick_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Video Transcript.docx">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Right_Trigger.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="diablo_controller_qex_icon.ico" />
-    <Content Include="Settings\Defaults\config.ini">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Start_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Settings\Defaults\profile.ini">
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\X_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
+    <None Include="AutoHotkey\Images\Xbox\Press\64\Y_Button.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="AutoHotkey\Video Transcript.docx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="diablo_controller_qex_icon.ico" />
+    <None Include="Settings\Defaults\config.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Settings\Defaults\profile.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\DataSources\IniParser.Model.IniData.datasource" />
     <None Include="Properties\DataSources\IniParser.Parser.IniDataParser.datasource" />
@@ -488,29 +500,35 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Content Include="Settings\Profiles\Diablo_III.ini">
+    <None Include="Settings\Profiles\Diablo_III.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Settings\Keybindings\Default.ini">
+    </None>
+    <None Include="Settings\Keybindings\Diablo III\Default.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Settings\Defaults\keybinding.ini">
+    </None>
+    <None Include="Settings\Defaults\keybinding.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
+    <None Include="Settings\Keybindings\Path of Exile\Default.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Settings\Profiles\Path_of_Exile.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AutoHotkey\Joystick to Keyboard Emulation.exe">
+    <None Include="AutoHotkey\Joystick to Keyboard Emulation.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\ReadMe.txt">
+    </None>
+    <None Include="AutoHotkey\ReadMe.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="AutoHotkey\Images\Target.png">
+    </None>
+    <None Include="AutoHotkey\Images\Target.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

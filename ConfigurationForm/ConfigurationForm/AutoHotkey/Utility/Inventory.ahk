@@ -8,8 +8,8 @@ class Inventory
 
 		this.m_Enabled := False
 
-		this.m_Grid := InventoryGrids.CreateGrid()
-		this.m_Pos := new Vector2(1, 6)
+		this.m_Grid := InventoryGrids.CreateGrid(Graphics.ApplicationTitle)
+		this.m_Pos := this.m_Grid.StartingPos
 
 		this.m_HoldToMove := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_To_Move")
 		this.m_HoldDelay := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_Delay")
@@ -17,7 +17,7 @@ class Inventory
 		this.m_ShowInventoryModeNotification
 			:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Show_Inventory_Mode_Notification")
 
-		this.m_RemeberPosition
+		this.m_RememberPosition
 			:= IniReader.ReadProfileKey(ProfileSection.Inventory, "Remember_Position")
 
 		this.m_BaseResolution := new Vector2(1920, 1080)
@@ -62,7 +62,7 @@ class Inventory
 	ProcessPress(p_DPadButton)
 	{
 		if (p_DPadButton.Controlbind.OnPress.Action or this.m_HoldToMove)
-			p_DPadButton.PressTick := A_TickCount
+			p_DPadButton.PressTick := FPS.GetCurrentTime()
 
 		if (!p_DPadButton.Controlbind.OnPress.Action or this.m_HoldToMove)
 			this.PressControl(p_DPadButton.Index)
@@ -83,21 +83,21 @@ class Inventory
 	{
 		if (this.m_HoldToMove)
 		{
-			if (p_DPadButton.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.m_HoldDelay)
+			if (p_DPadButton.PressTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.PressTick + Controller.m_HoldDelay)
 			{
 				this.PressControl(p_DPadButton.Index)
 
-				p_DPadButton.HoldTick	:= A_TickCount
+				p_DPadButton.HoldTick	:= FPS.GetCurrentTime()
 				p_DPadButton.PressTick 	:= 0
 			}
-			else if (p_DPadButton.HoldTick > 0 and A_TickCount >= p_DPadButton.HoldTick + Inventory.m_HoldDelay)
+			else if (p_DPadButton.HoldTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.HoldTick + Inventory.m_HoldDelay)
 			{
 				this.PressControl(p_DPadButton.Index)
 
-				p_DPadButton.HoldTick	:= A_TickCount
+				p_DPadButton.HoldTick	:= FPS.GetCurrentTime()
 			}
 		}
-		else if (_control.PressTick > 0 and A_TickCount >= p_DPadButton.PressTick + Controller.m_HoldDelay)
+		else if (_control.PressTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.PressTick + Controller.m_HoldDelay)
 		{
 			Controller.Vibrate()
 
@@ -157,7 +157,7 @@ class Inventory
 		{
 			local _controlInfo := Controller.FindControlInfo(IniReader.ParseKeybind("Inventory"))
 
-			Graphics.DrawToolTip("Inventory Mode: m_Enabled `n"
+			Graphics.DrawToolTip("Inventory Mode: Enabled `n"
 								. _controlInfo.Act . " the " . _controlInfo.Control.Name . " button on the controller to disable"
 								, Graphics.ActiveWinStats.Center.X
 								, 0
@@ -167,7 +167,7 @@ class Inventory
 		Controller.ForceMouseUpdate := True
 		this.m_Enabled := True
 
-		Debug.Log("Inventory Mode: m_Enabled")
+		Debug.Log("Inventory Mode: Enabled")
 	}
     Disable()
     {
@@ -178,7 +178,7 @@ class Inventory
 
 		Controller.ResetDPadTick()
 		if (!this.m_RememberPosition)
-			this.m_Pos := new Vector2(1, 6)
+			this.m_Pos := this.m_Grid.StartingPos
 
 		Controller.ForceMouseUpdate := True
 		this.m_Enabled := False
@@ -202,28 +202,36 @@ class InventoryGrids
 {
 	CreateGrid(p_Type := "Diablo III")
 	{
+		global
+
 		local _newGrid := Array()
 
 		if (p_Type = "Diablo III")
 		{
+			_newGrid.StartingPos := new Vector2(1, 6)
+
 			; Base Inventory m_Grid
 			Loop, 10
 			{
-				i := A_Index
+				local x := A_Index
 				Loop, 6
-					_newGrid[i, A_Index + 5] := new Vector2(1428.5 + 50 * (i - 1), 583.5 + 50 * (A_Index - 1))
+				{
+					local y := A_Index
+					_newGrid[x, y + 5] := new Vector2(1428.5 + 50 * (x - 1), 583.5 + 50 * (y - 1))
+				}
 			}
 
 			; The two UI buttons "Paragon" and "Details"
 			Loop, 4
 			{
-				i := A_Index
+				local x := A_Index
 				Loop, 5
 				{
-					if(A_Index > 2)
-						_newGrid[i, A_Index] := new Vector2(1524.5, 511)
+					local y := A_Index
+					if(y > 2)
+						_newGrid[x, y] := new Vector2(1524.5, 511)
 					else
-						_newGrid[i, A_Index] := new Vector2(1524.5,  223)
+						_newGrid[x, y] := new Vector2(1524.5,  223)
 				}
 			}
 
@@ -286,6 +294,128 @@ class InventoryGrids
 			_newGrid[10, 2] := _newGrid[9,  2]
 			_newGrid[9,  1] := _newGrid[9,  2]
 			_newGrid[10, 1] := _newGrid[9,  2]
+		}
+		else if (p_Type = "Path of Exile")
+		{
+			_newGrid.StartingPos := new Vector2(1, 7)
+
+			; Base Inventory m_Grid
+			Loop, 12
+			{
+				local x := A_Index
+				Loop, 5
+				{
+					local y := A_Index
+					_newGrid[x, y + 7] := new Vector2(1298.5 + 52.75 * (x - 1), 615.5 + 52.75 * (y - 1))
+				}
+			}
+
+			; Potion 1
+			Loop, 4
+				_newGrid[A_Index, 7] := new Vector2(1490, 515)
+
+			; Potion 2
+			_newGrid[5, 7] := new Vector2(1542, 515)
+
+			; Potion 3
+			Loop, 2
+				_newGrid[A_Index + 5, 7] := new Vector2(1594, 515)
+
+			; Potion 4
+			_newGrid[8, 7] := new Vector2(1646, 515)
+
+			; Potion 5
+			Loop, 4
+				_newGrid[A_Index + 8, 7] := new Vector2(1698, 515)
+
+			; Waist
+			Loop, 2
+				_newGrid[A_Index + 5, 6] := new Vector2(1594, 425)
+
+			; Hands
+			Loop, 5
+			{
+				local x := A_Index
+				Loop, 2
+				{
+					local y := A_Index
+					_newGrid[x, y + 4] := new Vector2(1455, 395)
+				}
+			}
+
+			; Legs
+			Loop, 5
+			{
+				local x := A_Index
+				Loop, 2
+				{
+					local y := A_Index
+					_newGrid[x + 7, y + 4] := new Vector2(1716, 398)
+				}
+			}
+
+			; Chest
+			Loop, 2
+			{
+				local x := A_Index
+				Loop, 3
+				{
+					local y := A_Index
+					_newGrid[x + 5, y + 2] := new Vector2(1594, 305)
+				}
+			}
+
+			; Left Ring
+			Loop, 5
+				_newGrid[5, A_Index] :=  new Vector2(1482, 305)
+
+			; Left Weapon
+			Loop, 4
+			{
+				local x := A_Index
+				Loop, 4
+				{
+					local y := A_Index
+					_newGrid[x, y + 1] := new Vector2(1380, 226)
+				}
+			}
+			; Right Swap
+			Loop, 4
+				_newGrid[A_Index, 1] := new Vector2(1380, 108)
+
+			; Right Ring
+			_newGrid[8, 5] := new Vector2(1690, 305)
+
+			; Amulet
+			Loop, 4
+				_newGrid[8, A_Index] := new Vector2(1690, 240)
+
+			; Right Weapon
+			Loop, 4
+			{
+				local x := A_Index
+				Loop, 4
+				{
+					local y := A_Index
+					_newGrid[x + 8, y + 1] := new Vector2(1797, 226)
+				}
+			}
+			; Right Swap
+			Loop, 4
+				_newGrid[A_Index + 8, 1] := new Vector2(1797, 108)
+
+			; Head
+			Loop, 2
+				_newGrid[A_Index + 5, 1] := new Vector2(1594, 160)
+			Loop, 2
+			{
+				local x := A_Index
+				Loop, 2
+				{
+					local y := A_Index
+					_newGrid[x + 5, y] := new Vector2(1594, 160)
+				}
+			}
 		}
 
 		return _newGrid

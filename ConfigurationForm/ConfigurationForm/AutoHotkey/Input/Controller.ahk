@@ -451,7 +451,7 @@ class Controller
 					if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
 						Inventory.ProcessPress(_control)
 					else if (_control.Controlbind.OnHold.Action)
-                    	_control.PressTick := A_TickCount
+                    	_control.PressTick := FPS.GetCurrentTime()
 					else
 					{
                     	Debug.Log(_control.Name . " pressed " . _control.Controlbind.OnPress.String)
@@ -492,7 +492,7 @@ class Controller
                 ; The first frame a button has been held down long enough to trigger the hold action
 				if (Inventory.Enabled and (_control.Index >= ControlIndex.DPadUp  and _control.Index <= ControlIndex.DPadRight))
 					Inventory.ProcessHold(_control)
-				else if (_control.PressTick > 0 and A_TickCount >= _control.PressTick + this.m_HoldDelay)
+				else if (_control.PressTick > 0 and FPS.GetCurrentTime() >= _control.PressTick + this.m_HoldDelay)
 				{
 					this.Vibrate()
 
@@ -507,12 +507,10 @@ class Controller
 		if (Inventory.Enabled)
 			Inventory.ProcessControlStack()
 
-		if ((this.m_MovementStick.StickValue.X != this.m_MovementStick.PrevStickValue.X
-        or this.m_MovementStick.StickValue.Y != this.m_MovementStick.PrevStickValue.Y)
+		if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
         or this.m_RepeatForceMove or this.m_ForceMouseUpdate or this.CursorMode)
             this.ProcessMovementStick()
-        if ((this.m_TargetStick.StickValue.X != this.m_TargetStick.PrevStickValue.X
-        or this.m_TargetStick.StickValue.Y != this.m_TargetStick.PrevStickValue.Y)
+        if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
         or this.m_ForceReticuleUpdate or this.FreeTargetMode)
             this.ProcessTargetStick()
     }
@@ -543,13 +541,13 @@ class Controller
 						this.StartMoving()
 				}
 
-				local _radius 
+				local _radius
 					:= new Rect(Vector2.Mul(this.m_MovementRadius.Min, Graphics.ResolutionScale)
 							, Vector2.Mul(this.m_MovementRadius.Max, Graphics.ResolutionScale))
 
-				this.m_MousePos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X) 
+				this.m_MousePos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X)
 									+ (_radius.Size.Width * _stick.StickValue.X)
-				this.m_MousePos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y) 
+				this.m_MousePos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y)
 									+ (_radius.Size.Height * _stick.StickValue.Y)
 			}
 			else if (this.m_Moving and !this.m_PressStack.Peek)
@@ -607,13 +605,13 @@ class Controller
 
 			if (_stick.State)
 			{
-				local _radius 
+				local _radius
 					:= new Rect(Vector2.Mul(this.m_TargetRadius.Min, Graphics.ResolutionScale)
 							, Vector2.Mul(this.m_TargetRadius.Max, Graphics.ResolutionScale))
 
-				this.m_TargetPos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X) 
+				this.m_TargetPos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X)
 									+ (_radius.Size.Width * _stick.StickValue.X)
-				this.m_TargetPos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y) 
+				this.m_TargetPos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y)
 									+ (_radius.Size.Height * _stick.StickValue.Y)
 			}
 

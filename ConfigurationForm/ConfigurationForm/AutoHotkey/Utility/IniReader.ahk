@@ -20,15 +20,15 @@ class KeybindingSection
 
 class IniReader
 {
-	static m_ConfigPath := A_WorkingDir . "\" . "config.ini"
+	static m_ConfigPath := A_ScriptDir . "\" . "config.ini"
 
 	static m_ProfilePath
 	static m_KeybindingPath
 
     Init()
     {
-        this.m_ProfilePath := A_WorkingDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Path")
-		this.m_KeybindingPath := A_WorkingDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Keybinding_Path")
+        this.m_ProfilePath := A_ScriptDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Path")
+		this.m_KeybindingPath := A_ScriptDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Keybinding_Path")
     }
 
 	ConfigPath[]

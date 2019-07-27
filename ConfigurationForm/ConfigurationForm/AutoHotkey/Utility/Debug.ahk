@@ -255,6 +255,27 @@ class Debug
 		this.m_LogFilename := "Log\" . _currentDate . ".txt"
 		FileAppend, , % this.m_LogFilename
 
+		local _logCount := 0
+		Loop, Log\*.*
+			++_logCount
+
+		local _maxLogCount := 50
+		if (_logCount > _maxLogCount)
+		{
+			Debug.Log("Deleting old log files...")
+
+			local _maxLoops := _logCount - (_maxLogCount / 2)
+			local _iter := 0
+			Loop, Log\*.*
+			{
+				if (_iter > _maxLoops)
+					break
+
+				FileDelete, % A_LoopFileFullPath
+				++_iter
+			}
+		}
+
 		this.m_DebugTextGUI := new TextOverlay(new Color(30, 30, 30, 225))
 		this.m_DebugLogGUI := new TextOverlay(new Color(30, 30, 30, 225), True)
 	}
@@ -263,32 +284,6 @@ class Debug
 	{
 		get {
 			return this.m_Enabled
-		}
-	}
-
-	CurrentTickDelta[]
-	{
-		get {
-			return A_TickCount - Debug.__singleton.m_StartupTick
-		}
-	}
-	CurrentRuntime[]
-	{
-		get {
-			local _ticksRemaining := this.CurrentTickDelta
-
-			local _hours 	:= Floor(_ticksRemaining / 1000 / 60 / 60)
-			_ticksRemaining := _ticksRemaining - (_hours * 1000 * 60 * 60)
-
-			local _minutes 	:= Floor(_ticksRemaining / 1000 / 60)
-			_ticksRemaining := _ticksRemaining - (_minutes * 1000 * 60)
-
-			local _seconds := Floor(_ticksRemaining / 1000)
-			_ticksRemaining := _ticksRemaining - (_seconds * 1000)
-
-			local _miliseconds := _ticksRemaining
-
-			return _hours . ":" . _minutes  . ":" . _seconds . ":" . _miliseconds
 		}
 	}
 

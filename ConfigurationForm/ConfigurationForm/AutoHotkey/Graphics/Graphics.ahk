@@ -124,6 +124,13 @@ class Graphics
 		Debug.OnToolTipAddListener(new Delegate(Graphics, "OnToolTip"))
 	}
 
+	ApplicationTitle
+	{
+		get {
+			return this.m_ApplicationTitle
+		}
+	}
+
 	ScreenBounds[]
 	{
 		get {
