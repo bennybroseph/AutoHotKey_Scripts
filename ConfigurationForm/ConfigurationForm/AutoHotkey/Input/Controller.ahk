@@ -510,7 +510,7 @@ class Controller
 		if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
         or this.m_RepeatForceMove or this.m_ForceMouseUpdate or this.CursorMode)
             this.ProcessMovementStick()
-        if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
+        if (!Vector2.IsEqual(this.m_TargetStick.StickValue, this.m_TargetStick.PrevStickValue)
         or this.m_ForceReticuleUpdate or this.FreeTargetMode)
             this.ProcessTargetStick()
     }
@@ -530,17 +530,6 @@ class Controller
 
 			if (_stick.State)
 			{
-				if ((!this.m_Moving or this.m_RepeatForceMove) and !this.m_PressStack.Peek)
-				{
-					if (this.m_RepeatForceMove)
-					{
-						this.StartMoving()
-						this.StopMoving()
-					}
-					else
-						this.StartMoving()
-				}
-
 				local _radius
 					:= new Rect(Vector2.Mul(this.m_MovementRadius.Min, Graphics.ResolutionScale)
 							, Vector2.Mul(this.m_MovementRadius.Max, Graphics.ResolutionScale))
@@ -562,6 +551,20 @@ class Controller
 			}
 			else
 				this.m_Reticule.Draw(this.m_MousePos)
+
+			if (_stick.State)
+			{
+				if ((!this.m_Moving or this.m_RepeatForceMove) and !this.m_PressStack.Peek)
+				{
+					if (this.m_RepeatForceMove)
+					{
+						this.StartMoving()
+						this.StopMoving()
+					}
+					else
+						this.StartMoving()
+				}
+			}
         }
         else if (_stick.State or this.m_ForceMouseUpdate)
         {

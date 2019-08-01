@@ -58,9 +58,12 @@ class Vector2
 		}
 	}
 
-	IsEqual(a, b, dec := 2)
+	IsEqual(a, b, dec := -1)
 	{
-		return Round(a.X, dec) = Round(b.X, dec) and Round(a.Y, dec) = Round(b.Y, dec)
+		if (dec >= 0)
+			return Round(a.X, dec) = Round(b.X, dec) and Round(a.Y, dec) = Round(b.Y, dec)
+
+		return a.X = b.X and a.Y = b.Y
 	}
 
 	Negative()
