@@ -130,6 +130,9 @@ class Controller
 	static m_MousePos
 	static m_TargetPos
 
+	static m_MouseHidden
+
+	static m_Cursor
 	static m_Reticule
 
 	static m_BatteryStatus
@@ -238,6 +241,9 @@ class Controller
         this.m_MousePos		:= InputHelper.GetMousePos()
         this.m_TargetPos	:= new Vector2(this.m_MousePos.X, this.m_MousePos.Y)
 
+		this.m_MouseHidden := True
+
+		this.m_Cursor 	:= new Image("Images\diabloCursor.png")
 		this.m_Reticule := new Image("Images\Target.png")
 
 		this.m_BatteryStatus := -1
@@ -504,12 +510,10 @@ class Controller
             }
         }
 
-		if (Inventory.Enabled)
-			Inventory.ProcessControlStack()
-
 		if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
         or this.m_RepeatForceMove or this.m_ForceMouseUpdate or this.CursorMode)
             this.ProcessMovementStick()
+
         if (!Vector2.IsEqual(this.m_TargetStick.StickValue, this.m_TargetStick.PrevStickValue)
         or this.m_ForceReticuleUpdate or this.FreeTargetMode)
             this.ProcessTargetStick()
@@ -544,12 +548,17 @@ class Controller
 
 			if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
 			{
-				if (Inventory.Enabled and !this.m_Moving)
+				if (Inventory.Enabled and !_stick.State)
 					InputHelper.MoveMouse(Inventory.GetGridPos())
 				else
 					InputHelper.MoveMouse(this.m_MousePos)
+
+				if (this.m_MouseHidden and Inventory.Enabled)
+					this.m_Cursor.Draw(Inventory.GetGridPos(), False)
+				else
+					this.m_Cursor.Hide()
 			}
-			else
+			else if (!this.m_MouseHidden)
 				this.m_Reticule.Draw(this.m_MousePos)
 
 			if (_stick.State)
@@ -558,8 +567,8 @@ class Controller
 				{
 					if (this.m_RepeatForceMove)
 					{
-						this.StartMoving()
 						this.StopMoving()
+						this.StartMoving()
 					}
 					else
 						this.StartMoving()
@@ -581,8 +590,11 @@ class Controller
 
 			if (this.m_PressStack.Peek.Type != KeybindType.Targeted or (!this.m_TargetStick.State and !this.FreeTargetMode))
 				InputHelper.MoveMouse(this.m_MousePos)
-			else
+			else if (!this.m_MouseHidden)
 				this.m_Reticule.Draw(this.m_MousePos)
+
+			if (this.m_MouseHidden)
+				this.m_Cursor.Draw(this.m_MousePos, False)
         }
 
 		this.m_ForceMouseUpdate := False
@@ -619,9 +631,13 @@ class Controller
 			}
 
             if (this.m_UsingReticule and this.m_PressStack.Peek.Type = KeybindType.Targeted)
+			{
                 InputHelper.MoveMouse(this.m_TargetPos)
-            else if (_stick.state and this.m_PressStack.Peek.Type != KeybindType.Targeted)
-                this.m_Reticule.Draw(this.m_TargetPos)
+				if (this.m_MouseHidden)
+					this.m_Reticule.Draw(this.m_TargetPos)
+			}
+			else if (_stick.state and this.m_PressStack.Peek.Type != KeybindType.Targeted)
+				this.m_Reticule.Draw(this.m_TargetPos)
 			else
 				this.m_Reticule.Hide()
         }
@@ -643,7 +659,10 @@ class Controller
 
 			if (this.m_PressStack.Peek.Type = KeybindType.Targeted)
 				InputHelper.MoveMouse(this.m_TargetPos)
-			else
+			else if (!this.m_MouseHidden)
+				this.m_Reticule.Draw(this.m_TargetPos)
+
+			if (this.m_MouseHidden)
 				this.m_Reticule.Draw(this.m_TargetPos)
         }
 

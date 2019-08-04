@@ -12,6 +12,14 @@ Clamp(a, min, max)
 
 class Vector2
 {
+	static s_Zero := new Vector2()
+
+	Zero[]
+	{
+		get {
+			return this.s_Zero.Clone()
+		}
+	}
 	__New(p_X := 0, p_Y := 0)
 	{
 		this.X := p_X

@@ -5,6 +5,7 @@
 
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
+#MaxThreads 255
 ;#KeyHistory 0
 
 ;ListLines Off
@@ -22,10 +23,13 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 
 ; Compile the library files
+#Include Library\LoadDLL.ahk
 #Include Library\XInput.ahk
 #Include Library\Gdip.ahk
 #Include Library\ToolTipOptions.ahk
 #Include Library\Delegate.ahk
+#Include Library\MouseDelta.ahk
+#Include Library\LLMouse.ahk
 #include Library\Sleep.ahk
 
 ; Compile the utility classes
@@ -46,6 +50,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Input\Input.ahk
 #Include Input\InputHelper.ahk
 #Include Input\Controller.ahk
+#Include Input\Intercept.ahk
 
 global PI := 3.141592653589793 ; Define PI for easier use
 
@@ -63,10 +68,13 @@ Graphics.Init()
 Calibrate()
 Inventory.Init()
 Controller.Init()
+Intercept.Init()
 ImageOverlay.Init()
 
 Debug.InitControllerOverlay()
 ImageOverlay.DrawImageOverlay()
+
+;SetTimer, Test, 0
 
 Loop
 {
@@ -78,8 +86,28 @@ Loop
 	Controller.RefreshState()
 	Controller.ProcessInput()
 
+	Intercept.Update()
+
 	Debug.Update()
 }
+
+return
+
+; Test:
+
+; FPS.Update()
+
+; Graphics.SetActiveWinStats()
+; ImageOverlay.DrawBatteryStatus()
+
+; Controller.RefreshState()
+; Controller.ProcessInput()
+
+; Intercept.Update()
+
+; Debug.Update()
+
+; return
 
 ; Reloades the config values when F5 is pressed
 $F5::

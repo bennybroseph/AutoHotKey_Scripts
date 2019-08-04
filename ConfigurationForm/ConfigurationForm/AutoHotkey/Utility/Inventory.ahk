@@ -136,7 +136,7 @@ class Inventory
 		} Until (this.GetGridPos().X != _prevGridPos.X
 			or this.GetGridPos().Y != _prevGridPos.Y)
 
-		InputHelper.MoveMouse(this.GetGridPos())
+		Controller.ForceMouseUpdate := True
 	}
 
 	Toggle()

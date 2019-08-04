@@ -98,8 +98,8 @@ class FPS
 		if (this.m_AddedDeltaTime > 1000)
 		{
 			this.m_AverageFPS := (this.m_FrameCount * 1000) / this.m_AddedDeltaTime
-			if (!Debug.Enabled and this.m_AverageFPS < this.m_TargetFPS * 0.75)
-				Debug.Log("FPS dropped below 75%")
+			if (!Debug.Enabled and this.m_AverageFPS < this.m_TargetFPS * 0.8)
+				Debug.Log("FPS dropped below 80%")
 
 			this.m_AddedDeltaTime := 0
 			this.m_FrameCount := 0

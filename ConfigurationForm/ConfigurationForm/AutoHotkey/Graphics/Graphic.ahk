@@ -140,7 +140,7 @@ class Line extends Graphic
 
 class Shape extends Graphic
 {
-	__New(p_Size, p_Color := -1, p_Filled := true, p_Thickness := 1)
+	__New(p_Size, p_Color := -1, p_Filled := True, p_Thickness := 1)
 	{
 		global
 
@@ -188,6 +188,7 @@ class Ellipse extends Shape
 
 class Image extends Graphic
 {
+	; TODO Add option to ignore smoothing
 	__New(p_ImagePath, p_Scale := 1, p_BackgroundColor := -1)
 	{
 		global

@@ -4,7 +4,7 @@ class InputHelper
 {
 	MoveMouse(p_Pos, p_Speed := "", p_IsRelative := "")
 	{
-		MouseMove, % p_Pos.X, % p_Pos.Y, % p_Speed, % p_IsRelative
+		MouseMove, % p_Pos.X, % p_Pos.Y , % p_Speed , % p_IsRelative
 	}
 	GetMousePos()
 	{
@@ -87,6 +87,7 @@ class InputHelper
 	{
 		local _isSpecial
 			:= p_Key = "CursorMode" or p_Key = "Loot" or p_Key = "FreeTarget" or p_Key = "SwapSticks" or p_Key = "Inventory"
+
 		if (_isSpecial)
 			this.PressSpecialKey(p_Key)
 		else
@@ -96,6 +97,7 @@ class InputHelper
 	{
 		local _isSpecial
 			:= p_Key = "CursorMode" or p_Key = "Loot" or p_Key = "FreeTarget"or p_Key = "SwapSticks" or p_Key = "Inventory"
+
 		if (_isSpecial)
 			this.ReleaseSpecialKey(p_Key)
 		else

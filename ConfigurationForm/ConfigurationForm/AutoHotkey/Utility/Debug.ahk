@@ -297,11 +297,11 @@ class Debug
 	{
 		global
 
-		static _prevKeyState := GetKeyState("F3")
-		if (GetKeyState("F3") and !_prevKeyState)
+		static _prevKeyState := GetKeyState("F3", "P")
+		if (GetKeyState("F3", "P") and !_prevKeyState)
 			this.Toggle()
 
-		_prevKeyState := GetKeyState("F3")
+		_prevKeyState := GetKeyState("F3", "P")
 
 		if (this.m_Enabled)
 			this.DrawInfo()
