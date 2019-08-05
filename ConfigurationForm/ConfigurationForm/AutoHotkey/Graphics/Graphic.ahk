@@ -75,7 +75,7 @@ class Graphic
 			return
 
 		if (!Vector2.IsEqual(this.m_Pos, p_Pos))
-			this.m_Pos := p_Pos
+			this.m_Pos := p_Pos.Clone()
 
 		Gui, % this.m_Index . ": Show", % "x" this.m_Pos.X "y" this.m_Pos.Y "NA"
 

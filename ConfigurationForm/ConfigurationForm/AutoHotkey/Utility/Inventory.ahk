@@ -83,21 +83,21 @@ class Inventory
 	{
 		if (this.m_HoldToMove)
 		{
-			if (p_DPadButton.PressTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.PressTick + Controller.m_HoldDelay)
+			if (p_DPadButton.PressTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.PressTick + InputManager.HoldDelay)
 			{
 				this.PressControl(p_DPadButton.Index)
 
 				p_DPadButton.HoldTick	:= FPS.GetCurrentTime()
 				p_DPadButton.PressTick 	:= 0
 			}
-			else if (p_DPadButton.HoldTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.HoldTick + Inventory.m_HoldDelay)
+			else if (p_DPadButton.HoldTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.HoldTick + this.m_HoldDelay)
 			{
 				this.PressControl(p_DPadButton.Index)
 
 				p_DPadButton.HoldTick	:= FPS.GetCurrentTime()
 			}
 		}
-		else if (_control.PressTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.PressTick + Controller.m_HoldDelay)
+		else if (_control.PressTick > 0 and FPS.GetCurrentTime() >= p_DPadButton.PressTick + InputManager.HoldDelay)
 		{
 			Controller.Vibrate()
 
@@ -136,7 +136,7 @@ class Inventory
 		} Until (this.GetGridPos().X != _prevGridPos.X
 			or this.GetGridPos().Y != _prevGridPos.Y)
 
-		Controller.ForceMouseUpdate := True
+		InputManager.ForceMouseUpdate := True
 	}
 
 	Toggle()
@@ -164,7 +164,7 @@ class Inventory
 								, 1, HorizontalAlignment.Center)
 		}
 
-		Controller.ForceMouseUpdate := True
+		InputManager.ForceMouseUpdate := True
 		this.m_Enabled := True
 
 		Debug.Log("Inventory Mode: Enabled")
@@ -180,7 +180,7 @@ class Inventory
 		if (!this.m_RememberPosition)
 			this.m_Pos := this.m_Grid.StartingPos
 
-		Controller.ForceMouseUpdate := True
+		InputManager.ForceMouseUpdate := True
 		this.m_Enabled := False
 
 		Debug.Log("Inventory Mode: Disabled")

@@ -20,39 +20,39 @@ class InputHelper
 
 		if (p_Keybind.Type != KeybindType.UnTargeted)
 		{
-			Controller.ForceMouseUpdate 	:= True
-			Controller.ForceReticuleUpdate 	:= True
+			InputManager.ForceMouseUpdate 		:= True
+			InputManager.ForceReticuleUpdate 	:= True
 
 			if (p_Keybind.Type = KeybindType.Targeted)
 			{
-				local _newMousePos := Controller.TargetPos
-				if (!Controller.TargetStick.State and !Controller.FreeTargetMode)
+				local _newMousePos := InputManager.TargetPos
+				if (!InputManager.UsingReticule)
 				{
 					if (Inventory.Enabled)
 						_newMousePos := Inventory.GetGridPos()
 					else
-						_newMousePos := Controller.MousePos
+						_newMousePos := InputManager.MousePos
 				}
 
-				if (Controller.HaltMovementOnTarget)
-					Controller.StopMoving()
+				if (InputManager.HaltMovementOnTarget)
+					InputManager.StopMoving()
 
 				this.MoveMouse(_newMousePos)
 
-				Controller.PressCount.Targeted++
+				InputManager.PressCount.Targeted++
 			}
 			else if (p_Keybind.Type = KeybindType.Movement)
 			{
-				Controller.StopMoving()
-				this.MoveMouse(Controller.MousePos)
+				InputManager.StopMoving()
+				this.MoveMouse(InputManager.MousePos)
 
-				Controller.PressCount.Movement++
+				InputManager.PressCount.Movement++
 			}
 
-			Controller.PressStack.Push(p_Keybind)
+			InputManager.PressStack.Push(p_Keybind)
 
-			if (Controller.TargetingDelay > 0)
-					Sleep(Controller.TargetingDelay)
+			if (InputManager.TargetingDelay > 0)
+					Sleep(InputManager.TargetingDelay)
 		}
 
 		if (p_Keybind.Modifier)
@@ -69,17 +69,17 @@ class InputHelper
 
 		if (p_Keybind.Type != KeybindType.UnTargeted)
 		{
-			Controller.ForceMouseUpdate 	:= True
-			Controller.ForceReticuleUpdate 	:= True
+			InputManager.ForceMouseUpdate 	:= True
+			InputManager.ForceReticuleUpdate 	:= True
 
-			Controller.PressStack.Remove(p_Keybind)
+			InputManager.PressStack.Remove(p_Keybind)
 			if (p_Keybind.Type = KeybindType.Targeted)
-				Controller.PressCount.Targeted--
+				InputManager.PressCount.Targeted--
 			else if (p_Keybind.Type = KeybindType.Movement)
-				Controller.PressCount.Movement--
+				InputManager.PressCount.Movement--
 
-			if (Controller.TargetingDelay > 0)
-					Sleep(Controller.TargetingDelay)
+			if (InputManager.TargetingDelay > 0)
+					Sleep(InputManager.TargetingDelay)
 		}
 	}
 

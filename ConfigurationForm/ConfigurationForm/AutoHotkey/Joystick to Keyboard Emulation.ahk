@@ -28,8 +28,6 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Library\Gdip.ahk
 #Include Library\ToolTipOptions.ahk
 #Include Library\Delegate.ahk
-#Include Library\MouseDelta.ahk
-#Include Library\LLMouse.ahk
 #include Library\Sleep.ahk
 
 ; Compile the utility classes
@@ -49,6 +47,7 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 #Include Input\Binding.ahk
 #Include Input\Input.ahk
 #Include Input\InputHelper.ahk
+#Include Input\InputManager.ahk
 #Include Input\Controller.ahk
 #Include Input\Intercept.ahk
 
@@ -67,14 +66,11 @@ Graphics.Init()
 
 Calibrate()
 Inventory.Init()
-Controller.Init()
-Intercept.Init()
+InputManager.Init()
 ImageOverlay.Init()
 
 Debug.InitControllerOverlay()
 ImageOverlay.DrawImageOverlay()
-
-;SetTimer, Test, 0
 
 Loop
 {
@@ -83,31 +79,13 @@ Loop
 	Graphics.SetActiveWinStats()
 	ImageOverlay.DrawBatteryStatus()
 
-	Controller.RefreshState()
-	Controller.ProcessInput()
-
-	Intercept.Update()
+	InputManager.RefreshState()
+	InputManager.ProcessInput()
 
 	Debug.Update()
 }
 
 return
-
-; Test:
-
-; FPS.Update()
-
-; Graphics.SetActiveWinStats()
-; ImageOverlay.DrawBatteryStatus()
-
-; Controller.RefreshState()
-; Controller.ProcessInput()
-
-; Intercept.Update()
-
-; Debug.Update()
-
-; return
 
 ; Reloades the config values when F5 is pressed
 $F5::

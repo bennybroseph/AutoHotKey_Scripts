@@ -73,6 +73,13 @@ class FPS
 		}
 	}
 
+	Delay[]
+	{
+		get {
+			return this.m_Delay
+		}
+	}
+
 	Update()
 	{
 		global

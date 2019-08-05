@@ -43,7 +43,7 @@ class ImageOverlay
 
 			this.m_FilePath
 				:= "Images\" . ImageOverlay.m_ImageSet . "\" . _controlInfo.Act . "\"
-				. ImageOverlay.m_ImageSetSize . "\" . _controlInfo.Control.Key . ".png"
+				. ImageOverlay.m_ImageSetSize . "\" . _controlInfo.Control.ControlString . ".png"
 
 			this.m_Image := new Image(this.m_FilePath, ImageOverlay.m_ImageScale, this.m_BackgroundColor)
 		}

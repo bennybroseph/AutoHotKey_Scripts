@@ -1,14 +1,8 @@
 ; Intercepts keyboard and mouse input and manipulates it
 
-class Intercept
+class Intercept extends InputManager
 {
-	static m_CurrTime
-	static m_PrevTime
-
-	static m_DeltaMouse := new Vector2()
-	static m_PrevMousePos := new Vector2()
-
-	static m_CursorPos := new Vector2()
+	static m_UsingReticule := True
 
 	static m_Up 	:= False
 	static m_Down 	:= False
@@ -18,6 +12,8 @@ class Intercept
 	static m_PrevMovement := new Vector2()
 	static m_Movement := new Vector2()
 
+	static m_PrevTargetPos := new Vector2()
+
 	static m_Reticule
 
 	Init()
@@ -25,50 +21,48 @@ class Intercept
 		global
 
 		BlockInput, MouseMove
+		BlockInput, Mouse
 
-		this.m_Reticule := new Image("Images\Target.png")
+		this.m_Reticule := new Image("Images\diabloCursor.png")
 
 		; TODO Loop through movement inputs
 
 		; Up inputs
 		local fn := ObjBindMethod(Intercept, "MovePress", "Up")
-		hotkey, $w, % fn
-		local fn := ObjBindMethod(Intercept, "MoveRelease", "Up")
-		hotkey, $w Up, % fn
+		hotkey, $Up, % fn
+		fn := ObjBindMethod(Intercept, "MoveRelease", "Up")
+		hotkey, $Up Up, % fn
 
 		; Down inputs
-		local fn := ObjBindMethod(Intercept, "MovePress", "Down")
-		hotkey, $s, % fn
-		local fn := ObjBindMethod(Intercept, "MoveRelease", "Down")
-		hotkey, $s Up, % fn
+		fn := ObjBindMethod(Intercept, "MovePress", "Down")
+		hotkey, $Down, % fn
+		fn := ObjBindMethod(Intercept, "MoveRelease", "Down")
+		hotkey, $Down Up, % fn
 
 		; Left inputs
-		local fn := ObjBindMethod(Intercept, "MovePress", "Left")
-		hotkey, $a, % fn
-		local fn := ObjBindMethod(Intercept, "MoveRelease", "Left")
-		hotkey, $a Up, % fn
+		fn := ObjBindMethod(Intercept, "MovePress", "Left")
+		hotkey, $Left, % fn
+		fn := ObjBindMethod(Intercept, "MoveRelease", "Left")
+		hotkey, $Left Up, % fn
 
 		; Right Inputs
-		local fn := ObjBindMethod(Intercept, "MovePress", "Right")
-		hotkey, $d, % fn
-		local fn := ObjBindMethod(Intercept, "MoveRelease", "Right")
-		hotkey, $d Up, % fn
+		fn := ObjBindMethod(Intercept, "MovePress", "Right")
+		hotkey, $Right, % fn
+		fn := ObjBindMethod(Intercept, "MoveRelease", "Right")
+		hotkey, $Right Up, % fn
 
 		; TODO Loop through Targeted Skills
-		local fn := ObjBindMethod(Intercept, "TargetedPress", "q")
-		hotkey, $q, % fn
-		local fn := ObjBindMethod(Intercept, "TargetedRelease", "q")
-		hotkey, $q Up, % fn
+		new Key("LButton", KeybindType.Targeted, "$LButton", this, "PressKeybind", "ReleaseKeybind")
+		new Key("RButton", KeybindType.Targeted, "$RButton", this, "PressKeybind", "ReleaseKeybind")
+		new Key("q", KeybindType.Targeted, "$q", this, "PressKeybind", "ReleaseKeybind")
+		new Key("w", KeybindType.Targeted, "$w", this, "PressKeybind", "ReleaseKeybind")
+		new Key("e", KeybindType.Targeted, "$e", this, "PressKeybind", "ReleaseKeybind")
+		new Key("r", KeybindType.Targeted, "$r", this, "PressKeybind", "ReleaseKeybind")
 
-		local fn := ObjBindMethod(Intercept, "TargetedPress", "LButton")
-		hotkey, $*LButton, % fn
-		local fn := ObjBindMethod(Intercept, "TargetedRelease", "LButton")
-		hotkey, $*LButton Up, % fn
-
-		this.m_PrevMousePos := InputHelper.GetMousePos()
-
-		local _function := new MouseDelta(new Delegate(Intercept, "MouseEvent"))
-		_function.SetState(1)
+		AHKThread("
+		(
+			#Include Input\MouseThread.ahk
+		)", &this.TargetPos "")
 
 		this.m_CurrTime := FPS.GetCurrentTime()
 		this.m_PrevTime := this.m_CurrTime
@@ -76,40 +70,127 @@ class Intercept
 		Debug.OnToolTipAddListener(new Delegate(Intercept, "OnToolTip"))
 	}
 
-	Update()
+	RefreshState()
 	{
+		global
+
 		this.m_PrevMovement := this.m_Movement.Clone()
 
 		this.m_Movement := new Vector2()
 		if (this.m_Up)
+		{
+			;this.m_Movement.X += 1
 			this.m_Movement.Y -= 1
+		}
 		if (this.m_Down)
+		{
+			;this.m_Movement.X -= 1
 			this.m_Movement.Y += 1
+		}
 
 		if (this.m_Left)
-			this.m_Movement.X -= 1.5
-		if (this.m_Right)
-			this.m_Movement.X += 1.5
-
-		if (!Vector2.IsEqual(this.m_Movement, this.m_PrevMovement))
 		{
-			InputHelper.MoveMouse(Vector2.Add(Graphics.ActiveWinStats.Center, Vector2.Mul(this.m_Movement, 50)))
-			if (!Vector2.IsEqual(this.m_Movement, Vector2.Zero))
-				InputHelper.PressKey("Space")
-			else
-				InputHelper.ReleaseKey("Space")
+			this.m_Movement.X -= 1
+			;this.m_Movement.Y += 1
+		}
+		if (this.m_Right)
+		{
+			this.m_Movement.X += 1
+			;this.m_Movement.Y += 1
 		}
 	}
 
-	TargetedPress(p_Key)
+	ProcessInput()
 	{
-		InputHelper.ReleaseKey("Space")
-		InputHelper.MoveMouse(this.m_CursorPos)
-		InputHelper.PressKey(p_Key)
+		global
+
+		if (!Vector2.IsEqual(this.m_Movement, this.m_PrevMovement)
+		or this.RepeatForceMove or this.ForceMouseUpdate)
+		{
+			local _centerOffset
+				:= Vector2.Add(Vector2.Add(Graphics.ActiveWinStats.Pos, Graphics.ActiveWinStats.Center)
+							, Vector2.Mul(this.MouseOffset, Graphics.ResolutionScale))
+
+			this.MousePos := _centerOffset
+
+			if (!Vector2.IsEqual(this.m_Movement, Vector2.Zero))
+			{
+				local _radius
+					:= new Rect(Vector2.Mul(this.MovementRadius.Min, Graphics.ResolutionScale)
+							, Vector2.Mul(this.MovementRadius.Max, Graphics.ResolutionScale))
+
+				this.MousePos.X += (_radius.Min.Width * this.m_Movement.Normalize.X)
+									+ (_radius.Size.Width * this.m_Movement.X)
+				this.MousePos.Y += (_radius.Min.Height * this.m_Movement.Normalize.Y)
+									+ (_radius.Size.Height * this.m_Movement.Y)
+			}
+			else if (this.Moving and !this.PressStack.Peek)
+				this.StopMoving()
+
+			if (this.PressStack.Peek.Type != KeybindType.Targeted)
+				InputHelper.MoveMouse(this.MousePos)
+
+			if (!Vector2.IsEqual(this.m_Movement, Vector2.Zero))
+			{
+				if ((!this.Moving or this.RepeatForceMove) and !this.PressStack.Peek)
+				{
+					if (this.RepeatForceMove)
+					{
+						this.StopMoving()
+						this.StartMoving()
+					}
+					else
+						this.StartMoving()
+				}
+			}
+
+			this.ForceMouseUpdate := False
+		}
+
+		if (!Vector2.IsEqual(this.TargetPos, this.m_PrevTargetPos)
+		or this.ForceReticuleUpdate)
+		{
+			if (this.PressStack.Peek.Type = KeybindType.Targeted)
+				InputHelper.MoveMouse(this.TargetPos)
+
+			this.m_Reticule.Draw(this.TargetPos, False)
+		}
+
+		this.m_PrevTargetPos.X := this.TargetPos.X
+		this.m_PrevTargetPos.Y := this.TargetPos.Y
 	}
-	TargetedRelease(p_Key)
+
+	PressKeybind(p_Key)
 	{
-		InputHelper.ReleaseKey(p_Key)
+		p_Key.State := True
+
+		if (p_Key.State = p_Key.PrevState)
+		{
+			p_Key.PrevState := p_Key.State
+			Exit
+		}
+
+		Debug.Log("Pressed " . p_Key.Keybind.String)
+		InputHelper.PressKeybind(p_Key.Keybind)
+
+		p_Key.PrevState := p_Key.State
+	}
+	ReleaseKeybind(p_Key)
+	{
+		Critical
+
+		p_Key.State := False
+
+		if (p_Key.State = p_Key.PrevState)
+		{
+			p_Key.PrevState := p_Key.State
+			Exit
+		}
+
+		Debug.Log("Released " . p_Key.Keybind.String)
+		InputHelper.ReleaseKeybind(p_Key.Keybind)
+
+		p_Key.PrevState := p_Key.State
 	}
 
 	MovePress(p_Direction)
@@ -135,68 +216,68 @@ class Intercept
 			this.m_Right := False
 	}
 
-	MouseEvent(p_MouseID, p_X := 0, p_Y := 0)
-	{
-		global
+	; MouseEvent(p_MouseID, p_X := 0, p_Y := 0)
+	; {
+	; 	global
 
-		static _carryX := 0, _carryY := 0, _mainMouse
+	; 	static _carryX := 0, _carryY := 0, _mainMouse
 
-		if (p_MouseID = 0 or (_mainMouse and p_MouseID != _mainMouse))
-			return
+	; 	if (p_MouseID = 0 or (_mainMouse and p_MouseID != _mainMouse))
+	; 		return
 
-		_mainMouse := p_MouseID
+	; 	_mainMouse := p_MouseID
 
-		this.m_PrevTime := this.m_CurrTime
-		this.m_CurrTime := FPS.GetCurrentTime()
+	; 	this.m_PrevTime := this.m_CurrTime
+	; 	this.m_CurrTime := FPS.GetCurrentTime()
 
-		local _deltaTime := Min(this.m_CurrTime - this.m_PrevTime, 200)
+	; 	local _deltaTime := Min(this.m_CurrTime - this.m_PrevTime, FPS.Delay)
 
-		; Pre-scale
-		p_X *= 3
-		p_Y *= 3
+	; 	; Pre-scale
+	; 	p_X *= 3
+	; 	p_Y *= 3
 
-		; Speedcap
-		if (False)
-		{
-			local _rate := Sqrt(p_X * p_X + p_Y * p_Y)
+	; 	; Speedcap
+	; 	if (False)
+	; 	{
+	; 		local _rate := Sqrt(p_X * p_X + p_Y * p_Y)
 
-			if (_rate >= 10)
-			{
+	; 		if (_rate >= 10)
+	; 		{
 
-			}
-		}
+	; 		}
+	; 	}
 
-		; Acceleration
-		local _accelSens := 1
-		if (True)
-		{
-			local _rate := Sqrt(p_X * p_X + p_Y * p_Y) / _deltaTime
-			_rate -= 1
+	; 	; Acceleration
+	; 	local _accelSens := 1
+	; 	if (True)
+	; 	{
+	; 		local _rate := Sqrt(p_X * p_X + p_Y * p_Y) / _deltaTime
+	; 		_rate -= 1
 
-			if (_rate > 0)
-			{
-				_rate *= 0.75
+	; 		if (_rate > 0)
+	; 		{
+	; 			_rate *= 1.5
 
-				local _power = Max(2 - 1, 0)
-				_accelSens += Exp(_power * Log(_rate))
-			}
-		}
-		_accelSens /= 1
+	; 			local _power = Max(2 - 1, 0)
+	; 			_accelSens += Exp(_power * Log(_rate))
+	; 		}
+	; 	}
+	; 	_accelSens /= 1
 
-		p_X *= _accelSens
-		p_Y *= _accelSens
+	; 	p_X *= _accelSens
+	; 	p_Y *= _accelSens
 
-		p_X *= _deltaTime / 1000
-		p_Y *= _deltaTime / 1000
+	; 	p_X *= _deltaTime / 1000
+	; 	p_Y *= _deltaTime / 1000
 
-		p_X *= 60
-		p_Y *= 60
+	; 	p_X *= 50
+	; 	p_Y *= 50
 
-		this.m_DeltaMouse := new Vector2(p_X, p_Y)
+	; 	this.m_DeltaMouse := new Vector2(p_X, p_Y)
 
-		this.m_CursorPos := Vector2.Add(this.m_CursorPos, this.m_DeltaMouse)
-		this.m_Reticule.Draw(this.m_CursorPos)
-	}
+	; 	this.m_CursorPos := Vector2.Add(this.m_CursorPos, this.m_DeltaMouse)
+	; 	this.m_Reticule.Draw(this.m_CursorPos)
+	; }
 
 	OnToolTip()
 	{
@@ -204,8 +285,7 @@ class Intercept
 
 		local _debugText :=
 
-		_debugText .= "DeltaMouse: " . this.m_DeltaMouse.String . " CursorPos: " . this.m_CursorPos.String . "`n"
-		_debugText .= "Movement" . this.m_Movement.String
+		_debugText .= "CursorPos: " . this.TargetPos.String . " Movement" . this.m_Movement.String
 
 		return _debugText
 	}

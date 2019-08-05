@@ -1,24 +1,62 @@
 ; Stores classes for all types of input
 
+class Key
+{
+	__New(p_KeybindString, p_KeybindType, p_Hotkey, p_Target, p_PressFuncString, p_ReleaseFuncString)
+	{
+		global
+
+		this.m_State 	 	:= False
+		this.m_PrevState	:= this.m_State
+
+		this.m_Keybind := IniReader.ParseKeybind(p_KeybindString)
+		this.m_Keybind.Type := p_KeybindType
+
+		local _boundFunction := ObjBindMethod(p_Target, p_PressFuncString, this)
+		Hotkey, % p_Hotkey, % _boundFunction
+
+		_boundFunction := ObjBindMethod(p_Target, p_ReleaseFuncString, this)
+		Hotkey, % p_Hotkey . " Up", % _boundFunction
+	}
+
+	State[] {
+		get {
+			return this.m_State
+		}
+		set {
+			return this.m_State := value
+		}
+	}
+	PrevState[] {
+		get {
+			return this.m_PrevState
+		}
+		set {
+			return this.m_PrevState := value
+		}
+	}
+
+	Keybind[] {
+		get {
+			return this.m_Keybind
+		}
+	}
+}
 class Control
 {
-    __New(p_Name, p_Nickname, p_Index, p_Key)
+    __New(p_Name, p_Nickname, p_Index, p_ControlString)
     {
-        this.m_Name         := p_Name
-        this.m_Nickname     := p_Nickname
-        this.m_Index        := p_Index
-        this.m_Key          := p_Key
+        this.m_Name         	:= p_Name
+        this.m_Nickname     	:= p_Nickname
+        this.m_Index        	:= p_Index
+        this.m_ControlString	:= p_ControlString
 
         this.m_State        := False
         this.m_PrevState    := this.m_State
 
         this.m_PressTick    := -1
 
-        this.m_Controlbind   := IniReader.ParseControlbind(this.m_Key)
-
-		;Debug.Log(this.m_Name . " - "
-		;	. "OnPress: " . this.m_Controlbind.OnPress.String . " "
-		;	. "OnHold: " . this.m_Controlbind.OnHold.String)
+        this.m_Controlbind   := IniReader.ParseControlbind(this.m_ControlString)
     }
 
     Name[]
@@ -39,10 +77,10 @@ class Control
             return this.m_Index
         }
     }
-    Key[]
+    ControlString[]
     {
         get {
-            return this.m_Key
+            return this.m_ControlString
         }
     }
 
