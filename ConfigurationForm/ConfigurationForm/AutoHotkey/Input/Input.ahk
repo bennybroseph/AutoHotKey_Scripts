@@ -2,43 +2,28 @@
 
 class Key
 {
-	__New(p_KeybindString, p_KeybindType, p_Hotkey, p_Target, p_PressFuncString, p_ReleaseFuncString)
+	__New(p_KeybindString, p_KeybindType, p_Hotkey)
 	{
 		global
 
-		this.m_State 	 	:= False
-		this.m_PrevState	:= this.m_State
+		this.State 	 	:= False
+		this.PrevState	:= False
 
 		this.m_Keybind := IniReader.ParseKeybind(p_KeybindString)
 		this.m_Keybind.Type := p_KeybindType
 
-		local _boundFunction := ObjBindMethod(p_Target, p_PressFuncString, this)
-		Hotkey, % p_Hotkey, % _boundFunction
-
-		_boundFunction := ObjBindMethod(p_Target, p_ReleaseFuncString, this)
-		Hotkey, % p_Hotkey . " Up", % _boundFunction
-	}
-
-	State[] {
-		get {
-			return this.m_State
-		}
-		set {
-			return this.m_State := value
-		}
-	}
-	PrevState[] {
-		get {
-			return this.m_PrevState
-		}
-		set {
-			return this.m_PrevState := value
-		}
+		this.m_Hotkey := p_Hotkey
 	}
 
 	Keybind[] {
 		get {
 			return this.m_Keybind
+		}
+	}
+
+	Hotkey[] {
+		get {
+			return this.m_Hotkey
 		}
 	}
 }

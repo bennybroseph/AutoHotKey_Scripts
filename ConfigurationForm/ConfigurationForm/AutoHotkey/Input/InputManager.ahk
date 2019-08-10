@@ -210,9 +210,6 @@ class InputManager
 		get {
 			return InputManager.s_TargetPos
 		}
-		set {
-			return InputManager.s_TargetPos := value.Clone()
-		}
 	}
 
 	MouseHidden[] {

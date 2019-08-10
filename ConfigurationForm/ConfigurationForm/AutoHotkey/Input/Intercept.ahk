@@ -9,6 +9,9 @@ class Intercept extends InputManager
 	static m_Left 	:= False
 	static m_Right 	:= False
 
+	static m_Keys := Array()
+	static m_Key
+
 	static m_PrevMovement := new Vector2()
 	static m_Movement := new Vector2()
 
@@ -52,17 +55,21 @@ class Intercept extends InputManager
 		hotkey, $Right Up, % fn
 
 		; TODO Loop through Targeted Skills
-		new Key("LButton", KeybindType.Targeted, "$LButton", this, "PressKeybind", "ReleaseKeybind")
-		new Key("RButton", KeybindType.Targeted, "$RButton", this, "PressKeybind", "ReleaseKeybind")
-		new Key("q", KeybindType.Targeted, "$q", this, "PressKeybind", "ReleaseKeybind")
-		new Key("w", KeybindType.Targeted, "$w", this, "PressKeybind", "ReleaseKeybind")
-		new Key("e", KeybindType.Targeted, "$e", this, "PressKeybind", "ReleaseKeybind")
-		new Key("r", KeybindType.Targeted, "$r", this, "PressKeybind", "ReleaseKeybind")
+		this.m_Keys.Push(CriticalObject(new Key("LButton", KeybindType.Targeted, "$LButton")))
+		this.m_Keys.Push(CriticalObject(new Key("RButton", KeybindType.Targeted, "$RButton")))
+		this.m_Keys.Push(CriticalObject(new Key("q", KeybindType.Targeted, "$q")))
+		this.m_Keys.Push(CriticalObject(new Key("w", KeybindType.Targeted, "$w")))
+		this.m_Keys.Push(CriticalObject(new Key("e", KeybindType.Movement, "$e")))
+		this.m_Keys.Push(CriticalObject(new Key("r", KeybindType.Targeted, "$r")))
 
-		AHKThread("
-		(
-			#Include Input\MouseThread.ahk
-		)", &this.TargetPos "")
+		local i, _key
+		For i, _key in this.m_Keys
+		{
+			AHKThread("#Include Input\KeyPressThread.ahk", &_key)
+			AHKThread("#Include Input\KeyReleaseThread.ahk", &_key)
+		}
+
+		AHKThread("#Include Input\MouseThread.ahk", &this.TargetPos)
 
 		this.m_CurrTime := FPS.GetCurrentTime()
 		this.m_PrevTime := this.m_CurrTime
@@ -103,6 +110,26 @@ class Intercept extends InputManager
 	ProcessInput()
 	{
 		global
+
+		local i, _key
+		For i, _key in this.m_Keys
+		{
+			if (_key.State != _key.PrevState)
+			{
+				if (_key.State)
+				{
+					Debug.Log("Pressed " . _key.Keybind.String)
+					InputHelper.PressKeybind(_key.Keybind)
+				}
+				else
+				{
+					Debug.Log("Released " . _key.Keybind.String)
+					InputHelper.ReleaseKeybind(_key.Keybind)
+				}
+
+				_key.PrevState := _key.State
+			}
+		}
 
 		if (!Vector2.IsEqual(this.m_Movement, this.m_PrevMovement)
 		or this.RepeatForceMove or this.ForceMouseUpdate)
@@ -150,6 +177,11 @@ class Intercept extends InputManager
 		if (!Vector2.IsEqual(this.TargetPos, this.m_PrevTargetPos)
 		or this.ForceReticuleUpdate)
 		{
+			local newTargetPos := Vector2.Clamp(this.TargetPos, Graphics.ScreenBounds.Min, Graphics.Screenbounds.Max)
+			
+			this.TargetPos.X := newTargetPos.X
+			this.TargetPos.Y := newTargetPos.Y
+
 			if (this.PressStack.Peek.Type = KeybindType.Targeted)
 				InputHelper.MoveMouse(this.TargetPos)
 
@@ -162,35 +194,25 @@ class Intercept extends InputManager
 
 	PressKeybind(p_Key)
 	{
-		p_Key.State := True
-
-		if (p_Key.State = p_Key.PrevState)
-		{
-			p_Key.PrevState := p_Key.State
+		if (p_Key.State = True)
 			Exit
-		}
 
 		Debug.Log("Pressed " . p_Key.Keybind.String)
 		InputHelper.PressKeybind(p_Key.Keybind)
 
 		p_Key.PrevState := p_Key.State
+		p_Key.State := True
 	}
 	ReleaseKeybind(p_Key)
 	{
-		Critical
-
-		p_Key.State := False
-
-		if (p_Key.State = p_Key.PrevState)
-		{
-			p_Key.PrevState := p_Key.State
+		if (p_Key.State = False)
 			Exit
-		}
 
 		Debug.Log("Released " . p_Key.Keybind.String)
 		InputHelper.ReleaseKeybind(p_Key.Keybind)
 
 		p_Key.PrevState := p_Key.State
+		p_Key.State := False
 	}
 
 	MovePress(p_Direction)
