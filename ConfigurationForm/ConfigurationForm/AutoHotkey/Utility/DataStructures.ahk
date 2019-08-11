@@ -229,7 +229,7 @@ class LooseStack
 	Remove(p_Item)
 	{
 		local i, _item
-		For i, _item in this.m_Stack
+		for i, _item in this.m_Stack
 		{
 			if (_item = p_Item)
 			{

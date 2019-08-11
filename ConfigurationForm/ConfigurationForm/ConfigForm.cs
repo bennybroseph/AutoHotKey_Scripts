@@ -56,6 +56,8 @@
         private static readonly string sm_DefaultsDirectory =
             Directory.GetCurrentDirectory() + "\\Settings\\Defaults\\";
 
+        private static readonly string sm_ConfigDefaultPath = sm_DefaultsDirectory + "config.ini";
+
         private static readonly string sm_SettingsDirectory = Directory.GetCurrentDirectory() + "\\Settings\\";
 
         private static readonly string sm_ScriptLocation = Directory.GetCurrentDirectory() + "\\AutoHotkey\\";
@@ -106,49 +108,7 @@
 
         private void PopulateComboBox(IniTypeInfo iniTypeInfo)
         {
-            if (!Directory.Exists(iniTypeInfo.directoryPath))
-            {
-                var message =
-                    "The folder \"Profiles\" was not found in " + Directory.GetCurrentDirectory();
-                MessageBox.Show(
-                    message,
-                    @"Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                Application.Exit();
-                throw new Exception(message);
-            }
-
-            var filePaths = GetAllFiles(iniTypeInfo.directoryPath).ToArray();
-            if (!filePaths.Any())
-            {
-                var message =
-                    "The folder:\n\n\"" + iniTypeInfo.directoryPath + "\"\n\nhas no valid configuration files " +
-                    "(files ending in \".ini\")";
-                MessageBox.Show(
-                    message,
-                    @"Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                Application.Exit();
-                throw new Exception(message);
-            }
-
-            var iniFiles = filePaths.Where(file => file.EndsWith(".ini")).ToArray();
-            if (!iniFiles.Any())
-            {
-                MessageBox.Show(
-                    "There are no configuration files (files ending in \".ini\") in\n\n\"" +
-                        sm_SettingsDirectory + "\"",
-                    @"Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                Close();
-                return;
-            }
+            var iniFiles = GetAllFiles(iniTypeInfo);
 
             var fileDisplayNames =
                 iniFiles.Select(
@@ -276,7 +236,12 @@
                 e.Cancel = true;
 
             if (result == DialogResult.Yes)
+            {
                 IniParserHelper.SaveIni(m_SelectedIniPath, m_SelectedIniData);
+                MessageBox.Show(
+                    GetRelativePath(m_SelectedIniPath, Directory.GetCurrentDirectory()) +
+                    " has been saved!", "INI Saved");
+            }
         }
 
         private void OpenIni(string newIniPath)
@@ -321,8 +286,9 @@
 
             IniParserHelper.SaveIni(m_SelectedIniPath, m_SelectedIniData);
 
-            var newToolTip = new ToolTip();
-            newToolTip.Show("INI Saved", this, 10, Size.Height - 55, 3000);
+            MessageBox.Show(
+                GetRelativePath(m_SelectedIniPath, Directory.GetCurrentDirectory()) +
+                " has been saved!", "INI Saved");
         }
         private void cancelButton_Click(object sender, EventArgs e)
         {
@@ -469,6 +435,205 @@
             OpenIni(iniTypeInfo.selectedIniPath);
         }
 
+        private string[] GetAllFiles(IniTypeInfo iniTypeInfo)
+        {
+            if (!Directory.Exists(iniTypeInfo.directoryPath))
+            {
+                var message =
+                    "The folder \"Profiles\" was not found in " + Directory.GetCurrentDirectory();
+                MessageBox.Show(
+                    message,
+                    @"Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                Application.Exit();
+                throw new Exception(message);
+            }
+
+            var filePaths = GetAllFiles(iniTypeInfo.directoryPath).ToArray();
+            if (!filePaths.Any())
+            {
+                var message =
+                    "The folder:\n\n\"" + iniTypeInfo.directoryPath + "\"\n\nhas no valid configuration files " +
+                    "(files ending in \".ini\")";
+                MessageBox.Show(
+                    message,
+                    @"Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                Application.Exit();
+                throw new Exception(message);
+            }
+
+            var iniFiles = filePaths.Where(file => file.EndsWith(".ini")).ToArray();
+            if (!iniFiles.Any())
+            {
+                var message = "There are no configuration files (files ending in \".ini\") in\n\n\"" +
+                              sm_SettingsDirectory + "\"";
+                MessageBox.Show(
+                    message,
+                    @"Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                Application.Exit();
+                throw new Exception(message);
+            }
+
+            return iniFiles;
+        }
+
+        private void updateButton_Click(object sender, EventArgs e)
+        {
+            if (!IsLeftClick(e))
+                return;
+
+            var updateCount = 0;
+            foreach (var iniTypeInfo in m_IniTypeInfo)
+            {
+                var defaultIniData = IniParserHelper.ParseIni(iniTypeInfo.defaultPath);
+                var defaultVersion = defaultIniData.Global.FirstOrDefault();
+                foreach (var file in GetAllFiles(iniTypeInfo))
+                {
+                    var iniData = IniParserHelper.ParseIni(file);
+                    var version = iniData.Global.FirstOrDefault();
+                    if (defaultVersion == null
+                        || version != null && float.Parse(defaultVersion.Value) < float.Parse(version.Value))
+                    {
+                        if (MessageBox.Show(
+                                "The default INI version of \n'"
+                                + GetRelativePath(file, Directory.GetCurrentDirectory())
+                                + "' is lower than your saved settings.\n\n"
+                                + "Did you forget to copy over the 'Defaults' folder from the new version?",
+                                "Version Mis-Match",
+                                MessageBoxButtons.OKCancel,
+                                MessageBoxIcon.Error) == DialogResult.Cancel)
+                            return;
+                    }
+
+                    switch (iniTypeInfo.name)
+                    {
+                        case "Keybinding":
+                            if (version == null)
+                            {
+                                foreach (var sectionData in iniData.Sections)
+                                    if (sectionData.SectionName == "Keybindings")
+                                        sectionData.SectionName = "Controller";
+
+                                iniData.Global.AddKey("Version", "4.1");
+
+                                IniParserHelper.SaveIni(file, iniData);
+                                iniData = IniParserHelper.ParseIni(file);
+
+                                version = iniData.Global.FirstOrDefault();
+
+                                ++updateCount;
+                            }
+                            break;
+
+                        case "Profile":
+                            if (version == null)
+                            {
+                                iniData.Global.AddKey("Version", "4.1");
+                                version = iniData.Global.FirstOrDefault();
+
+                                ++updateCount;
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    // Copy present data over to the default settings and then save the modified defaults
+                    // into the current INI file to maintain the key order from the default file.
+                    foreach (var defaultSectionData in defaultIniData.Sections)
+                    {
+                        if (!iniData.Sections.ContainsSection(defaultSectionData.SectionName))
+                            continue;
+
+                        foreach (var defaultKeyData in defaultSectionData.Keys)
+                        {
+                            if (iniData.Sections
+                                .GetSectionData(defaultSectionData.SectionName).Keys
+                                .ContainsKey(defaultKeyData.KeyName))
+                                defaultKeyData.Value =
+                                    iniData.Sections
+                                        .GetSectionData(defaultSectionData.SectionName).Keys
+                                        .GetKeyData(defaultKeyData.KeyName).Value;
+                        }
+                    }
+
+                    IniParserHelper.SaveIni(file, defaultIniData);
+                }
+            }
+
+            // Update config to latest version
+            {
+                var defaultIniData = IniParserHelper.ParseIni(sm_ConfigDefaultPath);
+                var defaultVersion = defaultIniData.Global.FirstOrDefault();
+
+                var iniData = IniParserHelper.ParseIni(CONFIG_PATH);
+                var version = iniData.Global.FirstOrDefault();
+
+                if (defaultVersion == null
+                    || version != null && float.Parse(defaultVersion.Value) < float.Parse(version.Value))
+                {
+                    if (MessageBox.Show(
+                            "The default INI version of \n'"
+                            + GetRelativePath(CONFIG_PATH, Directory.GetCurrentDirectory())
+                            + "' is lower than your saved settings.\n\n"
+                            + "Did you forget to copy over the 'Defaults' folder from the new version?",
+                            "Version Mis-Match",
+                            MessageBoxButtons.OKCancel,
+                            MessageBoxIcon.Error) == DialogResult.Cancel)
+                        return;
+                }
+
+                if (version == null)
+                {
+                    iniData.Global.AddKey("Version", "4.1");
+
+                    IniParserHelper.SaveIni(CONFIG_PATH, iniData);
+                    iniData = IniParserHelper.ParseIni(CONFIG_PATH);
+
+                    version = iniData.Global.FirstOrDefault();
+
+                    ++updateCount;
+                }
+
+                // Copy present data over to the default settings and then save the modified defaults
+                // into the current INI file to maintain the key order from the default file.
+                foreach (var defaultSectionData in defaultIniData.Sections)
+                {
+                    if (!iniData.Sections.ContainsSection(defaultSectionData.SectionName))
+                        continue;
+
+                    foreach (var defaultKeyData in defaultSectionData.Keys)
+                    {
+                        if (iniData.Sections
+                            .GetSectionData(defaultSectionData.SectionName).Keys
+                            .ContainsKey(defaultKeyData.KeyName))
+                            defaultKeyData.Value =
+                                iniData.Sections
+                                    .GetSectionData(defaultSectionData.SectionName).Keys
+                                    .GetKeyData(defaultKeyData.KeyName).Value;
+                    }
+                }
+
+                IniParserHelper.SaveIni(CONFIG_PATH, defaultIniData);
+            }
+
+            if (updateCount > 0)
+                MessageBox.Show("Updated " + updateCount + " file(s)!", "INIs updated");
+            else
+                MessageBox.Show(
+                    "All INI files were already on the latest version. Missing keys and comments were added as needed.",
+                    "INIs updated");
+        }
+
         private void OpenConfigButton_Click(object sender, EventArgs e)
         {
             if (!IsLeftClick(e))
@@ -521,6 +686,7 @@
 
     public class MyTableLayoutPanel : TableLayoutPanel
     {
+        // I didn't write this expression. These are awful, and I never have understood why there isn't a better way.
         const string REGEX_URL =
         @"((http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-\@?^=%&amp;/~\+#])?)";
 
@@ -600,7 +766,7 @@
                     previousListView =
                         new FastObjectListView
                         {
-                            HeaderStyle = ColumnHeaderStyle.Clickable,
+                            HeaderStyle = ColumnHeaderStyle.Nonclickable,
                             Dock = DockStyle.Fill,
                             GridLines = true,
                             RowHeight = 0,

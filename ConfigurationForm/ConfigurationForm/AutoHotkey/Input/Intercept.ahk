@@ -4,13 +4,15 @@ class Intercept extends InputManager
 {
 	static m_UsingReticule := True
 
+	static m_TargetedKeybinds
+	static m_MovementKeybinds
+
 	static m_Up 	:= False
 	static m_Down 	:= False
 	static m_Left 	:= False
 	static m_Right 	:= False
 
 	static m_Keys := Array()
-	static m_Key
 
 	static m_PrevMovement := new Vector2()
 	static m_Movement := new Vector2()
@@ -24,46 +26,32 @@ class Intercept extends InputManager
 		global
 
 		BlockInput, MouseMove
-		BlockInput, Mouse
 
-		this.m_Reticule := new Image("Images\diabloCursor.png")
+		this.m_Reticule := new Image("Images\" . Graphics.ApplicationTitle . ".png", 1, 5)
 
-		; TODO Loop through movement inputs
+		this.m_TargetedKeybinds	:= IniReader.ParseKeybindArray(KeybindingSection.MouseKeyboard, "Targeted_Actions")
+        this.m_MovementKeybinds	:= IniReader.ParseKeybindArray(KeybindingSection.MouseKeyboard, "Movement_Actions")
 
-		; Up inputs
-		local fn := ObjBindMethod(Intercept, "MovePress", "Up")
-		hotkey, $Up, % fn
-		fn := ObjBindMethod(Intercept, "MoveRelease", "Up")
-		hotkey, $Up Up, % fn
+		local _moveKeys := Array("Up", "Down", "Left", "Right")
 
-		; Down inputs
-		fn := ObjBindMethod(Intercept, "MovePress", "Down")
-		hotkey, $Down, % fn
-		fn := ObjBindMethod(Intercept, "MoveRelease", "Down")
-		hotkey, $Down Up, % fn
+		local i, _moveKey
+		for i, _moveKey in _moveKeys
+		{
+			local _key := new Key(IniReader.ReadKeybindingKey(KeybindingSection.MouseKeyboard, "Move_" . _moveKey))
+			local _boundFunction := ObjBindMethod(Intercept, "MovePress", _moveKey)
+			hotkey, % "*" . _key.Keybind.Hotkey, % _boundFunction
+			_boundFunction := ObjBindMethod(Intercept, "MoveRelease", _moveKey)
+			hotkey, % "*" . _key.Keybind.Hotkey . " Up", % _boundFunction
+		}
 
-		; Left inputs
-		fn := ObjBindMethod(Intercept, "MovePress", "Left")
-		hotkey, $Left, % fn
-		fn := ObjBindMethod(Intercept, "MoveRelease", "Left")
-		hotkey, $Left Up, % fn
+		local _keybind
+		for i, _keybind in this.m_TargetedKeybinds
+			this.m_Keys.Push(CriticalObject(new Key(_keybind.String, KeybindType.Targeted)))
+		for i, _keybind in this.m_MovementKeybinds
+			this.m_Keys.Push(CriticalObject(new Key(_keybind.String, KeybindType.Movement)))
 
-		; Right Inputs
-		fn := ObjBindMethod(Intercept, "MovePress", "Right")
-		hotkey, $Right, % fn
-		fn := ObjBindMethod(Intercept, "MoveRelease", "Right")
-		hotkey, $Right Up, % fn
-
-		; TODO Loop through Targeted Skills
-		this.m_Keys.Push(CriticalObject(new Key("LButton", KeybindType.Targeted, "$LButton")))
-		this.m_Keys.Push(CriticalObject(new Key("RButton", KeybindType.Targeted, "$RButton")))
-		this.m_Keys.Push(CriticalObject(new Key("q", KeybindType.Targeted, "$q")))
-		this.m_Keys.Push(CriticalObject(new Key("w", KeybindType.Targeted, "$w")))
-		this.m_Keys.Push(CriticalObject(new Key("e", KeybindType.Movement, "$e")))
-		this.m_Keys.Push(CriticalObject(new Key("r", KeybindType.Targeted, "$r")))
-
-		local i, _key
-		For i, _key in this.m_Keys
+		local _key
+		for i, _key in this.m_Keys
 		{
 			AHKThread("#Include Input\KeyPressThread.ahk", &_key)
 			AHKThread("#Include Input\KeyReleaseThread.ahk", &_key)
@@ -75,6 +63,17 @@ class Intercept extends InputManager
 		this.m_PrevTime := this.m_CurrTime
 
 		Debug.OnToolTipAddListener(new Delegate(Intercept, "OnToolTip"))
+	}
+
+	TargetedKeybinds[] {
+		get {
+			return this.m_TargetedKeybinds
+		}
+	}
+	MovementKeybinds[] {
+		get {
+			return this.m_MovementKeybinds
+		}
 	}
 
 	RefreshState()
@@ -112,7 +111,7 @@ class Intercept extends InputManager
 		global
 
 		local i, _key
-		For i, _key in this.m_Keys
+		for i, _key in this.m_Keys
 		{
 			if (_key.State != _key.PrevState)
 			{
@@ -130,6 +129,11 @@ class Intercept extends InputManager
 				_key.PrevState := _key.State
 			}
 		}
+	}
+
+	ProcessOther()
+	{
+		global
 
 		if (!Vector2.IsEqual(this.m_Movement, this.m_PrevMovement)
 		or this.RepeatForceMove or this.ForceMouseUpdate)
@@ -170,19 +174,18 @@ class Intercept extends InputManager
 						this.StartMoving()
 				}
 			}
-
-			this.ForceMouseUpdate := False
 		}
 
 		if (!Vector2.IsEqual(this.TargetPos, this.m_PrevTargetPos)
 		or this.ForceReticuleUpdate)
 		{
 			local newTargetPos := Vector2.Clamp(this.TargetPos, Graphics.ScreenBounds.Min, Graphics.Screenbounds.Max)
-			
+
 			this.TargetPos.X := newTargetPos.X
 			this.TargetPos.Y := newTargetPos.Y
 
-			if (this.PressStack.Peek.Type = KeybindType.Targeted)
+			if (this.PressStack.Peek.Type = KeybindType.Targeted
+			or (this.PressStack.Peek.Type != KeybindType.Movement and !this.Moving))
 				InputHelper.MoveMouse(this.TargetPos)
 
 			this.m_Reticule.Draw(this.TargetPos, False)

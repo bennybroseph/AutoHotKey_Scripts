@@ -16,7 +16,7 @@ SetBatchLines, -1
 _critObj := CriticalObject(A_Args[1])
 
 _boundFunction := Func("ReleaseKeybind").Bind()
-Hotkey, % "~" . _critObj.Hotkey . " Up", % _boundFunction
+Hotkey, % "~*" . _critObj.Keybind.Hotkey . " Up", % _boundFunction
 
 return
 

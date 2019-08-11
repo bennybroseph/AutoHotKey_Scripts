@@ -45,7 +45,7 @@ class ImageOverlay
 				:= "Images\" . ImageOverlay.m_ImageSet . "\" . _controlInfo.Act . "\"
 				. ImageOverlay.m_ImageSetSize . "\" . _controlInfo.Control.ControlString . ".png"
 
-			this.m_Image := new Image(this.m_FilePath, ImageOverlay.m_ImageScale, this.m_BackgroundColor)
+			this.m_Image := new Image(this.m_FilePath, ImageOverlay.m_ImageScale, 7, this.m_BackgroundColor)
 		}
 
 		Image[]
@@ -67,6 +67,7 @@ class ImageOverlay
 		global
 
 		this.m_Enabled := IniReader.ReadProfileKey(ProfileSection.ImageOverlay, "Enable_Image_Overlay")
+					and InputManager.ControllerEnabled
 		if (!this.m_Enabled)
 			return
 
@@ -105,7 +106,7 @@ class ImageOverlay
 			return
 
 		local i, _overlayImage
-		For i, _overlayImage in this.m_Images
+		for i, _overlayImage in this.m_Images
 			_overlayImage.Image.Draw(_overlayImage.Pos)
 	}
 	DrawBatteryStatus()
@@ -119,7 +120,7 @@ class ImageOverlay
 		and Controller.BatteryStatus.BatteryLevel != Controller.PrevBatteryStatus.BatteryLevel)
 		{
 			local i, _batteryImage
-			For i, _batteryImage in this.m_BatteryImages
+			for i, _batteryImage in this.m_BatteryImages
 			{
 				if (Controller.BatteryStatus.BatteryLevel = i - 1)
 					_batteryImage.Draw(new Vector2(Graphics.ActiveWinStats.Pos.X, Graphics.ActiveWinStats.Pos.Y), False)

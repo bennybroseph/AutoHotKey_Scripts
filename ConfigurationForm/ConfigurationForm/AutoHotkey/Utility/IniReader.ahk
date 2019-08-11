@@ -15,7 +15,9 @@ class ProfileSection
 }
 class KeybindingSection
 {
-	static Keybindings := "Keybindings"
+	static Controller 		:= "Controller"
+	static MouseKeyboard	:= "Mouse/Keyboard"
+	static Other 			:= "Other"
 }
 
 class IniReader
@@ -27,8 +29,15 @@ class IniReader
 
     Init()
     {
-        this.m_ProfilePath := A_ScriptDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Profile_Path")
-		this.m_KeybindingPath := A_ScriptDir . "\" . this.ReadKey(this.m_ConfigPath, ConfigSection.Other, "Keybinding_Path")
+		global
+
+        this.m_ProfilePath := A_ScriptDir . "\" . this.ReadConfigKey(ConfigSection.Other, "Profile_Path")
+		this.m_KeybindingPath := A_ScriptDir . "\" . this.ReadConfigKey(ConfigSection.Other, "Keybinding_Path")
+
+		local _profileSections, _keybindingSections
+
+		IniRead, _profileSections, this.m_ProfilePath
+		IniRead, _keybindingSections, this.m_KeybindingPath
     }
 
 	ConfigPath[]
@@ -46,7 +55,7 @@ class IniReader
 	KeybindingPath[]
 	{
 		get {
-			return this.__singleton.m_KeybindingPath
+			return this.m_KeybindingPath
 		}
 	}
 
@@ -111,12 +120,12 @@ class IniReader
     }
     ParseControlbind(p_Key)
     {
-        local _controlbindString := this.ReadKeybindingKey(KeybindingSection.Keybindings, p_Key)
+        local _controlbindString := this.ReadKeybindingKey(KeybindingSection.Controller, p_Key)
 
         ; Returns an error when the requested key is not in the current profile
         if (_controlbindString = "ERROR")
 		{
-			Debug.Log("Could not find key '" . p_Key . "' in the profile ini's keybindings")
+			Debug.Log("Could not find key '" . p_Key . "' in the keybinding ini's keybindings")
             return ERROR
 		}
 
@@ -143,13 +152,13 @@ class IniReader
 
         return _newControlbind
     }
-    ParseKeybindArray(p_Key)
+    ParseKeybindArray(p_Section, p_Key)
     {
-		local _keybindArrayString := this.ReadKeybindingKey(KeybindingSection.Keybindings, p_Key)
+		local _keybindArrayString := this.ReadKeybindingKey(p_Section, p_Key)
 
 		if (_keybindArrayString = "ERROR")
 		{
-			Debug.Log("Could not find key '" . p_Key . "' in the profile ini's keybindings")
+			Debug.Log("Could not find key '" . p_Key . "' in the keybinding ini's keybindings")
 			return ERROR
 		}
 

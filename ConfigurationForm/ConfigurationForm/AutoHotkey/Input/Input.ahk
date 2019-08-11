@@ -2,7 +2,7 @@
 
 class Key
 {
-	__New(p_KeybindString, p_KeybindType, p_Hotkey)
+	__New(p_KeybindString, p_KeybindType := -1)
 	{
 		global
 
@@ -10,9 +10,9 @@ class Key
 		this.PrevState	:= False
 
 		this.m_Keybind := IniReader.ParseKeybind(p_KeybindString)
-		this.m_Keybind.Type := p_KeybindType
 
-		this.m_Hotkey := p_Hotkey
+		if (p_KeybindType != -1)
+			this.m_Keybind.Type := p_KeybindType
 	}
 
 	Keybind[] {
@@ -20,17 +20,14 @@ class Key
 			return this.m_Keybind
 		}
 	}
-
-	Hotkey[] {
-		get {
-			return this.m_Hotkey
-		}
-	}
 }
+
 class Control
 {
     __New(p_Name, p_Nickname, p_Index, p_ControlString)
     {
+		global
+
         this.m_Name         	:= p_Name
         this.m_Nickname     	:= p_Nickname
         this.m_Index        	:= p_Index
@@ -42,6 +39,29 @@ class Control
         this.m_PressTick    := -1
 
         this.m_Controlbind   := IniReader.ParseControlbind(this.m_ControlString)
+
+		local i, _keybind
+		for i, _keybind in Controller.TargetedKeybinds
+		{
+			if (this.m_Controlbind.OnPress.Action = _keybind.Action
+			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnPress.Type := KeybindType.Targeted
+
+			if (this.m_Controlbind.OnHold.Action = _keybind.Action
+			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnHold.Type := KeybindType.Targeted
+		}
+
+		for i, _keybind in Controller.MovementKeybinds
+		{
+			if (this.m_Controlbind.OnPress.Action = _keybind.Action
+			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnPress.Type := KeybindType.Movement
+
+			if (this.m_Controlbind.OnHold.Action = _keybind.Action
+			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
+				this.m_Controlbind.OnHold.Type := KeybindType.Movement
+		}
     }
 
     Name[]
@@ -101,30 +121,7 @@ class Control
 
 	ParseTargeting()
 	{
-		global
 
-		local i, _keybind
-		For i, _keybind in Controller.TargetedKeybinds
-		{
-			if (this.m_Controlbind.OnPress.Action = _keybind.Action
-			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnPress.Type := KeybindType.Targeted
-
-			if (this.m_Controlbind.OnHold.Action = _keybind.Action
-			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnHold.Type := KeybindType.Targeted
-		}
-
-		For i, _keybind in Controller.MovementKeybinds
-		{
-			if (this.m_Controlbind.OnPress.Action = _keybind.Action
-			and this.m_Controlbind.OnPress.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnPress.Type := KeybindType.Movement
-
-			if (this.m_Controlbind.OnHold.Action = _keybind.Action
-			and this.m_Controlbind.OnHold.Modifier = _keybind.Modifier)
-				this.m_Controlbind.OnHold.Type := KeybindType.Movement
-		}
 	}
 
     RefreshState(p_State)

@@ -16,7 +16,7 @@ SetBatchLines, -1
 _critObj := CriticalObject(A_Args[1])
 
 _boundFunction := Func("PressKeybind").Bind()
-Hotkey, % _critObj.Hotkey, % _boundFunction
+Hotkey, % "*" . _critObj.Keybind.Hotkey, % _boundFunction
 
 return
 

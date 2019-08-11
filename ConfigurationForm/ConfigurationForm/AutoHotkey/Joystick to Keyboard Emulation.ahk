@@ -18,6 +18,9 @@ SetKeyDelay, -1, -1
 SetWinDelay, -1
 SetControlDelay, -1
 
+SetTitleMatchMode, Fast
+SetTitleMatchMode, 3
+
 CoordMode, Mouse, Screen
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -79,15 +82,14 @@ Loop
 	Graphics.SetActiveWinStats()
 	ImageOverlay.DrawBatteryStatus()
 
-	InputManager.RefreshState()
-	InputManager.ProcessInput()
+	InputManager.Update()
 
 	Debug.Update()
 }
 
 return
 
-; Reloades the config values when F5 is pressed
+; Reloads the config values when F5 is pressed
 $F5::
 	Reload
 return

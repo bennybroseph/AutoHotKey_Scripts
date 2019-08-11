@@ -1153,7 +1153,7 @@ Gdip_FillPolygon(pGraphics, pBrush, Points, FillMode:=0)
 
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	For eachPoint, Point in Points
+	for eachPoint, Point in Points
 	{
 		Coord := StrSplit(Point, ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
@@ -1278,7 +1278,7 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	For eachPoint, Point in Points
+	for eachPoint, Point in Points
 	{
 		Coord := StrSplit(Point, ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
@@ -1337,7 +1337,7 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 ;						Gdip_DrawImage performs faster
 ;						Matrix can be omitted to just draw with no alteration to ARGB
 ;						Matrix may be passed as a digit from 0 - 1 to change just transparency
-;						Matrix can be passed as a matrix with any delimiter. For example:
+;						Matrix can be passed as a matrix with any delimiter. for example:
 ;						MatrixBright=
 ;						(
 ;						1.5		|0		|0		|0		|0
@@ -1822,7 +1822,7 @@ Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 		BufSize := 16 + (2*(A_PtrSize ? A_PtrSize : 4))
 
 		VarSetCapacity(buf, BufSize, 0)
-		For eachSize, Size in StrSplit( Sizes, "|" )
+		for eachSize, Size in StrSplit( Sizes, "|" )
 		{
 			DllCall("PrivateExtractIcons", "str", sFile, "int", IconNumber-1, "int", Size, "int", Size, PtrA, hIcon, PtrA, 0, "uint", 1, "uint", 0)
 
@@ -2222,14 +2222,14 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 		return -1
 
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
-	For eachStyle, valStyle in StrSplit( Styles, "|" )
+	for eachStyle, valStyle in StrSplit( Styles, "|" )
 	{
 		if RegExMatch(Options, "\b" valStyle)
 			Style |= (valStyle != "StrikeOut") ? (A_Index-1) : 8
 	}
 
 	Align := 0, Alignments := "Near|Left|Centre|Center|Far|Right"
-	For eachAlignment, valAlignment in StrSplit( Alignments, "|" )
+	for eachAlignment, valAlignment in StrSplit( Alignments, "|" )
 	{
 		if RegExMatch(Options, "\b" valAlignment)
 			Align |= A_Index//2.1	; 0|0|1|1|2|2

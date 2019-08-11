@@ -3,21 +3,21 @@ class InputManager
 {
 	static s_Init := False
 
+	static s_MouseKeyboardEnabled
+	static s_ControllerEnabled
+
 	static s_Moving := False
 
 	static s_ForceMouseUpdate	:= True
 	static s_ForceReticuleUpdate 	:= True
 
-	static s_MoveOnlyKey
+	static s_ForceMoveKey
 
 	static s_RepeatForceMove
 	static s_HaltMovementOnTarget
 
 	static s_MouseOffset
 	static s_TargetOffset
-
-	static s_TargetedKeybinds
-	static s_MovementKeybinds
 
 	static s_PressStack
 	static s_PressCount
@@ -39,56 +39,68 @@ class InputManager
 
 	Init()
 	{
-		InputManager.s_MoveOnlyKey := IniReader.ParseKeybind(IniReader.ReadKeybindingKey(KeybindingSection.Keybindings, "Force_Move"))
+		this.s_ControllerEnabled 	:= IniReader.ReadKeybindingKey(KeybindingSection.Controller, "Enabled")
+		this.s_MouseKeyboardEnabled := IniReader.ReadKeybindingKey(KeybindingSection.MouseKeyboard, "Enabled")
 
-		InputManager.s_RepeatForceMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Repeat_Force_Move")
-		InputManager.s_HaltMovementOnTarget := IniReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
+		this.s_ForceMoveKey := IniReader.ParseKeybind(IniReader.ReadKeybindingKey(KeybindingSection.Other, "Force_Move"))
 
-		InputManager.s_MouseOffset
+		this.s_RepeatForceMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Repeat_Force_Move")
+		this.s_HaltMovementOnTarget := IniReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
+
+		this.s_MouseOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_X")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Center_Offset_Y"))
-        InputManager.s_TargetOffset
+        this.s_TargetOffset
             := new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Center_Offset_X")
                         , IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Center_Offset_Y"))
 
-		InputManager.s_TargetedKeybinds	:= IniReader.ParseKeybindArray("Targeted_Actions")
-        InputManager.s_MovementKeybinds	:= IniReader.ParseKeybindArray("Movement_Actions")
+		this.s_PressStack := new LooseStack()
+        this.s_PressCount := new PressCounter()
 
-		InputManager.s_PressStack := new LooseStack()
-        InputManager.s_PressCount := new PressCounter()
+		this.s_LootDelay 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Loot_Delay")
+		this.s_TargetingDelay	:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Targeting_Delay")
+		this.s_HoldDelay 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Hold_Delay")
 
-		InputManager.s_LootDelay 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Loot_Delay")
-		InputManager.s_TargetingDelay	:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Targeting_Delay")
-		InputManager.s_HoldDelay 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Hold_Delay")
-
-		InputManager.s_MovementRadius
+		this.s_MovementRadius
 			:= new Rect(new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Min_Radius_Width")
 								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Min_Radius_Height"))
 					, new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Max_Radius_Width")
 								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Movement_Max_Radius_Height")))
 
-		InputManager.s_TargetRadius
+		this.s_TargetRadius
 			:= new Rect(new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Min_Radius_Width")
 								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Min_Radius_Height"))
 					, new Vector2(IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Max_Radius_Width")
 								, IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Targeting_Max_Radius_Height")))
 
-		InputManager.s_MousePos		:= InputHelper.GetMousePos()
-		InputManager.s_TargetPos	:= CriticalObject(InputHelper.GetMousePos())
+		this.s_MousePos		:= InputHelper.GetMousePos()
+		this.s_TargetPos	:= CriticalObject(InputHelper.GetMousePos())
 
-		InputManager.s_MouseHidden := True
+		this.s_MouseHidden := IniReader.ReadProfileKey(ProfileSection.Preferences, "Using_Invisible_Cursor")
 
-		InputManager.s_Cursor 	:= new Image("Images\diabloCursor.png")
-		InputManager.s_Reticule := new Image("Images\Target.png")
+		this.s_Cursor 	:= new Image("Images\" . Graphics.ApplicationTitle . ".png", 1, 5)
+		this.s_Reticule := new Image("Images\Target.png", 1, 5)
 
 		Debug.OnToolTipAddListener(new Delegate(this, "OnToolTip"))
 
-		InputManager.s_Init := True
+		this.s_Init := True
 
 		Controller.Init()
-		Intercept.Init()
+		if (this.s_MouseKeyboardEnabled)
+			Intercept.Init()
 	}
 	; Create accessors for children
+	ControllerEnabled[]	{
+		get {
+			return InputManager.s_ControllerEnabled
+		}
+	}
+	MouseKeyboardEnabled[] {
+		get {
+			return InputManager.s_MouseKeyboardEnabled
+		}
+	}
+
 	Moving[] {
 		get {
 			return InputManager.s_Moving
@@ -120,9 +132,9 @@ class InputManager
 		}
 	}
 
-	MoveOnlyKey[] {
+	ForceMoveKey[] {
 		get {
-			return InputManager.s_MoveOnlyKey
+			return InputManager.s_ForceMoveKey
 		}
 	}
 
@@ -146,17 +158,6 @@ class InputManager
 	TargetOffset[] {
 		get {
 			return InputManager.s_TargetOffset
-		}
-	}
-
-	TargetedKeybinds[] {
-		get {
-			return InputManager.s_TargetedKeybinds
-		}
-	}
-	MovementKeybinds[] {
-		get {
-			return InputManager.s_MovementKeybinds
 		}
 	}
 
@@ -229,28 +230,38 @@ class InputManager
 		}
 	}
 
-	RefreshState()
+	Update()
 	{
-		;Controller.RefreshState()
-		Intercept.RefreshState()
-	}
-	ProcessInput()
-	{
-		;Controller.ProcessInput()
-		Intercept.ProcessInput()
+		if (this.s_ControllerEnabled)
+			Controller.RefreshState()
+		if (this.s_MouseKeyboardEnabled)
+			Intercept.RefreshState()
+
+		if (this.s_ControllerEnabled)
+			Controller.ProcessInput()
+		if (this.s_MouseKeyboardEnabled)
+			Intercept.ProcessInput()
+
+		if (this.s_ControllerEnabled)
+			Controller.ProcessOther()
+		if (this.s_MouseKeyboardEnabled)
+			Intercept.ProcessOther()
+
+		this.s_ForceMouseUpdate		:= False
+		this.s_ForceReticuleUpdate	:= False
 	}
 
 	StartMoving()
 	{
-		Debug.Log("Pressing " . this.MoveOnlyKey.String)
-		InputHelper.PressKeybind(this.MoveOnlyKey)
+		Debug.Log("Pressing " . this.ForceMoveKey.String)
+		InputHelper.PressKeybind(this.ForceMoveKey)
 
 		this.Moving := True
 	}
 	StopMoving()
 	{
-		Debug.Log("Releasing " . this.MoveOnlyKey.String)
-		InputHelper.ReleaseKeybind(this.MoveOnlyKey)
+		Debug.Log("Releasing " . this.ForceMoveKey.String)
+		InputHelper.ReleaseKeybind(this.ForceMoveKey)
 
 		this.Moving := False
 	}
@@ -259,18 +270,18 @@ class InputManager
 	{
 		local _debugText :=
 
-        _debugText .= "MousePos: " . InputManager.s_MousePos.String . "`n"
-        _debugText .= "Moving: " . InputManager.s_Moving . " ForceMouseUpdate: " . InputManager.s_ForceMouseUpdate . "`n"
+        _debugText .= "MousePos: " . this.s_MousePos.String . "`n"
+        _debugText .= "Moving: " . this.s_Moving . " ForceMouseUpdate: " . this.s_ForceMouseUpdate . "`n"
 
-        _debugText .= "TargetPos: " InputManager.s_TargetPos.String "`n"
-        _debugText .= "UsingReticule: " . InputManager.s_UsingReticule
-				. " ForceReticuleUpdate: " . InputManager.s_ForceReticuleUpdate . "`n"
+        _debugText .= "TargetPos: " this.s_TargetPos.String "`n"
+        _debugText .= "UsingReticule: " . this.s_UsingReticule
+				. " ForceReticuleUpdate: " . this.s_ForceReticuleUpdate . "`n"
 
-        _debugText .= "PressStack - Length: " . InputManager.s_PressStack.Length
-					. " Peek: " . InputManager.s_PressStack.Peek.Type . "`n"
+        _debugText .= "PressStack - Length: " . this.s_PressStack.Length
+					. " Peek: " . this.s_PressStack.Peek.Type . "`n"
 					. "PressCount - "
-                    . "Targeted: " . InputManager.s_PressCount.Targeted . " "
-                    . "Movement: " . InputManager.s_PressCount.Movement
+                    . "Targeted: " . this.s_PressCount.Targeted . " "
+                    . "Movement: " . this.s_PressCount.Movement
 
 		return _debugText
 	}

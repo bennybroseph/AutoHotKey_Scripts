@@ -30,13 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConfigForm));
-            this.saveButton = new System.Windows.Forms.Button();
-            this.cancelButton = new System.Windows.Forms.Button();
             this.iniDataBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.launchButton = new System.Windows.Forms.Button();
-            this.openIniButton = new System.Windows.Forms.Button();
-            this.openConfigButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.newKeybindingIniButton = new System.Windows.Forms.Button();
             this.keybindingDefaultButton = new System.Windows.Forms.Button();
@@ -47,89 +42,41 @@
             this.keybindingsComboBox = new System.Windows.Forms.ComboBox();
             this.setKeybindingButton = new System.Windows.Forms.Button();
             this.openFileDialog = new System.Windows.Forms.OpenFileDialog();
+            this.openConfigButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
+            this.saveButton = new System.Windows.Forms.Button();
+            this.launchButton = new System.Windows.Forms.Button();
+            this.updateButton = new System.Windows.Forms.Button();
+            this.openIniButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.iniDataBindingSource)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
-            // saveButton
-            // 
-            this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.saveButton.Location = new System.Drawing.Point(3, 4);
-            this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(75, 23);
-            this.saveButton.TabIndex = 0;
-            this.saveButton.Text = "Save";
-            this.saveButton.UseVisualStyleBackColor = true;
-            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
-            // 
-            // cancelButton
-            // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelButton.Location = new System.Drawing.Point(481, 4);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(75, 23);
-            this.cancelButton.TabIndex = 1;
-            this.cancelButton.Text = "Cancel";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
-            // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.BackColor = System.Drawing.Color.Transparent;
-            this.tableLayoutPanel1.ColumnCount = 5;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66611F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66611F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66278F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66278F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.34223F));
-            this.tableLayoutPanel1.Controls.Add(this.saveButton, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.cancelButton, 4, 0);
+            this.tableLayoutPanel1.ColumnCount = 6;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.66667F));
+            this.tableLayoutPanel1.Controls.Add(this.openIniButton, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.updateButton, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.launchButton, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.openIniButton, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.openConfigButton, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.saveButton, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.cancelButton, 5, 0);
+            this.tableLayoutPanel1.Controls.Add(this.openConfigButton, 4, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 631);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(559, 30);
             this.tableLayoutPanel1.TabIndex = 2;
-            // 
-            // launchButton
-            // 
-            this.launchButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.launchButton.Location = new System.Drawing.Point(102, 4);
-            this.launchButton.Name = "launchButton";
-            this.launchButton.Size = new System.Drawing.Size(75, 23);
-            this.launchButton.TabIndex = 4;
-            this.launchButton.Text = "Launch";
-            this.launchButton.UseVisualStyleBackColor = true;
-            this.launchButton.Click += new System.EventHandler(this.launchButton_Click);
-            // 
-            // openIniButton
-            // 
-            this.openIniButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.openIniButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.openIniButton.Location = new System.Drawing.Point(195, 4);
-            this.openIniButton.Name = "openIniButton";
-            this.openIniButton.Size = new System.Drawing.Size(75, 23);
-            this.openIniButton.TabIndex = 2;
-            this.openIniButton.Text = "Open INI";
-            this.openIniButton.UseVisualStyleBackColor = true;
-            this.openIniButton.Click += new System.EventHandler(this.openIniButton_Click);
-            // 
-            // openConfigButton
-            // 
-            this.openConfigButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.openConfigButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.openConfigButton.Location = new System.Drawing.Point(288, 4);
-            this.openConfigButton.Name = "openConfigButton";
-            this.openConfigButton.Size = new System.Drawing.Size(75, 23);
-            this.openConfigButton.TabIndex = 5;
-            this.openConfigButton.Text = "Open Config";
-            this.openConfigButton.UseVisualStyleBackColor = true;
-            this.openConfigButton.Click += new System.EventHandler(this.OpenConfigButton_Click);
             // 
             // tableLayoutPanel2
             // 
@@ -245,6 +192,75 @@
             this.setKeybindingButton.UseVisualStyleBackColor = true;
             this.setKeybindingButton.Click += new System.EventHandler(this.SetButtonClick);
             // 
+            // openConfigButton
+            // 
+            this.openConfigButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.openConfigButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.openConfigButton.Location = new System.Drawing.Point(381, 4);
+            this.openConfigButton.Name = "openConfigButton";
+            this.openConfigButton.Size = new System.Drawing.Size(75, 23);
+            this.openConfigButton.TabIndex = 5;
+            this.openConfigButton.Text = "Open Config";
+            this.openConfigButton.UseVisualStyleBackColor = true;
+            this.openConfigButton.Click += new System.EventHandler(this.OpenConfigButton_Click);
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelButton.Location = new System.Drawing.Point(481, 4);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(75, 23);
+            this.cancelButton.TabIndex = 1;
+            this.cancelButton.Text = "Cancel";
+            this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            // 
+            // saveButton
+            // 
+            this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.saveButton.Location = new System.Drawing.Point(3, 4);
+            this.saveButton.Name = "saveButton";
+            this.saveButton.Size = new System.Drawing.Size(75, 23);
+            this.saveButton.TabIndex = 0;
+            this.saveButton.Text = "Save";
+            this.saveButton.UseVisualStyleBackColor = true;
+            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            // 
+            // launchButton
+            // 
+            this.launchButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.launchButton.Location = new System.Drawing.Point(102, 4);
+            this.launchButton.Name = "launchButton";
+            this.launchButton.Size = new System.Drawing.Size(75, 23);
+            this.launchButton.TabIndex = 4;
+            this.launchButton.Text = "Launch";
+            this.launchButton.UseVisualStyleBackColor = true;
+            this.launchButton.Click += new System.EventHandler(this.launchButton_Click);
+            // 
+            // updateButton
+            // 
+            this.updateButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.updateButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.updateButton.Location = new System.Drawing.Point(195, 4);
+            this.updateButton.Name = "updateButton";
+            this.updateButton.Size = new System.Drawing.Size(75, 23);
+            this.updateButton.TabIndex = 6;
+            this.updateButton.Text = "Update INIs";
+            this.updateButton.UseVisualStyleBackColor = true;
+            this.updateButton.Click += new System.EventHandler(this.updateButton_Click);
+            // 
+            // openIniButton
+            // 
+            this.openIniButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.openIniButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.openIniButton.Location = new System.Drawing.Point(288, 4);
+            this.openIniButton.Name = "openIniButton";
+            this.openIniButton.Size = new System.Drawing.Size(75, 23);
+            this.openIniButton.TabIndex = 2;
+            this.openIniButton.Text = "Open INI";
+            this.openIniButton.UseVisualStyleBackColor = true;
+            this.openIniButton.Click += new System.EventHandler(this.openIniButton_Click);
+            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -265,23 +281,23 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Button saveButton;
-        private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.BindingSource iniDataBindingSource;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Button openIniButton;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Button newProfileIniButton;
         private System.Windows.Forms.Button profileDefaultButton;
         private System.Windows.Forms.ComboBox profilesComboBox;
         private System.Windows.Forms.Button setProfileButton;
         private System.Windows.Forms.OpenFileDialog openFileDialog;
-        private System.Windows.Forms.Button launchButton;
         private System.Windows.Forms.Button newKeybindingIniButton;
         private System.Windows.Forms.Button keybindingDefaultButton;
         private System.Windows.Forms.ComboBox keybindingsComboBox;
         private System.Windows.Forms.Button setKeybindingButton;
+        private System.Windows.Forms.Button openIniButton;
+        private System.Windows.Forms.Button updateButton;
+        private System.Windows.Forms.Button launchButton;
+        private System.Windows.Forms.Button saveButton;
+        private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button openConfigButton;
     }
 }

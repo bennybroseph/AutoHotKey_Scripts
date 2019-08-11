@@ -189,9 +189,11 @@ class Ellipse extends Shape
 class Image extends Graphic
 {
 	; TODO Add option to ignore smoothing
-	__New(p_ImagePath, p_Scale := 1, p_BackgroundColor := -1)
+	__New(p_ImagePath, p_Scale := 1, p_Interpolation := 7, p_BackgroundColor := -1)
 	{
 		global
+
+		this.m_Interpolation := p_Interpolation
 
 		if (p_BackgroundColor != -1)
 			this.m_Brush := Gdip_BrushCreateSolid(p_BackgroundColor.GDIP_Hex)
@@ -210,7 +212,7 @@ class Image extends Graphic
 		if (this.m_Brush)
 			Gdip_SetCompositingMode(this.m_Graphics, 0)
 
-		Gdip_SetInterpolationMode(this.m_Graphics, 7)
+		Gdip_SetInterpolationMode(this.m_Graphics, this.m_Interpolation)
 	}
 	DrawGraphic()
 	{

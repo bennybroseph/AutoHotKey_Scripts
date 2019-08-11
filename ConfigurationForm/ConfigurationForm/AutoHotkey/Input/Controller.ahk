@@ -84,6 +84,8 @@ class PressCounter
 
 class Controller extends InputManager
 {
+	static m_StickSpeed := 1500
+
 	static m_UsingReticule 	:= False
 
 	static m_CursorMode 	:= False
@@ -95,6 +97,9 @@ class Controller extends InputManager
 	static m_VibeStrength
 	static m_VibeDuration
 
+	static m_TargetedKeybinds
+	static m_MovementKeybinds
+
 	static m_Controls := Array()
 
 	static m_MovementStick
@@ -102,8 +107,6 @@ class Controller extends InputManager
 
 	static m_BatteryStatus
 	static m_PrevBatteryStatus
-
-	static m_StickSpeed := 1500
 
     Init()
     {
@@ -116,6 +119,9 @@ class Controller extends InputManager
 
 		this.m_VibeStrength := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Strength")
 		this.m_VibeDuration := IniReader.ReadProfileKey(ProfileSection.Preferences, "Vibration_Duration")
+
+		this.m_TargetedKeybinds	:= IniReader.ParseKeybindArray(KeybindingSection.Controller, "Targeted_Actions")
+        this.m_MovementKeybinds	:= IniReader.ParseKeybindArray(KeybindingSection.Controller, "Movement_Actions")
 
 		this.m_Controls := Array()
 
@@ -154,7 +160,7 @@ class Controller extends InputManager
 		this.m_Controls[ControlIndex.Guide]
 			:= new Button("Guide Button", "Guide", ControlIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
 
-		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "Force_Move", "Left")
+		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "Left_Stick_Button", "Left")
 		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "Right_Stick_Button", "Right")
 
         this.m_MovementStick    := this.m_LeftStick
@@ -164,7 +170,7 @@ class Controller extends InputManager
 		this.m_PrevBatteryStatus := this.m_BatteryStatus
 
 		local i, _control
-		For i, _control in this.m_Controls
+		for i, _control in this.m_Controls
 			_control.ParseTargeting()
 
 		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
@@ -181,6 +187,17 @@ class Controller extends InputManager
 
 		Debug.OnToolTipAddListener(new Delegate(Controller, "OnToolTip"))
     }
+
+	TargetedKeybinds[] {
+		get {
+			return this.m_TargetedKeybinds
+		}
+	}
+	MovementKeybinds[] {
+		get {
+			return this.m_MovementKeybinds
+		}
+	}
 
     CursorMode[]
     {
@@ -258,7 +275,7 @@ class Controller extends InputManager
                 Continue
 
 			local i, _control
-            For i, _control in this.m_Controls
+            for i, _control in this.m_Controls
                 _control.RefreshState(_state)
 
 			this.m_LeftStick.RefreshState(_state)
@@ -274,7 +291,7 @@ class Controller extends InputManager
         global
 
 		local i, _control
-        For i, _control in this.m_Controls
+        for i, _control in this.m_Controls
         {
             ;Debug.Log(_control.Name . " State: " . _control.State . " PrevState: " . _control.PrevState)
             if (_control.State != _control.PrevState)
@@ -337,19 +354,25 @@ class Controller extends InputManager
 				}
             }
         }
+    }
+
+	ProcessOther()
+	{
+		global
 
 		if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
         or this.m_RepeatForceMove or this.ForceMouseUpdate or (this.m_CursorMode and this.m_MovementStick.State))
             this.ProcessMovementStick()
 
         if (!Vector2.IsEqual(this.m_TargetStick.StickValue, this.m_TargetStick.PrevStickValue)
-        or this.ForceReticuleUpdate or (this.m_FreeTargetMode and this.m_TargetStick.State))
+        or (this.ForceReticuleUpdate and !this.MouseKeyboardEnabled) or (this.m_FreeTargetMode and this.m_TargetStick.State))
             this.ProcessTargetStick()
-    }
+	}
 
 	ProcessMovementStick()
 	{
         global
+
         local _stick := this.m_MovementStick
 
         if (!this.m_CursorMode)
@@ -424,8 +447,6 @@ class Controller extends InputManager
 			if (this.MouseHidden)
 				this.Cursor.Draw(this.MousePos, False)
         }
-
-		this.ForceMouseUpdate := False
 	}
 	ProcessTargetStick()
     {
@@ -444,7 +465,8 @@ class Controller extends InputManager
 				:= Vector2.Add(Vector2.Add(Graphics.ActiveWinStats.Pos, Graphics.ActiveWinStats.Center)
 							, Vector2.Mul(this.TargetOffset, Graphics.ResolutionScale))
 
-			this.TargetPos := _centerOffset
+			this.TargetPos.X := _centerOffset.X
+			this.TargetPos.Y := _centerOffset.Y
 
 			if (_stick.State)
 			{
@@ -482,7 +504,10 @@ class Controller extends InputManager
 					this.TargetPos.Y -= _targetDelta.Y
 				}
 
-				this.TargetPos := Vector2.Clamp(this.TargetPos, Graphics.ScreenBounds.Min, Graphics.ScreenBounds.Max)
+				local _clampedTargetPos := Vector2.Clamp(this.TargetPos, Graphics.ScreenBounds.Min, Graphics.ScreenBounds.Max)
+
+				this.TargetPos.X := _clampedTargetPos.X
+				this.TargetPos.Y := _clampedTargetPos.Y
 			}
 
 			if (this.PressStack.Peek.Type = KeybindType.Targeted)
@@ -493,8 +518,6 @@ class Controller extends InputManager
 			if (this.MouseHidden)
 				this.Reticule.Draw(this.TargetPos)
         }
-
-		this.ForceReticuleUpdate := False
     }
 
 	Vibrate()
@@ -624,7 +647,7 @@ class Controller extends InputManager
 		local i, _control
 		if (_isSpecial)
 		{
-			For i, _control in this.m_Controls
+			for i, _control in this.m_Controls
 			{
 				if (_control.Controlbind.OnPress.Action = p_Keybind.Action and !_control.Controlbind.OnPress.Modifier)
 					return new ControlInfo(_control, "Press")
@@ -633,7 +656,7 @@ class Controller extends InputManager
 			}
 		}
 
-		For i, _control in this.m_Controls
+		for i, _control in this.m_Controls
 		{
 			local _onPress := _control.Controlbind.OnPress
 
@@ -661,7 +684,7 @@ class Controller extends InputManager
 			local _keybindClone := p_Keybind.Clone()
 			_keybindClone.Modifier := _keybindClone.Action
 
-			Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls. Trying again...")
+			;Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls. Trying again...")
 			return this.FindControlInfo(_keybindClone)
 		}
 
@@ -685,7 +708,7 @@ class Controller extends InputManager
 					. this.m_TargetStick.StickValue.String " Angle: " . Round(this.m_TargetStick.StickAngleDeg, 2) . "`n`n"
 
 		local i, _control
-		For i, _control in this.m_Controls
+		for i, _control in this.m_Controls
 		{
 			_debugText := _debugText . _control.Nickname . ": "
 			if (_control.Index = ControlIndex.LTrigger or _control.Index = ControlIndex.RTrigger)

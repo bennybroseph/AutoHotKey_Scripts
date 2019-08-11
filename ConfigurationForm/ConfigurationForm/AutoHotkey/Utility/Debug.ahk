@@ -314,7 +314,7 @@ class Debug
 		local _debugText :=
 
 		local i, _delegate
-		For i, _delegate in this.m_OnToolTip
+		for i, _delegate in this.m_OnToolTip
 		{
 			_debugText .= %_delegate%()
 			if (i != this.m_OnToolTip.MaxIndex())
@@ -328,7 +328,7 @@ class Debug
 			local _debugLog := _debugLog . "Debug Log:`n"
 
 			local i, _entry
-			For i, _entry in this.m_LogEntries
+			for i, _entry in this.m_LogEntries
 			{
 				_debugLog .= _entry
 				if (i != this.m_LogEntries.MaxIndex())

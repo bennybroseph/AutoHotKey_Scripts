@@ -34,7 +34,7 @@ class InputHelper
 						_newMousePos := InputManager.MousePos
 				}
 
-				if (InputManager.HaltMovementOnTarget)
+				if (InputManager.Moving and InputManager.HaltMovementOnTarget)
 					InputManager.StopMoving()
 
 				this.MoveMouse(_newMousePos)
@@ -43,7 +43,9 @@ class InputHelper
 			}
 			else if (p_Keybind.Type = KeybindType.Movement)
 			{
-				InputManager.StopMoving()
+				if (InputManager.Moving)
+					InputManager.StopMoving()
+
 				this.MoveMouse(InputManager.MousePos)
 
 				InputManager.PressCount.Movement++
@@ -91,7 +93,7 @@ class InputHelper
 		if (_isSpecial)
 			this.PressSpecialKey(p_Key)
 		else
-			Send {%p_Key% Down}
+			Send {Blind}{%p_Key% Down}
 	}
 	ReleaseKey(p_Key)
 	{
@@ -101,7 +103,7 @@ class InputHelper
 		if (_isSpecial)
 			this.ReleaseSpecialKey(p_Key)
 		else
-			Send {%p_Key% Up}
+			Send {Blind}{%p_Key% Up}
 	}
 
 	PressSpecialKey(p_SpecialKey)

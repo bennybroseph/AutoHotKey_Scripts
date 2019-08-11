@@ -52,8 +52,21 @@ class Keybind
 		get {
 			local _string :=
 			if (this.m_Modifier)
-				_string := this.m_Modifier . "+"
-			_string := _string . this.m_Action
+				_string .= this.m_Modifier . "+"
+			_string .= this.m_Action
+
+			return _string
+		}
+	}
+	Hotkey[]
+	{
+		get {
+			local _string :=
+			if (this.m_Modifier)
+				_string .= this.m_Modifier . " & "
+			else
+				_string .= "$"
+			_string .= this.m_Action
 
 			return _string
 		}
