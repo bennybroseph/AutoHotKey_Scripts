@@ -25,7 +25,7 @@ class InputHelper
 
 			if (p_Keybind.Type = KeybindType.Targeted)
 			{
-				local _newMousePos := InputManager.TargetPos
+				local _newMousePos := new Vector2(InputManager.TargetPos.X, InputManager.TargetPos.Y)
 				if (!InputManager.UsingReticule)
 				{
 					if (Inventory.Enabled)

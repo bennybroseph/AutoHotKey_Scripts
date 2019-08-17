@@ -14,6 +14,8 @@ class InputManager
 	static s_ForceMoveKey
 
 	static s_RepeatForceMove
+	static s_RepeatForceMoveSpeed := 125
+	static s_LastForceMove
 	static s_HaltMovementOnTarget
 
 	static s_MouseOffset
@@ -45,6 +47,8 @@ class InputManager
 		this.s_ForceMoveKey := IniReader.ParseKeybind(IniReader.ReadKeybindingKey(KeybindingSection.Other, "Force_Move"))
 
 		this.s_RepeatForceMove := IniReader.ReadProfileKey(ProfileSection.Preferences, "Repeat_Force_Move")
+		this.s_LastForceMove := FPS.GetCurrentTime()
+
 		this.s_HaltMovementOnTarget := IniReader.ReadProfileKey(ProfileSection.Preferences, "Halt_Movement_On_Target")
 
 		this.s_MouseOffset
@@ -120,7 +124,8 @@ class InputManager
 
 	UsingReticule[] {
 		get {
-			return Controller.m_UsingReticule or Intercept.m_UsingReticule
+			return (InputManager.s_ControllerEnabled and Controller.m_UsingReticule)
+				or (InputManager.s_MouseKeyboardEnabled and Intercept.m_UsingReticule)
 		}
 	}
 	ForceReticuleUpdate[] {
@@ -141,6 +146,19 @@ class InputManager
 	RepeatForceMove[] {
 		get {
 			return InputManager.s_RepeatForceMove
+		}
+	}
+	RepeatForceMoveSpeed[] {
+		get {
+			return InputManager.s_RepeatForceMoveSpeed
+		}
+	}
+	LastForceMove[] {
+		get {
+			return InputManager.s_LastForceMove
+		}
+		set {
+			return InputManager.s_LastForceMove := value
 		}
 	}
 
@@ -274,7 +292,7 @@ class InputManager
         _debugText .= "Moving: " . this.s_Moving . " ForceMouseUpdate: " . this.s_ForceMouseUpdate . "`n"
 
         _debugText .= "TargetPos: " this.s_TargetPos.String "`n"
-        _debugText .= "UsingReticule: " . this.s_UsingReticule
+        _debugText .= "UsingReticule: " . this.UsingReticule
 				. " ForceReticuleUpdate: " . this.s_ForceReticuleUpdate . "`n"
 
         _debugText .= "PressStack - Length: " . this.s_PressStack.Length

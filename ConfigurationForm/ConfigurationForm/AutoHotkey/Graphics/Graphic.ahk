@@ -59,15 +59,6 @@ class Graphic
 
 	Draw(p_Pos, p_Centered := True)
 	{
-		if (!this.m_HasDrawn)
-		{
-			this.DrawGraphic()
-			UpdateLayeredWindow(this.m_HWND, this.m_HDC, 0, 0, this.m_Size.Width, this.m_Size.Height)
-			this.UnloadGraphic()
-
-			this.m_HasDrawn := True
-		}
-
 		if (p_Centered)
 			p_Pos := Vector2.Sub(p_Pos, Vector2.Div(this.m_Size, 2))
 
@@ -77,7 +68,14 @@ class Graphic
 		if (!Vector2.IsEqual(this.m_Pos, p_Pos))
 			this.m_Pos := p_Pos.Clone()
 
-		Gui, % this.m_Index . ": Show", % "x" this.m_Pos.X "y" this.m_Pos.Y "NA"
+		this.DrawGraphic()
+		UpdateLayeredWindow(this.m_HWND, this.m_HDC, this.m_Pos.X, this.m_Pos.Y, this.m_Size.Width, this.m_Size.Height)
+		Gdip_GraphicsClear(this.m_Graphics)
+
+		if (this.m_IsVisible)
+			return
+
+		Gui, % this.m_Index . ": Show", NA
 
 		this.m_IsVisible := True
 	}

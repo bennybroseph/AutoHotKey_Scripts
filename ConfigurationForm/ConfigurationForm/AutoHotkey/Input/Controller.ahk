@@ -290,6 +290,11 @@ class Controller extends InputManager
     {
         global
 
+		if (this.m_TargetStick.State or this.m_FreeTargetMode)
+			this.m_UsingReticule := True
+		else
+			this.m_UsingReticule := False
+
 		local i, _control
         for i, _control in this.m_Controls
         {
@@ -361,7 +366,7 @@ class Controller extends InputManager
 		global
 
 		if (!Vector2.IsEqual(this.m_MovementStick.StickValue, this.m_MovementStick.PrevStickValue)
-        or this.m_RepeatForceMove or this.ForceMouseUpdate or (this.m_CursorMode and this.m_MovementStick.State))
+        or this.RepeatForceMove or this.ForceMouseUpdate or (this.m_CursorMode and this.m_MovementStick.State))
             this.ProcessMovementStick()
 
         if (!Vector2.IsEqual(this.m_TargetStick.StickValue, this.m_TargetStick.PrevStickValue)
@@ -414,12 +419,14 @@ class Controller extends InputManager
 
 			if (_stick.State)
 			{
-				if ((!this.Moving or this.m_RepeatForceMove) and !this.PressStack.Peek)
+				if ((!this.Moving or this.RepeatForceMove) and !this.PressStack.Peek)
 				{
-					if (this.m_RepeatForceMove)
+					if (this.RepeatForceMove and FPS.GetCurrentTime() - this.LastForceMove >= this.RepeatForceMoveSpeed)
 					{
-						this.StopMoving()
 						this.StartMoving()
+						this.StopMoving()
+
+						this.LastForceMove := FPS.GetCurrentTime()
 					}
 					else
 						this.StartMoving()
@@ -452,12 +459,6 @@ class Controller extends InputManager
     {
         global
         local _stick := this.m_TargetStick
-
-		if ((_stick.State and this.PressStack.Peek.Type = KeybindType.Targeted)
-		or (this.m_FreeTargetMode))
-			this.m_UsingReticule := True
-		else
-			this.m_UsingReticule := False
 
         if (!this.m_FreeTargetMode)
         {

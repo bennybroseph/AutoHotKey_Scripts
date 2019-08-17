@@ -136,7 +136,7 @@ class Intercept extends InputManager
 		global
 
 		if (!Vector2.IsEqual(this.m_Movement, this.m_PrevMovement)
-		or this.RepeatForceMove or this.ForceMouseUpdate)
+		or ((this.RepeatForceMove or this.ForceMouseUpdate) and !this.ControllerEnabled))
 		{
 			local _centerOffset
 				:= Vector2.Add(Vector2.Add(Graphics.ActiveWinStats.Pos, Graphics.ActiveWinStats.Center)
@@ -158,17 +158,19 @@ class Intercept extends InputManager
 			else if (this.Moving and !this.PressStack.Peek)
 				this.StopMoving()
 
-			if (this.PressStack.Peek.Type != KeybindType.Targeted)
+			if (this.PressStack.Peek.Type != KeybindType.Targeted and !Vector2.IsEqual(this.m_Movement, Vector2.Zero))
 				InputHelper.MoveMouse(this.MousePos)
 
 			if (!Vector2.IsEqual(this.m_Movement, Vector2.Zero))
 			{
 				if ((!this.Moving or this.RepeatForceMove) and !this.PressStack.Peek)
 				{
-					if (this.RepeatForceMove)
+					if (this.RepeatForceMove and FPS.GetCurrentTime() - this.LastForceMove >= this.RepeatForceMoveSpeed)
 					{
 						this.StopMoving()
 						this.StartMoving()
+
+						this.LastForceMove := FPS.GetCurrentTime()
 					}
 					else
 						this.StartMoving()
