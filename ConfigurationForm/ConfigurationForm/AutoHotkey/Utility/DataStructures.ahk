@@ -59,6 +59,13 @@ class Vector2
 		}
 	}
 
+	GDIP_String[]
+	{
+		get {
+			return this.X . "," . this.Y
+		}
+	}
+
 	String[]
 	{
 		get{

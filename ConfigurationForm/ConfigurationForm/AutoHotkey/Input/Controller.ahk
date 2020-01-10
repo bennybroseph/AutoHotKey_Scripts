@@ -173,6 +173,9 @@ class Controller extends InputManager
 		for i, _control in this.m_Controls
 			_control.ParseTargeting()
 
+		this.m_TargetTriangle
+			:= new Polygon(this.TargetRadius.Size, new Color(255, 255, 0, 50), True)
+
 		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
 		if (_cursorModeAtStart)
 			this.EnableCursorMode()
@@ -409,7 +412,7 @@ class Controller extends InputManager
 				else
 					InputHelper.MoveMouse(this.MousePos)
 
-				if (this.MouseHidden and Inventory.Enabled)
+				if (Inventory.Enabled)
 					this.Cursor.Draw(Inventory.GetGridPos(), False)
 				else
 					this.Cursor.Hide()
@@ -475,22 +478,34 @@ class Controller extends InputManager
 					:= new Rect(Vector2.Mul(this.TargetRadius.Min, Graphics.ResolutionScale)
 							, Vector2.Mul(this.TargetRadius.Max, Graphics.ResolutionScale))
 
-				this.TargetPos.X += (_radius.Min.Width * _stick.StickValue.Normalize.X)
-									+ (_radius.Size.Width * _stick.StickValue.X)
-				this.TargetPos.Y -= (_radius.Min.Height * _stick.StickValue.Normalize.Y)
-									+ (_radius.Size.Height * _stick.StickValue.Y)
+				local _targetDelta
+					:= new Vector2(_radius.Min.Width * _stick.StickValue.Normalize.X + _radius.Size.Width * _stick.StickValue.X
+								, -(_radius.Min.Height * _stick.StickValue.Normalize.Y + _radius.Size.Height * _stick.StickValue.Y))
+
+				this.TargetPos.X += _targetDelta.X
+				this.TargetPos.Y += _targetDelta.Y
+
+				this.CalculateTargetTriangle(_stick, _targetDelta, _radius)
 			}
 
             if (this.m_UsingReticule and this.PressStack.Peek.Type = KeybindType.Targeted)
 			{
                 InputHelper.MoveMouse(this.TargetPos)
+
+				this.m_TargetTriangle.Draw(_centerOffset)
 				if (this.MouseHidden)
 					this.Reticule.Draw(this.TargetPos)
 			}
 			else if (_stick.state and this.PressStack.Peek.Type != KeybindType.Targeted)
+			{
+				this.m_TargetTriangle.Draw(_centerOffset)
 				this.Reticule.Draw(this.TargetPos)
+			}
 			else
+			{
+				this.m_TargetTriangle.Hide()
 				this.Reticule.Hide()
+			}
         }
         else if (_stick.State or this.ForceReticuleUpdate)
         {
@@ -518,8 +533,27 @@ class Controller extends InputManager
 
 			if (this.MouseHidden)
 				this.Reticule.Draw(this.TargetPos)
+
+			this.m_TargetTriangle.Hide()
         }
     }
+
+	CalculateTargetTriangle(p_Stick, p_TargetDelta, p_Radius)
+	{
+		global
+
+		this.m_TargetTriangle.UpdateSize(Vector2.Add(Vector2.Mul(p_Radius.Size, 2), 100))
+
+		local _triangleCenter := Vector2.Div(this.m_TargetTriangle.Size, 2)
+		this.m_TargetTriangle
+			.UpdatePoints(_triangleCenter
+						, Vector2.Add(_triangleCenter
+									, new Vector2(p_TargetDelta.X - Cos(p_Stick.StickAngleRad + PI / 2) * 50
+												, p_TargetDelta.Y + Sin(p_Stick.StickAngleRad + PI / 2) * 50))
+						, Vector2.Add(_triangleCenter
+									, new Vector2(p_TargetDelta.X - Cos(p_Stick.StickAngleRad - PI / 2) * 50
+												, p_TargetDelta.Y + Sin(p_Stick.StickAngleRad - PI / 2) * 50)))
+	}
 
 	Vibrate()
 	{
