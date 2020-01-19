@@ -24,6 +24,9 @@ class Inventory
 		this.m_Scaling
 			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Width")
 						, IniReader.ReadProfileKey(ProfileSection.Inventory, "Custom_Scaling_Height"))
+		this.m_Offset
+			:= new Vector2(IniReader.ReadProfileKey(ProfileSection.Inventory, "Offset_Width")
+						, IniReader.ReadProfileKey(ProfileSection.Inventory, "Offset_Height"))
 
 		Debug.OnToolTipAddListener(new Delegate(Inventory, "OnToolTip"))
 	}
@@ -53,8 +56,10 @@ class Inventory
 
 		local _gridPos
 			:= Vector2
-				.Mul(Vector2
-					.Mul(this.m_Grid[p_X, p_Y], Vector2.Div(Graphics.ActiveWinStats.Size, this.m_BaseResolution)), this.m_Scaling)
+				.Add(Vector2
+					.Mul(Vector2
+						.Mul(this.m_Grid[p_X, p_Y], Vector2.Div(Graphics.ActiveWinStats.Size, this.m_BaseResolution)), this.m_Scaling)
+					, this.m_Offset)
 
 		return _gridPos
 	}

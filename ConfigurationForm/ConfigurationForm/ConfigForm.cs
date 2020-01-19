@@ -513,14 +513,25 @@
                             return;
                     }
 
+                    var updated = false;
                     switch (iniTypeInfo.name)
                     {
                         case "Keybinding":
                             if (version == null)
                             {
+                                var forceMove = "";
                                 foreach (var sectionData in iniData.Sections)
+                                {
                                     if (sectionData.SectionName == "Keybindings")
+                                    {
                                         sectionData.SectionName = "Controller";
+                                        forceMove =
+                                            sectionData.Keys.FirstOrDefault(x => x.KeyName == "Force_Move")?.Value;
+                                    }
+                                }
+                                iniData.Sections.AddSection("Other");
+                                var otherSection = iniData.Sections.GetSectionData("Other");
+                                otherSection.Keys.AddKey("Force_Move", forceMove);
 
                                 iniData.Global.AddKey("Version", "4.1");
 
@@ -529,8 +540,17 @@
 
                                 version = iniData.Global.FirstOrDefault();
 
-                                ++updateCount;
+                                updated = true;
                             }
+                            if (version != null && version.Value == "4.1")
+                            {
+                                version.Value = "4.2";
+
+                                updated = true;
+                            }
+
+                            if (updated)
+                                ++updateCount;
                             break;
 
                         case "Profile":
@@ -539,8 +559,17 @@
                                 iniData.Global.AddKey("Version", "4.1");
                                 version = iniData.Global.FirstOrDefault();
 
-                                ++updateCount;
+                                updated = true;
                             }
+                            if (version != null && version.Value == "4.1")
+                            {
+                                version.Value = "4.2";
+
+                                updated = true;
+                            }
+
+                            if (updated)
+                                ++updateCount;
                             break;
 
                         default:
@@ -592,6 +621,7 @@
                         return;
                 }
 
+                var updated = false;
                 if (version == null)
                 {
                     iniData.Global.AddKey("Version", "4.1");
@@ -601,8 +631,17 @@
 
                     version = iniData.Global.FirstOrDefault();
 
-                    ++updateCount;
+                    updated = true;
                 }
+                if (version != null && version.Value == "4.1")
+                {
+                    version.Value = "4.2";
+
+                    updated = true;
+                }
+
+                if (updated)
+                    ++updateCount;
 
                 // Copy present data over to the default settings and then save the modified defaults
                 // into the current INI file to maintain the key order from the default file.

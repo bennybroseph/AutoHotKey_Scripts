@@ -89,7 +89,8 @@ class InputManager
 
 		this.s_Init := True
 
-		Controller.Init()
+		if (this.s_ControllerEnabled)
+			Controller.Init()
 		if (this.s_MouseKeyboardEnabled)
 			Intercept.Init()
 	}

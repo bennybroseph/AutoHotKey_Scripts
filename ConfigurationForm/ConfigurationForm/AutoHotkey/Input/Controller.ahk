@@ -173,8 +173,14 @@ class Controller extends InputManager
 		for i, _control in this.m_Controls
 			_control.ParseTargeting()
 
+		this.m_TargetTriangleEnabled := IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Target_Triangle_Enabled")
+		this.m_TargetTriangleWidth := IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Target_Triangle_Width")
+
+		local _colorString := IniReader.ReadProfileKey(ProfileSection.AnalogStick, "Target_Triangle_Color")
+		this.m_TargetTriangleColor := IniReader.ParseColor(_colorString)
+
 		this.m_TargetTriangle
-			:= new Polygon(this.TargetRadius.Size, new Color(255, 255, 0, 50), True)
+			:= new Polygon(Vector2.Mul(this.TargetRadius.Size, 2), this.m_TargetTriangleColor, True)
 
 		local _cursorModeAtStart 		:= IniReader.ReadProfileKey(ProfileSection.Preferences, "Cursor_Mode_At_Start")
 		if (_cursorModeAtStart)
@@ -418,7 +424,12 @@ class Controller extends InputManager
 					this.Cursor.Hide()
 			}
 			else if (!this.MouseHidden)
-				this.Reticule.Draw(this.MousePos)
+			{
+				if (_stick.State)
+					this.Reticule.Draw(this.MousePos)
+				else
+					this.Reticule.Hide()
+			}
 
 			if (_stick.State)
 			{
@@ -492,13 +503,15 @@ class Controller extends InputManager
 			{
                 InputHelper.MoveMouse(this.TargetPos)
 
-				this.m_TargetTriangle.Draw(_centerOffset)
+				if (this.m_TargetTriangleEnabled)
+					this.m_TargetTriangle.Draw(_centerOffset)
 				if (this.MouseHidden)
 					this.Reticule.Draw(this.TargetPos)
 			}
 			else if (_stick.state and this.PressStack.Peek.Type != KeybindType.Targeted)
 			{
-				this.m_TargetTriangle.Draw(_centerOffset)
+				if (this.m_TargetTriangleEnabled)
+					this.m_TargetTriangle.Draw(_centerOffset)
 				this.Reticule.Draw(this.TargetPos)
 			}
 			else
@@ -548,11 +561,11 @@ class Controller extends InputManager
 		this.m_TargetTriangle
 			.UpdatePoints(_triangleCenter
 						, Vector2.Add(_triangleCenter
-									, new Vector2(p_TargetDelta.X - Cos(p_Stick.StickAngleRad + PI / 2) * 50
-												, p_TargetDelta.Y + Sin(p_Stick.StickAngleRad + PI / 2) * 50))
+									, new Vector2(p_TargetDelta.X - Cos(p_Stick.StickAngleRad + PI / 2) * this.m_TargetTriangleWidth
+												, p_TargetDelta.Y + Sin(p_Stick.StickAngleRad + PI / 2) * this.m_TargetTriangleWidth))
 						, Vector2.Add(_triangleCenter
-									, new Vector2(p_TargetDelta.X - Cos(p_Stick.StickAngleRad - PI / 2) * 50
-												, p_TargetDelta.Y + Sin(p_Stick.StickAngleRad - PI / 2) * 50)))
+									, new Vector2(p_TargetDelta.X - Cos(p_Stick.StickAngleRad - PI / 2) * this.m_TargetTriangleWidth
+												, p_TargetDelta.Y + Sin(p_Stick.StickAngleRad - PI / 2) * this.m_TargetTriangleWidth)))
 	}
 
 	Vibrate()
