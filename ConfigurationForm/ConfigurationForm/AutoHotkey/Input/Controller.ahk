@@ -160,8 +160,8 @@ class Controller extends InputManager
 		this.m_Controls[ControlIndex.Guide]
 			:= new Button("Guide Button", "Guide", ControlIndex.Guide, "Guide_Button", XINPUT_GAMEPAD_GUIDE)
 
-		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "Left_Stick_Button", "Left")
-		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "Right_Stick_Button", "Right")
+		this.m_LeftStick := new Stick("Left Analog Stick", "Left Stick", StickIndex.Left, "Left_Analog_Stick", "Left")
+		this.m_RightStick := new Stick("Right Analog Stick", "Right Stick", StickIndex.Right, "Right_Analog_Stick", "Right")
 
         this.m_MovementStick    := this.m_LeftStick
         this.m_TargetStick      := this.m_RightStick
@@ -602,7 +602,10 @@ class Controller extends InputManager
         global
 
         if (Inventory.Enabled)
+		{
+			this.Cursor.Hide()
             Inventory.Disable()
+		}
 
 		if (this.m_ShowCursorModeNotification)
 		{
@@ -732,11 +735,14 @@ class Controller extends InputManager
 			local _keybindClone := p_Keybind.Clone()
 			_keybindClone.Modifier := _keybindClone.Action
 
-			;Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls. Trying again...")
+			Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls. Trying again with no modifier...")
 			return this.FindControlInfo(_keybindClone)
 		}
 
-		Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls")
+		if (this.ForceMoveKey.Action = p_Keybind.Action)
+			return new ControlInfo(this.m_MovementStick, "Hold")
+
+		Debug.Log("Could not find " . p_Keybind.String . " in list of configured controls.")
 	}
 
 	OnToolTip()

@@ -51,11 +51,11 @@ class Intercept extends InputManager
 			this.m_Keys.Push(CriticalObject(new Key(_keybind.String, KeybindType.Movement)))
 
 		local _key
-		; for i, _key in this.m_Keys
-		; {
-		; 	AHKThread("#Include Input\KeyPressThread.ahk", &_key)
-		; 	AHKThread("#Include Input\KeyReleaseThread.ahk", &_key)
-		; }
+		for i, _key in this.m_Keys
+		{
+			AHKThread("#Include Input\KeyPressThread.ahk", &_key)
+			AHKThread("#Include Input\KeyReleaseThread.ahk", &_key)
+		}
 
 		AHKThread("#Include Input\MouseThread.ahk", &this.TargetPos)
 

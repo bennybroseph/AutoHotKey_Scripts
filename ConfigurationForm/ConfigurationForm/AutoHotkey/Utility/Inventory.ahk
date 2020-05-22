@@ -9,7 +9,7 @@ class Inventory
 		this.m_Enabled := False
 
 		this.m_Grid := InventoryGrids.CreateGrid(Graphics.ApplicationTitle)
-		this.m_Pos := this.m_Grid.StartingPos
+		this.m_Pos := this.m_Grid.StartingPos.Clone()
 
 		this.m_HoldToMove := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_To_Move")
 		this.m_HoldDelay := IniReader.ReadProfileKey(ProfileSection.Inventory, "Hold_Delay")
@@ -183,7 +183,7 @@ class Inventory
 
 		Controller.ResetDPadTick()
 		if (!this.m_RememberPosition)
-			this.m_Pos := this.m_Grid.StartingPos
+			this.m_Pos := this.m_Grid.StartingPos.Clone()
 
 		InputManager.ForceMouseUpdate := True
 		this.m_Enabled := False

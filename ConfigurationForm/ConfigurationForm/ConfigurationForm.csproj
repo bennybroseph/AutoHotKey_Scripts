@@ -478,9 +478,6 @@
     <None Include="AutoHotkey\Images\Xbox\Press\64\Y_Button.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="AutoHotkey\Video Transcript.docx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="diablo_controller_qex_icon.ico" />
     <None Include="Settings\Defaults\config.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
