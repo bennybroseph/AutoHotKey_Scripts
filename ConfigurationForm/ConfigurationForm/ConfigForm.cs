@@ -104,6 +104,14 @@
 
             m_TabControlPoint = new Point(5, tableLayoutPanel2.Size.Height);
             m_TabControlOffset = new Size(5, tableLayoutPanel2.Size.Height + tableLayoutPanel1.Size.Height);
+
+            // Load the selected profile and keybindings file if we have values
+            if (!string.IsNullOrEmpty(Properties.Settings.Default.ProfileFile) &&
+                !string.IsNullOrEmpty(Properties.Settings.Default.KeybindingsFile))
+            {
+                profilesComboBox.Text = Properties.Settings.Default.ProfileFile;
+                keybindingsComboBox.Text = Properties.Settings.Default.KeybindingsFile;
+            }
         }
 
         private void PopulateComboBox(IniTypeInfo iniTypeInfo)
@@ -222,6 +230,15 @@
 
             if (m_SelectedIniPath == null)
                 return;
+
+            // Save the selected profile and keybindings file if we have values
+            if (profilesComboBox.Text!= "(Select INI)" && keybindingsComboBox.Text != "(Select INI)")
+            {
+                Properties.Settings.Default.ProfileFile = profilesComboBox.Text;
+                Properties.Settings.Default.KeybindingsFile = keybindingsComboBox.Text;
+                Properties.Settings.Default.Save();
+                Properties.Settings.Default.Reload();
+            }
 
             IniParserHelper.PrintIniData(m_SelectedIniData);
 
