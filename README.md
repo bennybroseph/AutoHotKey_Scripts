@@ -12,3 +12,7 @@ The main program was coded in the AutoHotKey scripting language. The windows for
 ### Path of Exile Defaults
 
 ![](https://github.com/bennybroseph/AutoHotKey_Scripts/blob/v2.1/ConfigurationForm/ConfigurationForm/Images/Controller%20Layout%20Path%20of%20Exile.png)
+
+
+#### AutoLauncher for Diablo III
+There is an **[AutoLauncher](https://github.com/VagnerDomingues/Diablo-III-PC-Joystick-AutoLauncher)** included to play Diablo III, It automatically starts the joystick-to-keyboard emulator when the game launches and closes it when the game exits, improving quality of life.
