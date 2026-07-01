@@ -165,19 +165,19 @@ XInput_Init(dll="xinput1_3.dll")
 
     ;=============== END CONSTANTS =================
 
-    _XInput_hm := DllCall("LoadLibrary" ,"str", dll)
+    _XInput_hm := DllCall("LoadLibrary" ,"str", dll, "Ptr")
 
     if !_XInput_hm {
         MsgBox, Failed to initialize XInput: %dll%.dll not found.
         return
     }
 
-    _XInput_GetState        := DllCall("GetProcAddress", "uint", _XInput_hm, "uint", 100) ; guide/home button works with this. __stdcall int secret_get_gamepad (int, XINPUT_GAMEPAD_SECRET*)
-    ;_XInput_GetState       := DllCall("GetProcAddress", "uint", _XInput_hm, "AStr", "XInputGetState")
-    _XInput_SetState        := DllCall("GetProcAddress", "uint", _XInput_hm, "AStr", "XInputSetState")
-    _XInput_GetKeystroke    := DllCall("GetProcAddress", "uint", _XInput_hm, "AStr", "XInputGetKeystroke")
-    _XInput_GetCapabilities := DllCall("GetProcAddress", "uint", _XInput_hm, "AStr", "XInputGetCapabilities")
-    _XInput_GetBatteryInformation := DllCall("GetProcAddress", "uint", _XInput_hm, "AStr", "XInputGetBatteryInformation")
+    _XInput_GetState        := DllCall("GetProcAddress", "Ptr", _XInput_hm, "uint", 100, "Ptr") ; guide/home button works with this. __stdcall int secret_get_gamepad (int, XINPUT_GAMEPAD_SECRET*)
+    ;_XInput_GetState       := DllCall("GetProcAddress", "Ptr", _XInput_hm, "AStr", "XInputGetState", "Ptr")
+    _XInput_SetState        := DllCall("GetProcAddress", "Ptr", _XInput_hm, "AStr", "XInputSetState", "Ptr")
+    _XInput_GetKeystroke    := DllCall("GetProcAddress", "Ptr", _XInput_hm, "AStr", "XInputGetKeystroke", "Ptr")
+    _XInput_GetCapabilities := DllCall("GetProcAddress", "Ptr", _XInput_hm, "AStr", "XInputGetCapabilities", "Ptr")
+    _XInput_GetBatteryInformation := DllCall("GetProcAddress", "Ptr", _XInput_hm, "AStr", "XInputGetBatteryInformation", "Ptr")
 
     ;OnExit, XInput_Term__
     if !(_XInput_GetState && _XInput_SetState && _XInput_GetKeystroke && _XInput_GetCapabilities && _XInput_GetBatteryInformation) {
@@ -195,8 +195,8 @@ XInput_Term() {
     ;XInput_Term__:
     global
     if _XInput_hm {
-        DllCall("FreeLibrary", "uint", _XInput_hm)
-        _XInput_hm :=_0
+        DllCall("FreeLibrary", "Ptr", _XInput_hm)
+        _XInput_hm := 0
         _XInput_GetState := 0
         _XInput_SetState := 0
         _XInput_GetKeystroke := 0
@@ -236,7 +236,7 @@ XInput_GetState(UserIndex = 0)
 {
     global _XInput_GetState
     VarSetCapacity(xiState, 16)
-    if ErrorLevel := DllCall(_XInput_GetState, "uint", UserIndex , "uint", &xiState)
+    if ErrorLevel := DllCall(_XInput_GetState, "uint", UserIndex , "Ptr", &xiState)
         return 0
 
     return {
@@ -282,7 +282,7 @@ XInput_GetKeystroke(UserIndex = 0x0FF) ; XUSER_INDEX_ANY = 0x0FF
 {
     global _XInput_GetKeystroke
     VarSetCapacity(xiKeystroke, 8)
-    if ErrorLevel := DllCall(_XInput_GetKeystroke, "uint", UserIndex, "uint", 0, "uint", &xiKeystroke)
+    if ErrorLevel := DllCall(_XInput_GetKeystroke, "uint", UserIndex, "uint", 0, "Ptr", &xiKeystroke)
         return 0
 
     ;Unicode : NumGet(xiKeystroke, 2, "UShort")
@@ -358,7 +358,7 @@ XInput_GetCapabilities(UserIndex = 0, Flags = 0)
 {
     global _XInput_GetCapabilities
     VarSetCapacity(xiCaps, 20)
-    if ErrorLevel := DllCall(_XInput_GetCapabilities, "uint", UserIndex, "uint", Flags, "uint", &xiCaps)
+    if ErrorLevel := DllCall(_XInput_GetCapabilities, "uint", UserIndex, "uint", Flags, "Ptr", &xiCaps)
         return 0
 
     return {
@@ -410,7 +410,7 @@ XInput_GetBatteryInformation(UserIndex = 0, DevType = 1)
 {
     global _XInput_GetBatteryInformation
     VarSetCapacity(xiBattery, 8) ; actually 7 but 8 may have better performance
-    if ErrorLevel := DllCall(_XInput_GetBatteryInformation, "uint", UserIndex, "uchar", DevType, "uint", &xiBattery)
+    if ErrorLevel := DllCall(_XInput_GetBatteryInformation, "uint", UserIndex, "uchar", DevType, "Ptr", &xiBattery)
         return 0
 
     return {
