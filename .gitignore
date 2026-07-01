@@ -183,6 +183,9 @@ _pkginfo.txt
 # but keep track of directories ending in .cache
 !*.[Cc]ache/
 
+# Local build tooling cache (reference assemblies fetched by build-release.ps1)
+.tools/
+
 # Others
 ClientBin/
 ~$*
