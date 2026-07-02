@@ -102,6 +102,8 @@ class Controller extends InputManager
 
 	static m_Controls := Array()
 
+	static m_ActiveSlot := -1
+
 	static m_MovementStick
 	static m_TargetStick
 
@@ -277,22 +279,51 @@ class Controller extends InputManager
     {
         global
 
+        ; Only ever read ONE controller. Reading every connected slot let an idle or virtual
+        ; controller on a lower slot overwrite the active one every frame (never releasing keys).
+        ; Latch onto the slot that is actually sending input and keep it until it disconnects.
+        if (this.m_ActiveSlot < 0 or !XInput_GetState(this.m_ActiveSlot))
+            this.m_ActiveSlot := this.FindActiveSlot()
+
+        if (this.m_ActiveSlot < 0)
+            return
+
+        local _state := XInput_GetState(this.m_ActiveSlot)
+        if (!_state)
+            return
+
+        local i, _control
+        for i, _control in this.m_Controls
+            _control.RefreshState(_state)
+
+        this.m_LeftStick.RefreshState(_state)
+        this.m_RightStick.RefreshState(_state)
+
+        this.m_PrevBatteryStatus := this.m_BatteryStatus
+        this.m_BatteryStatus := XInput_GetBatteryInformation(this.m_ActiveSlot, 0)
+    }
+
+    ; Returns the first XInput slot that is sending input, or -1 if none is active.
+    ; Used to pick the real controller and ignore idle/virtual pads on other slots.
+    FindActiveSlot()
+    {
+        global
+
+        local _slot, _state
         Loop, 4
         {
-            local _state := XInput_GetState(A_Index - 1)
+            _slot := A_Index - 1
+            _state := XInput_GetState(_slot)
             if (!_state)
                 Continue
 
-			local i, _control
-            for i, _control in this.m_Controls
-                _control.RefreshState(_state)
-
-			this.m_LeftStick.RefreshState(_state)
-			this.m_RightStick.RefreshState(_state)
-
-			this.m_PrevBatteryStatus := this.m_BatteryStatus
-			this.m_BatteryStatus := XInput_GetBatteryInformation(A_Index - 1, 0)
+            if (_state.Buttons
+                or _state.LeftTrigger > 30 or _state.RightTrigger > 30
+                or Abs(_state.ThumbLX) > 8000 or Abs(_state.ThumbLY) > 8000
+                or Abs(_state.ThumbRX) > 8000 or Abs(_state.ThumbRY) > 8000)
+                return _slot
         }
+        return -1
     }
 
     ProcessInput()
