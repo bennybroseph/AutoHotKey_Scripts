@@ -186,6 +186,9 @@ _pkginfo.txt
 # Local build tooling cache (reference assemblies fetched by build-release.ps1)
 .tools/
 
+# Release zips produced by build-release.ps1
+dist/
+
 # Others
 ClientBin/
 ~$*
